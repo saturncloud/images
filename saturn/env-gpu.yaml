@@ -1,0 +1,75 @@
+name: saturn
+channels:
+- https://conda.saturncloud.io/pkgs
+- rapidsai/label/cuda10.0
+- nvidia
+- rapidsai
+- numba
+- conda-forge
+- defaults
+dependencies:
+- blas=*=mkl
+- nodejs=10.13.0
+- python=3.7
+- numpy=1.16.4
+- pandas=0.24.2
+- ipywidgets=7.2*
+- numexpr
+- matplotlib
+- scipy
+- seaborn
+- scikit-learn
+- scikit-image
+- sympy
+- cython
+- patsy
+- statsmodels
+- cloudpickle
+- dill
+- bokeh
+- sqlalchemy
+- hdf5
+- h5py
+- vincent
+- beautifulsoup4
+- protobuf
+- xlrd
+- ipykernel
+- dask
+- s3fs
+- dash
+- dash-bootstrap-components
+- dash-core-components
+- dash-daq
+- dash-html-components
+- dash-renderer
+- dash-table
+- pip
+- s3fs
+- nltk
+- gensim
+- wordcloud
+- pytorch-cpu
+- torchvision-cpu
+- tensorflow=1.14.0=mkl_py37h45c423b_0
+- cvxpy
+- keras
+- cudf
+- cuml
+- cugraph
+- xgboost
+- dask-cuda
+- dask-cudf
+- dask-cuml
+- dask-xgboost
+- cudatoolkit=10.0
+- python-louvain
+- networkx
+- numba=0.41
+- pyarrow=0.12.1
+- pip:
+  - tweepy
+  - graphistry
+  - mockito
+  - graphviz
+  - kaggle
