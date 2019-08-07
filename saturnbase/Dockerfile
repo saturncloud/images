@@ -2,7 +2,7 @@ FROM buildpack-deps:bionic
 EXPOSE 8888
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
-ENV PATH=${PATH}:/srv/conda/bin:
+ENV PATH=${PATH}:/srv/conda/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \
@@ -51,6 +51,7 @@ RUN apt-get -qq update && \
         gcc-5 \
         g++-5 \
         zlib1g-dev \
+        rsync \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
@@ -59,11 +60,22 @@ RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 RUN mkdir -p ${APP_BASE} && \
     chown -R $NB_USER:$NB_USER ${APP_BASE}
 USER ${NB_USER}
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY jupyter.yml /tmp/jupyter.yml
 RUN bash /tmp/install-jupyter.bash
-RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy
+
+RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
+RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
 RUN ${CONDA_DIR}/bin/jupyter labextension install jupyterlab_bokeh
+RUN ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
+
+RUN cd ${CONDA_DIR}/jsaturn_ext && \
+    ${CONDA_DIR}/bin/npm install && \
+    ${CONDA_DIR}/bin/npm run build && \
+    ${CONDA_DIR}/bin/jupyter labextension install
+
 RUN ${CONDA_DIR}/bin/conda create -n saturn
 RUN ${CONDA_DIR}/bin/conda clean --all
 WORKDIR ${HOME}
