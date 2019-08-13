@@ -12,7 +12,7 @@ dependencies:
   - jupyterhub=1.0.0.devsaturn2
   - nbserverproxy
   - tornado=5.0
-  - jupyter_saturn=1.0.17
+  - jupyter_saturn=1.0.19
   - nbdime=1.0.7
   - pyyaml
   - sutils=0.5.1

@@ -1,4 +1,4 @@
-FROM saturncloud/saturnbase:0.7.4
+FROM saturncloud/saturnbase:0.8.1
 USER root
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \
