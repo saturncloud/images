@@ -52,4 +52,7 @@ dependencies:
 - keras
 - pip:
   - tweepy
+  - geopandas==0.5.1
+  - descartes==1.1.0
+  - pyproj==2.2.1
 name: saturn

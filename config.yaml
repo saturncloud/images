@@ -1,0 +1,4 @@
+build_type: prod
+jsaturn_version: 1.0.21
+base_image_version: 0.8.3
+image_version: 0.8.3
