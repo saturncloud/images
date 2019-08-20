@@ -72,9 +72,11 @@ RUN ${CONDA_DIR}/bin/jupyter labextension install jupyterlab_bokeh
 RUN ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 RUN cd ${CONDA_DIR}/jsaturn_ext && \
-    ${CONDA_DIR}/bin/npm install && \
+    ${CONDA_DIR}/bin/npm install
+RUN cd ${CONDA_DIR}/jsaturn_ext && \
     ${CONDA_DIR}/bin/npm run build && \
     ${CONDA_DIR}/bin/jupyter labextension install
+RUN rm -rf ${CONDA_DIR}/jsaturn_ext
 
 RUN ${CONDA_DIR}/bin/conda create -n saturn
 RUN ${CONDA_DIR}/bin/conda clean --all
