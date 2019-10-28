@@ -1,17 +1,11 @@
 #
-#
 
 mkdir kubet
 mkdir saturn
 
 
-
-cp -r ../../kubet/ ./
-cp  ../*.py  ./saturn/
-#cp -r ~/.kube  ./
-#cp  ~/.minikube/ca.crt  . 
-#cp  ~/.minikube/client.*  . 
-
+cp -r ../../saturn/pdc/kubet/ ./
+cp  ../../saturn/pdc/dask/*.py  ./saturn/
 
 docker build -t daskdev-sat .
 
