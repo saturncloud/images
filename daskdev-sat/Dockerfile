@@ -21,12 +21,9 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.14.0/b
 
 RUN conda install -y -c conda-forge dask-kubernetes
 RUN conda install -c https://conda.saturncloud.io/pkgs sutils=0.5.1
-RUN mkdir /root/saturn
 
-RUN mkdir /root/saturn/dask
-RUN mkdir /root/saturn/kubet
-COPY kubet /root/saturn/kubet
-COPY saturn /root/saturn/dask
+RUN mkdir /root/saturn
+COPY saturn /root/saturn
 
 ## temp!
 RUN mkdir /root/.minikube
