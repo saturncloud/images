@@ -2,6 +2,7 @@ channels:
   - defaults
   - conda-forge
   - https://conda.saturncloud.io/pkgs
+  - saturncloud
 dependencies:
   - nodejs=11
   - python=3.7
@@ -15,4 +16,4 @@ dependencies:
   - jupyter_saturn=1.2.0
   - nbdime=1.0.7
   - pyyaml
-  - sutils=0.5.1
+  - sutils=0.7
