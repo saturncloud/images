@@ -7,7 +7,7 @@ jobs:
       - checkout
       - run: |
           echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-          make cpu_image
+          docker build -t saturncloud/saturnbase:{{base_image_version}} .
 workflows:
   version: 2
   build_cpu:
