@@ -1,4 +1,4 @@
-FROM saturncloud/saturnbase-gpu:0.9.3
+FROM saturncloud/saturnbase-gpu:0.9.3.1
 
 COPY environment.yml /tmp/environment.yml
 RUN conda env update -n saturn --file /tmp/environment.yml
