@@ -6,7 +6,9 @@ jobs:
       - checkout  
       - run: build_docker_image.sh
 
-      
 
-
+workflows:
+  version: 2
+  jobs:
+    - daskdev-sat
 

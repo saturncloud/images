@@ -11,6 +11,6 @@ cp     ../../saturn/pdc/dask/*.py  ./saturn/pdc/dask/
 
 
 sudo docker build -t saturncloud/daskdev-sat .
-sudo docker push saturncloud/daskdev-sat
+#sudo docker push saturncloud/daskdev-sat
 
 rm -r ./saturn/
