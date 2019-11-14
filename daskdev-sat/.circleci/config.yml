@@ -1,0 +1,12 @@
+version: 2
+jobs:
+  daskdev-sat:
+    context: build
+    steps:
+      - checkout  
+      - run: build_docker_image.sh
+
+      
+
+
+
