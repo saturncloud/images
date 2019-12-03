@@ -20,15 +20,21 @@ RUN curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.14.0/b
 
 
 RUN conda install -y -c conda-forge dask-kubernetes
-RUN conda install -c https://conda.saturncloud.io/pkgs sutils=0.5.1
+#RUN conda install -y -c https://conda.saturncloud.io/pkgs jupyterhub-kubespawner
+RUN conda install -y -c https://conda.saturncloud.io/pkgs sutils=0.5.1
+RUN conda install -y -c conda-forge kubernetes=1.13.5
+RUN conda install -y -c conda-forge python-kubernetes=9.0
+
 
 RUN mkdir /root/saturn
-COPY saturn /root/saturn
+RUN mkdir /root/saturn/pdc
+RUN mkdir /root/saturn/pdc/kubet
+RUN mkdir /root/saturn/pdc/dask
 
-## temp!
-RUN mkdir /root/.minikube
-COPY .kube/config /root/.kube/config
-COPY client.* /root/.minikube/
-COPY ca.crt /root/.minikube/
+COPY saturn/pdc/kubet /root/saturn/pdc/kubet
+COPY saturn/pdc/dask /root/saturn/pdc/dask
+
+ENV PYTHONPATH=/root/saturn
+
 
 
