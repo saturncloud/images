@@ -1,4 +1,4 @@
-FROM saturncloud/saturnbase:0.9.3.2
+FROM saturncloud/saturnbase:0.9.3.3
 
 COPY environment.yml /tmp/environment.yml
 RUN conda env update -n saturn --file /tmp/environment.yml

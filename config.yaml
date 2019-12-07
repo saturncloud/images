@@ -1,4 +1,4 @@
 build_type: prod
-jsaturn_version: 1.2.2
-base_image_version: 0.9.3.2
-image_version: 0.9.3.2
+jsaturn_version: 1.2.3
+base_image_version: 0.9.3.3
+image_version: 0.9.3.3
