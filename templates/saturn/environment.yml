@@ -31,7 +31,9 @@ dependencies:
 - protobuf
 - xlrd
 - ipykernel
-- dask
+- dask=2.8.1
+- lz4
+- graphviz
 - s3fs
 - dash
 - dash-bootstrap-components
