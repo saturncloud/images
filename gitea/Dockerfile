@@ -1,3 +1,5 @@
+# Custom gitea image with main admin user created during setup
+
 FROM gitea/gitea:1.9.4
 
 ARG ADMIN_USER=saturn
