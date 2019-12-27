@@ -1,15 +1,9 @@
 #
 
-mkdir saturn
-mkdir saturn/pdc
-mkdir saturn/pdc/kube
-mkdir saturn/pdc/dask
-
-
-cp -r  ../../saturn/pdc/kubet/   ./saturn/pdc/kubet/
+mkdir -p saturn/pdc/dask
 cp     ../../saturn/pdc/dask/*.py  ./saturn/pdc/dask/
 
-
+pause
 sudo docker build -t saturncloud/daskdev-sat .
 #sudo docker push saturncloud/daskdev-sat
 
