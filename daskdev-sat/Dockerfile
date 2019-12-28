@@ -1,4 +1,4 @@
-FROM daskdev/dask:latest
+FROM daskdev/dask:2.8.1
 
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends locales > /dev/null && \
@@ -17,7 +17,7 @@ RUN conda install -y -c conda-forge kubernetes=1.13.5
 RUN conda install -y -c conda-forge python-kubernetes=9.0
 
 RUN mkdir -p /root/saturn/pdc/dask
-COPY saturn/pdc/dask /root/saturn/pdc/dask
+COPY dask*.py /root/saturn/pdc/dask
 
 ENV PYTHONPATH=/root/saturn
 
