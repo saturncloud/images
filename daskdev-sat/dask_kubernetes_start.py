@@ -5,7 +5,9 @@ import click
 import os
 from dask_kubernetes import KubeCluster, KubeConfig, InCluster, make_pod_from_dict
 import yaml
-
+import logging
+logging.basicConfig(level=logging.INFO)
+log = logging.getLogger(__name__)
 
 """
 This function authorizes with kubernetes and creates KubeCluster object.
@@ -36,7 +38,7 @@ async def start_dask_kube_cluster(**params):
     kube_config_file = params.get("kube_config_file")  # TODO: remove when local testing is done
     assert name is not None and len(name) > 0, "Name of the cluster must be set and not empty!"
 
-    print(f"Starting KubeCluster for {name} in namespace {namespace}, params: ", params)
+    log.info(f"Starting KubeCluster for {name} in namespace {namespace}, params: ", params)
     max_workers = int(max_workers)
     starting_workers = max(2, int(starting_workers))
 
@@ -55,7 +57,7 @@ async def start_dask_kube_cluster(**params):
         d = yaml.safe_load(f)
         pod_template = make_pod_from_dict(d)
 
-    print(pod_template)  # a lot of interesting undocumented stuff there
+    log.debug(pod_template)  # a lot of interesting undocumented stuff there
 
     cluster = KubeCluster(
         pod_template=pod_template,
@@ -66,7 +68,7 @@ async def start_dask_kube_cluster(**params):
     )
 
     if starting_workers > 2:
-        print("Starting scaled up to %s workers" % starting_workers)
+        log.info("Starting scaled up to %s workers" % starting_workers)
         cluster.scale_up(starting_workers)  # specify number of nodes explicitly
 
     cluster.adapt(
@@ -112,7 +114,7 @@ def kube_cluster(
 
     kube_config_file = "~/.kube/config" if use_kube_config else None
     if kube_config_file is not None:
-        print("Using kube config file:", kube_config_file)
+        log.info("Using kube config file:", kube_config_file)
 
     params = {"name": name}
 
@@ -132,12 +134,13 @@ def kube_cluster(
         params["scheduler_timeout_min"] = scheduler_timeout_min
 
     result = loop.run_until_complete(start_dask_kube_cluster(**params))
-    print(f"\nDask cluster {name} started in namespace {namespace}")
-    print(f"\tworker config: {worker_config}")
-    print(f"\tworkers: start: {starting_workers}, max: {max_workers}")
-    print(f"\tcpus per pod {cpus_per_pod}")
-    print(f"\tscheduler timeout: {scheduler_timeout_min} min")
-    print(f"\tscheduler address: {result.scheduler_address}")
+    log.info(f"\nDask cluster {name} started in namespace {namespace}")
+    log.info(f"\tworker config: {worker_config}")
+    log.info(f"\tworkers: start: {starting_workers}, max: {max_workers}")
+    log.info(f"\tcpus per pod {cpus_per_pod}")
+    log.info(f"\tscheduler timeout: {scheduler_timeout_min} min")
+    log.info(f"\tscheduler address: {result.scheduler_address}")
+
     loop.run_forever()
     loop.close()
 
