@@ -1,4 +1,6 @@
-FROM golang:1.8
+FROM golang:1.8-alpine
+
+RUN apk --no-cache add git
 
 WORKDIR /go/src/proxy-main
 ADD ./go/proxy-main.go ./
