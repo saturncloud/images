@@ -1,49 +1,45 @@
 package main
 
 import (
+	"crypto/rand"
+	"fmt"
+	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 	"net/http/httputil"
-	"crypto/rand"
 	"net/url"
 	"os"
 	"strconv"
 	"time"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 )
 
-//SECURITY NOTICE: Some older versions of Go have a security issue in the cryotp/elliptic. 
+//SECURITY NOTICE: Some older versions of Go have a security issue in the cryotp/elliptic.
 //Recommendation is to upgrade to at least 1.8.3.
 
-var defaultURL = "http://localhost"    // resource default url. port 80 of the localhost
-var fallbackURL = "http://localhost/fallback"   // not authorized fallback
+var defaultURL = "http://localhost"           // resource default url. port 80 of the localhost
+var fallbackURL = "http://localhost/fallback" // not authorized fallback
 var jwtKey = []byte("my_jwt_key")
-var minutesExpire = 60  //  1 hour to expiration
+var minutesExpire = 60 //  1 hour to expiration
 var debug = true
 var defaultPort = "8080"
 
-
 const (
-   errGeneric = 0
-   errNoCookie = 1
-   errBadSignature = 2
-   errExpired = 3
-   errTokenInvalid = 4
-   errSignatureInvalid  = 5
-
+	errGeneric          = 0
+	errNoCookie         = 1
+	errBadSignature     = 2
+	errExpired          = 3
+	errTokenInvalid     = 4
+	errSignatureInvalid = 5
 )
-
 
 // Get env var or default
 func getEnv(key, dflt string) string {
-	value, ok := os.LookupEnv(key) 
+	value, ok := os.LookupEnv(key)
 	if ok {
 		return value
 	}
 	return dflt
 }
-
 
 func generateCookieSigningKey(n int) ([]byte, error) {
 	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
@@ -68,21 +64,19 @@ func serveReverseProxy(targetURL string, res http.ResponseWriter, req *http.Requ
 	req.URL.Scheme = url.Scheme
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
 	req.Host = url.Host
-	proxy.ServeHTTP(res, req)  // non blocking
+	proxy.ServeHTTP(res, req) // non blocking
 }
-
 
 type extendedClaims struct {
 	resourceAddress string `json:"resource"`
-	isShared string `json:"shared"`
+	isShared        string `json:"shared"`
 	jwt.StandardClaims
 }
-
 
 func setNewCookie(res http.ResponseWriter, req *http.Request) {
 
 	claims := &extendedClaims{}
-	expirationTime := time.Now().Add(time.Duration(minutesExpire)*time.Minute)
+	expirationTime := time.Now().Add(time.Duration(minutesExpire) * time.Minute)
 	claims.ExpiresAt = expirationTime.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
@@ -93,38 +87,35 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 
 	// Set the new token as the users `saturn_token` cookie
 	http.SetCookie(res, &http.Cookie{
-			Name:    "saturn_token",
-			Value:   tokenString,
-			Expires: expirationTime,
+		Name:    "saturn_token",
+		Value:   tokenString,
+		Expires: expirationTime,
 	})
 }
 
-
-func handleRequestAndSetCookie(res http.ResponseWriter, req *http.Request) {
-	setNewCookie(res,req)
-	fmt.Fprintf(res, "Hello, cookie is set and will be valid for %d minuted", minutesExpire)
-
-}
-
-// The default fallback handler. 
+// The default fallback handler.
 func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusUnauthorized)
-//		res.WriteHeader(http.StatusBadRequest)
-		fmt.Fprintf(res, "\nWe are sorry, access denied.")
-		return
+	res.WriteHeader(http.StatusUnauthorized)
+	//		res.WriteHeader(http.StatusBadRequest)
+	fmt.Fprintf(res, "\nWe are sorry, access denied.")
+	return
 }
 
-// Mocked resource handler. 
+// Mocked resource handler.
 func handleRequestMockResource(res http.ResponseWriter, req *http.Request) {
-		res.WriteHeader(http.StatusOK)
-		if debug {
-			log.Printf("Mocked resorce url hit")
-		}
+	res.WriteHeader(http.StatusOK)
+	if debug {
+		log.Printf("Mocked resorce url hit")
+	}
 
-		fmt.Fprintf(res, "\nOK, access granted.")
-		return
+	fmt.Fprintf(res, "\nOK, access granted.")
+	return
 }
 
+func validateAuthToken(token string) bool {
+	// TODO:  token verification
+	return true
+}
 
 func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int) {
 
@@ -132,16 +123,16 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int) {
 		log.Printf("fallback code: %d", error)
 	}
 	switch error {
-		case errNoCookie:
-			log.Printf( "error: no cookie token presented or bad cookie")
-		case errExpired:
-			log.Printf("error: cookie expired")
-		case errSignatureInvalid:
-			log.Printf("error: Unauthorized attempt to access resource: wrong signature\n")
-		case errTokenInvalid:
-			log.Printf("error: Unauthorized attempt to access resource: invalid token\n")
-		case errGeneric:
-			log.Printf( "error: bad request")
+	case errNoCookie:
+		log.Printf("error: no cookie token presented or bad cookie")
+	case errExpired:
+		log.Printf("error: cookie expired")
+	case errSignatureInvalid:
+		log.Printf("error: Unauthorized attempt to access resource: wrong signature\n")
+	case errTokenInvalid:
+		log.Printf("error: Unauthorized attempt to access resource: invalid token\n")
+	case errGeneric:
+		log.Printf("error: bad request")
 	}
 
 	if debug {
@@ -150,19 +141,35 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int) {
 	http.Redirect(res, req, fallbackURL, 301)
 }
 
-
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
-	c, err := req.Cookie("saturn_token")
-	if err != nil {
+	targetURL := defaultURL
+	// if we receive authorization token in the request : the user authorized by the backend
+	satToken := req.URL.Query().Get("saturn_token")
+	resourceURL := req.URL.Query().Get("resource_url")
 
-		errcode := errGeneric
-		if err == http.ErrNoCookie {
-			errcode=errNoCookie
+	if satToken != "" {
+		if resourceURL != "" {
+			targetURL = resourceURL
 		}
 
-		redirectToFallBack(res,req, errcode)
+		if validateAuthToken(satToken) {
+			setNewCookie(res, req)
+			log.Printf("OK: Setting cookie")
+			serveReverseProxy(targetURL, res, req)
+			log.Printf("OK: Proxying to url: %s", targetURL)
+		}
+	}
+
+	c, err := req.Cookie("saturn_token")
+	if err != nil {
+		errcode := errGeneric
+		if err == http.ErrNoCookie {
+			errcode = errNoCookie
+		}
+
+		redirectToFallBack(res, req, errcode)
 		return
 	}
 
@@ -179,21 +186,20 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if err == jwt.ErrSignatureInvalid {
 			errcode = errSignatureInvalid
 		}
-		redirectToFallBack(res,req,errcode)
+		redirectToFallBack(res, req, errcode)
 		return
 	}
 	if !tkn.Valid {
-		redirectToFallBack(res,req,errTokenInvalid)
+		redirectToFallBack(res, req, errTokenInvalid)
 		return
 	}
 	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(minutesExpire)*time.Minute {
-		redirectToFallBack(res,req,errExpired)
+		redirectToFallBack(res, req, errExpired)
 		return
-		}
+	}
 
-	targetURL := defaultURL	
-	if len(claims.resourceAddress)	!=0 {
-			targetURL = claims.resourceAddress
+	if len(claims.resourceAddress) != 0 {
+		targetURL = claims.resourceAddress
 	}
 
 	// here we finally OK
@@ -203,35 +209,33 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 func main() {
 
-	defaultURL = getEnv("PROXY_RESOURCE_URL",defaultURL)
+	defaultURL = getEnv("PROXY_RESOURCE_URL", defaultURL)
 	fallbackURL = getEnv("PROXY_fallbackURL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
-	tmpKey, err := generateCookieSigningKey(4096/8)
+	tmpKey, err := generateCookieSigningKey(4096 / 8)
 	if err != nil {
 		log.Printf("Critical error: unable to generate JWT signing key")
 		return
 	}
 
-	log.Printf("JWT signing key generated and has length %d bytes: \"%20.20s...\"" , len(tmpKey),tmpKey)
-
+	log.Printf("JWT signing key generated and has length %d bytes: \"%20.20s...\"", len(tmpKey), tmpKey)
 
 	jwtKey = tmpKey
-	minutesExpire , _ = strconv.Atoi(getEnv("JWT_minutesExpire","60"))
-	listAddr :=  ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
-	log.Printf("Listening on %s",listAddr)
-	
-	log.Printf("Default target URL: %s",defaultURL)
-	log.Printf("Fallback URL:       %s",fallbackURL)
+	minutesExpire, _ = strconv.Atoi(getEnv("JWT_minutesExpire", "60"))
+	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
+	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 
-	http.HandleFunc("/test", handleRequestAndSetCookie)
+	log.Printf("Listening on %s", listAddr)
+
+	log.Printf("Default target URL: %s", defaultURL)
+	log.Printf("Fallback URL:       %s", fallbackURL)
+
 	http.HandleFunc("/fallback", handleRequestFallBack)
 	http.HandleFunc("/resource", handleRequestAndRedirect)
-	
-	
-	err = http.ListenAndServe(listAddr, nil) 
+
+	err = http.ListenAndServe(listAddr, nil)
 	if err != nil {
 		panic(err)
 	}
 }
-
