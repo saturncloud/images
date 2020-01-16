@@ -1,10 +1,10 @@
-FROM golang:1.8-alpine
+FROM golang:1.8
 
 WORKDIR /go/src/proxy-main
-COPY ./proxy-main/*.go .
+ADD ./go/proxy-main.go ./
 
-RUN go get -d -v ./proxy-main/...
-RUN go install -v ./proxy-main/...
+RUN go get -v
+RUN go install -v .
 
 ENV PROXY_LISTEN_PORT=8080
 ENV PROXY_FALLBACK_URL=http://localhost:$PROXY_LISTEN_PORT/fallback
@@ -13,6 +13,5 @@ ENV JWT_MINUTES_EXPIRE=60
 
 EXPOSE 8080
 
-
-CMD ["proxy-main"]
+CMD ["/go/bin/proxy-main"]
 
