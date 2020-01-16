@@ -21,7 +21,7 @@ var fallbackURL = "http://localhost/fallback"   // not authorized fallback
 var jwtKey = []byte("my_jwt_key")
 var minutesExpire = 60  //  1 hour to expiration
 var debug = true
-var defalutPort = "8080"
+var defaultPort = "8080"
 
 
 const (
@@ -205,7 +205,7 @@ func main() {
 
 	defaultURL = getEnv("PROXY_RESOURCE_URL",defaultURL)
 	fallbackURL = getEnv("PROXY_fallbackURL",
-		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defalutPort)+"/fallback")
+		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
 	tmpKey, err := generateCookieSigningKey(4096/8)
 	if err != nil {
@@ -218,7 +218,7 @@ func main() {
 
 	jwtKey = tmpKey
 	minutesExpire , _ = strconv.Atoi(getEnv("JWT_minutesExpire","60"))
-	listAddr :=  ":" + getEnv("PROXY_LISTEN_PORT", defalutPort)
+	listAddr :=  ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
 	log.Printf("Listening on %s",listAddr)
 	
 	log.Printf("Default target URL: %s",defaultURL)
