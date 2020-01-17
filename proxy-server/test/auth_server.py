@@ -23,13 +23,17 @@ def create_token(signing_key=None, seconds_to_expire=60, **payload):
 
     assert signing_key is not None, "Token signing key is not valid"
     payload["exp"] = int(datetime.now(tz=timezone.utc).timestamp()) + seconds_to_expire
+
     encoded_jwt = jwt.encode(payload, signing_key, algorithm="HS256")
+    print(encoded_jwt)
+    a = jwt.decode(encoded_jwt,signing_key)
+    print (a)
     return encoded_jwt
 
 
-def get_redirect_url(signing_key, orig_url):
+def get_redirect_url(signing_key, orig_url, ret_token):
     """ Form redirect url adding signed token to the original url"""
-    payload = {"resource": orig_url}
+    payload = {"resource": orig_url, "iss": ret_token}
     token = create_token(signing_key, 3600, **payload)
     new_url = "http://" + orig_url + "?saturn_token=" + token.decode("utf-8")
     return new_url
@@ -48,10 +52,16 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
 
         query_components = parse_qs(urlparse(self.path).query)
 
+        ret_token = query_components.get("ret_token")
         orig_request = query_components.get("orig_request")
-        if orig_request is not None and len(orig_request) > 0:
+        if (
+            ret_token is not None
+            and len(ret_token) > 0
+            and orig_request is not None
+            and len(orig_request) > 0
+        ):
             """  Redirect ----------------------------------------------------------------------------------"""
-            new_url = get_redirect_url(debug_key, orig_request[0])
+            new_url = get_redirect_url(debug_key, orig_request[0], ret_token[0])
             self.send_response(301)
             self.send_header("Location", new_url)
             self.end_headers()
