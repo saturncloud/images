@@ -18,8 +18,8 @@ import (
 
 var defaultURL = "http://localhost"           // resource default url. port 80 of the localhost
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
-var jwtKey = []byte("my_jwt_key")
-var sharedKey = []byte("my_jwt_key")
+var jwtKey []byte
+var sharedKey []byte
 
 var minutesExpire = 60 //  1 hour to expiration
 var debug = true
