@@ -104,17 +104,6 @@ func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-// Mocked resource handler.
-func handleRequestMockResource(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(http.StatusOK)
-	if debug {
-		log.Printf("Mocked resorce url hit")
-	}
-
-	fmt.Fprintf(res, "\nOK, access granted.")
-	return
-}
-
 func validateAuthToken(token *extendedClaims) bool {
 	// token extra validation. its signature is already verified at this point
 	// considerations: -
@@ -141,12 +130,12 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 		log.Printf("Fallback: bad request")
 	}
 
-	url := fallbackURL + "?orig_request=" + origURL
+	u := fallbackURL + "?orig_request=" + origURL
 	if debug {
-		log.Printf("Redirecting to fallback url: %s", url)
+		log.Printf("Redirecting to fallback url: %s", u)
 	}
 
-	http.Redirect(res, req, url, 301)
+	http.Redirect(res, req, u, 301)
 }
 
 // Given a request send it to the appropriate url
@@ -233,7 +222,7 @@ func main() {
 
 	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 	defaultURL = getEnv("PROXY_RESOURCE_URL", defaultURL)
-	fallbackURL = getEnv("PROXY_fallbackURL",
+	fallbackURL = getEnv("PROXY_FALLBACKURL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
@@ -264,7 +253,9 @@ func main() {
 	log.Printf("JWT signing key generated and has length %d bytes: \"%20.20s...\"", len(tmpKey), tmpKey)
 
 	jwtKey = tmpKey
-	minutesExpire, _ = strconv.Atoi(getEnv("JWT_minutesExpire", "60"))
+	minutesExpire, _ = strconv.Atoi(getEnv("JWT_EXPIRE_MIN", "60"))
+	log.Printf("JWT cookie expiration time: %d", minutesExpire)
+
 	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
 
 	log.Printf("Listening on %s", listAddr)
