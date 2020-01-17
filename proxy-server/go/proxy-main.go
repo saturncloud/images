@@ -19,17 +19,21 @@ import (
 var defaultURL = "http://localhost"           // resource default url. port 80 of the localhost
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
 var jwtKey = []byte("my_jwt_key")
+var sharedKey = []byte("my_jwt_key")
+
 var minutesExpire = 60 //  1 hour to expiration
 var debug = true
 var defaultPort = "8080"
 
+const keyLength = 512 / 8
+
 const (
-	errGeneric          = 0
-	errNoCookie         = 1
-	errBadSignature     = 2
-	errExpired          = 3
-	errTokenInvalid     = 4
-	errSignatureInvalid = 5
+	errGeneric          = iota
+	errNoCookie         = iota
+	errBadSignature     = iota
+	errExpired          = iota
+	errTokenInvalid     = iota
+	errSignatureInvalid = iota
 )
 
 // Get env var or default
@@ -69,7 +73,6 @@ func serveReverseProxy(targetURL string, res http.ResponseWriter, req *http.Requ
 
 type extendedClaims struct {
 	resourceAddress string `json:"resource"`
-	isShared        string `json:"shared"`
 	jwt.StandardClaims
 }
 
@@ -112,49 +115,66 @@ func handleRequestMockResource(res http.ResponseWriter, req *http.Request) {
 	return
 }
 
-func validateAuthToken(token string) bool {
-	// TODO:  token verification
+func validateAuthToken(token *extendedClaims) bool {
+	// token extra validation. its signature is already verified at this point
+	// considerations: -
+	//			check expiration time for this token
+	//          any extra user access limitations
 	return true
 }
 
-func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int) {
+func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, origURL string) {
 
 	if debug {
 		log.Printf("fallback code: %d", error)
 	}
 	switch error {
 	case errNoCookie:
-		log.Printf("error: no cookie token presented or bad cookie")
+		log.Printf("Fallback: no cookie token presented or bad cookie")
 	case errExpired:
-		log.Printf("error: cookie expired")
+		log.Printf("Fallback: cookie expired")
 	case errSignatureInvalid:
-		log.Printf("error: Unauthorized attempt to access resource: wrong signature\n")
+		log.Printf("Fallback: Unauthorized attempt to access resource: wrong signature\n")
 	case errTokenInvalid:
-		log.Printf("error: Unauthorized attempt to access resource: invalid token\n")
+		log.Printf("Fallback: Unauthorized attempt to access resource: invalid token\n")
 	case errGeneric:
-		log.Printf("error: bad request")
+		log.Printf("Fallback: bad request")
 	}
 
+	url := fallbackURL + "?orig_request=" + origURL
 	if debug {
-		log.Printf("Redirecting to fallback url: %s", fallbackURL)
+		log.Printf("Redirecting to fallback url: %s", url)
 	}
-	http.Redirect(res, req, fallbackURL, 301)
+
+	http.Redirect(res, req, url, 301)
 }
 
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 	targetURL := defaultURL
+
 	// if we receive authorization token in the request : the user authorized by the backend
 	satToken := req.URL.Query().Get("saturn_token")
-	resourceURL := req.URL.Query().Get("resource_url")
 
 	if satToken != "" {
-		if resourceURL != "" {
-			targetURL = resourceURL
+		claims := &extendedClaims{}
+		tkn, err := jwt.ParseWithClaims(satToken, claims, func(token *jwt.Token) (interface{}, error) {
+			return sharedKey, nil
+		})
+
+		if err != nil || !tkn.Valid {
+			log.Printf("Authorization Error: invalid token from saturn")
+			// Breaking the loop. No more redirects. All is bad for this request.
+			res.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 
-		if validateAuthToken(satToken) {
+		if len(claims.resourceAddress) != 0 {
+			targetURL = claims.resourceAddress
+		}
+
+		if validateAuthToken(claims) {
 			setNewCookie(res, req)
 			log.Printf("OK: Setting cookie")
 			serveReverseProxy(targetURL, res, req)
@@ -163,13 +183,15 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	}
 
 	c, err := req.Cookie("saturn_token")
+	origURL := req.Host + req.URL.Path
+
 	if err != nil {
 		errcode := errGeneric
 		if err == http.ErrNoCookie {
 			errcode = errNoCookie
 		}
 
-		redirectToFallBack(res, req, errcode)
+		redirectToFallBack(res, req, errcode, origURL)
 		return
 	}
 
@@ -186,15 +208,15 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if err == jwt.ErrSignatureInvalid {
 			errcode = errSignatureInvalid
 		}
-		redirectToFallBack(res, req, errcode)
+		redirectToFallBack(res, req, errcode, origURL)
 		return
 	}
 	if !tkn.Valid {
-		redirectToFallBack(res, req, errTokenInvalid)
+		redirectToFallBack(res, req, errTokenInvalid, origURL)
 		return
 	}
 	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(minutesExpire)*time.Minute {
-		redirectToFallBack(res, req, errExpired)
+		redirectToFallBack(res, req, errExpired, origURL)
 		return
 	}
 
@@ -209,11 +231,31 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 func main() {
 
+	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 	defaultURL = getEnv("PROXY_RESOURCE_URL", defaultURL)
 	fallbackURL = getEnv("PROXY_fallbackURL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
-	tmpKey, err := generateCookieSigningKey(4096 / 8)
+	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
+	if len(sharedKey) == 0 {
+		if debug {
+			sharedKey = []byte("debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567890")
+			log.Printf("WARNING! WARNING! Running in debug mode with predefined weak key!\n - set PROXY_DEBUG=false if you are running this in production. ")
+		} else {
+			log.Printf("Critical error: unable to obtain shared saturn signing key.\n - set environment variable PROXY_SHARED_KEY")
+			return
+		}
+
+	}
+
+	if len(sharedKey) < keyLength {
+		log.Printf("Critical error: shared saturn signing key is too short (%d),\n - set environment variable PROXY_SHARED_KEY", len(sharedKey))
+		return
+	}
+
+	log.Printf("Saturn signing key obtained and has length %d bytes: \"%20.20s...\"", len(sharedKey), sharedKey)
+
+	tmpKey, err := generateCookieSigningKey(keyLength)
 	if err != nil {
 		log.Printf("Critical error: unable to generate JWT signing key")
 		return
@@ -224,7 +266,6 @@ func main() {
 	jwtKey = tmpKey
 	minutesExpire, _ = strconv.Atoi(getEnv("JWT_minutesExpire", "60"))
 	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
-	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 
 	log.Printf("Listening on %s", listAddr)
 
