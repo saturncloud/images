@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"sync"
 	"time"
 )
 
@@ -24,6 +25,8 @@ var sharedKey []byte
 var minutesExpire = 60 //  1 hour to expiration
 var debug = true
 var defaultPort = "8080"
+var mutex sync.Mutex
+var tokenMap = make(map[string]string)
 
 const keyLength = 512 / 8
 
@@ -73,6 +76,7 @@ func serveReverseProxy(targetURL string, res http.ResponseWriter, req *http.Requ
 
 type extendedClaims struct {
 	resourceAddress string `json:"resource"`
+	//	reqToken string `json:"req_token"`
 	jwt.StandardClaims
 }
 
@@ -130,7 +134,15 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 		log.Printf("Fallback: bad request")
 	}
 
-	u := fallbackURL + "?orig_request=" + origURL
+	uniqToken, _ := generateCookieSigningKey(40)
+
+	mutex.Lock()
+	tokenMap[string(uniqToken)] = ""
+	log.Printf("Added token %s", uniqToken)
+	mutex.Unlock()
+
+	u := fallbackURL + "?orig_request=" + origURL + "&ret_token=" + string(uniqToken)
+
 	if debug {
 		log.Printf("Redirecting to fallback url: %s", u)
 	}
@@ -161,6 +173,27 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		if len(claims.resourceAddress) != 0 {
 			targetURL = claims.resourceAddress
+		}
+
+		if len(claims.Issuer) == 0 {
+			log.Printf("Authorization Error: invalid token from saturn")
+			res.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		mutex.Lock()
+		_, prs := tokenMap[claims.Issuer]
+		if prs {
+			delete(tokenMap, claims.Issuer)
+			log.Printf("Deleted token %s", claims.Issuer)
+
+		}
+		mutex.Unlock()
+
+		if !prs {
+			log.Printf("Authorization Error: invalid token from saturn")
+			res.WriteHeader(http.StatusUnauthorized)
+			return
 		}
 
 		if validateAuthToken(claims) {
