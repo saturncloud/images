@@ -1,6 +1,20 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import urlparse
+from urllib.parse import parse_qs
 import logging
 from sys import argv
+import jwt
+from datetime import datetime, timezone
+
+
+debug_key = "debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567890"
+
+
+def create_token(signing_key= None,minutes=60, **payload):
+    assert signing_key is not None, "Token signing key is not valid"
+    payload["exp"] = int(datetime.now(tz=timezone.utc).timestamp()) + 60*minutes
+    encoded_jwt = jwt.encode(payload, signing_key, algorithm='HS256')
+    return encoded_jwt
 
 
 class HTTPServerHandler(BaseHTTPRequestHandler):
@@ -10,9 +24,26 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
-        self._set_response()
-        self.wfile.write(f"GET request for {self.path}".encode("utf-8"))
+
+        query_components = parse_qs(urlparse(self.path).query)
+
+        orig_request = query_components.get("orig_request")
+        if orig_request is not None and len(orig_request)>0:
+            payload = {"resource": orig_request[0]}
+            token = create_token(
+                debug_key,
+                60,
+                **payload
+            )
+
+            new_url = "http://"+orig_request[0]+"?saturn_token="+token.decode("utf-8")
+            self.send_response(301)
+            self.send_header('Location', new_url)
+            self.end_headers()
+        else:
+            logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+            self._set_response()
+            self.wfile.write(f"GET request for {self.path}".encode("utf-8"))
 
     def do_POST(self):
         content_length = int(self.headers["Content-Length"])  # <--- Gets the size of data
