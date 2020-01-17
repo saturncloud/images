@@ -25,9 +25,9 @@ def create_token(signing_key=None, seconds_to_expire=60, **payload):
     payload["exp"] = int(datetime.now(tz=timezone.utc).timestamp()) + seconds_to_expire
 
     encoded_jwt = jwt.encode(payload, signing_key, algorithm="HS256")
-    print(encoded_jwt)
-    a = jwt.decode(encoded_jwt,signing_key)
-    print (a)
+    # print(encoded_jwt)
+    # a = jwt.decode(encoded_jwt,signing_key)
+    # print (a)
     return encoded_jwt
 
 
