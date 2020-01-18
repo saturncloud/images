@@ -31,12 +31,12 @@ var tokenMap = make(map[string]string)
 const keyLength = 512 / 8
 
 const (
-	errGeneric          = iota
-	errNoCookie         = iota
-	errBadSignature     = iota
-	errExpired          = iota
-	errTokenInvalid     = iota
-	errSignatureInvalid = iota
+	errGeneric = iota
+	errNoCookie
+	errBadSignature
+	errExpired
+	errTokenInvalid
+	errSignatureInvalid
 )
 
 // Get env var or default
@@ -249,6 +249,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	// here we finally OK
 	serveReverseProxy(targetURL, res, req)
 	log.Printf("OK: Proxying to url: %s\n", targetURL)
+	return
 }
 
 func main() {
