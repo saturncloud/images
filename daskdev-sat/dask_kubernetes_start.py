@@ -40,7 +40,6 @@ async def start_dask_kube_cluster(**params):
 
     log.info(f"Starting KubeCluster for {name} in namespace {namespace}, params:\n {params} ")
     max_workers = int(max_workers)
-    starting_workers = max(2, int(starting_workers))
 
     if kube_config_file is not None:
         kube_config = KubeConfig(os.path.expanduser(kube_config_file))
