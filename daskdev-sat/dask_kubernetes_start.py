@@ -67,7 +67,7 @@ async def start_dask_kube_cluster(**params):
         scheduler_timeout=f"{scheduler_timeout_min} m",
     )
 
-    if starting_workers > 2:
+    if starting_workers > 1:
         log.info(f"Starting scaled up to {starting_workers} workers, max is {max_workers}")
         cluster.scale_up(starting_workers)  # specify number of nodes explicitly
 
