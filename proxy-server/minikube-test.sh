@@ -13,8 +13,9 @@ echo -e "\033[1;92mBuilding test server image\033[0m"
 
 kubectl apply -f minikube-test.yaml
 
-echo "Waiting for pod to be ready..."
+echo "Waiting for all pods to be ready..."
 kubectl wait --for=condition=Ready pod/mock-auth-server
+kubectl wait --for=condition=Ready pod/proxy-test
 
 kubectl port-forward svc/mock-auth-server 8888:8888 &
 auth_pid=$!
