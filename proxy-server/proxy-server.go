@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"sync"
 	"time"
-
 	"github.com/dgrijalva/jwt-go"
 )
 
