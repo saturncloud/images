@@ -40,7 +40,6 @@ async def start_dask_kube_cluster(**params):
 
     log.info(f"Starting KubeCluster for {name} in namespace {namespace}, params:\n {params} ")
     max_workers = int(max_workers)
-    starting_workers = max(2, int(starting_workers))
 
     if kube_config_file is not None:
         kube_config = KubeConfig(os.path.expanduser(kube_config_file))
@@ -68,7 +67,7 @@ async def start_dask_kube_cluster(**params):
         scheduler_timeout=f"{scheduler_timeout_min} m",
     )
 
-    if starting_workers > 2:
+    if starting_workers > 1:
         log.info(f"Starting scaled up to {starting_workers} workers, max is {max_workers}")
         cluster.scale_up(starting_workers)  # specify number of nodes explicitly
 
