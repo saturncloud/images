@@ -13,8 +13,6 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-//SECURITY NOTICE: Some older versions of Go have a security issue in the crypto/elliptic.
-//Recommendation is to upgrade to at least 1.8.3.
 
 var targetURL = "http://localhost:80"         // protocol + host + port to be proxied to
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
