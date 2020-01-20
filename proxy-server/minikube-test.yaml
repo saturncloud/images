@@ -37,8 +37,8 @@ spec:
     env:
       - name: PROXY_LISTEN_PORT
         value: "8080"
-      - name: PROXY_TARGET_PORT
-        value: "80"
+      - name: PROXY_TARGET_URL
+        value: "http://localhost:80"
       - name: PROXY_FALLBACK_URL
         value: "http://localhost:8888/"
       - name: PROXY_DEBUG

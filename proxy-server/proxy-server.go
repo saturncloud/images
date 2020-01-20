@@ -14,10 +14,10 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-//SECURITY NOTICE: Some older versions of Go have a security issue in the cryotp/elliptic.
+//SECURITY NOTICE: Some older versions of Go have a security issue in the crypto/elliptic.
 //Recommendation is to upgrade to at least 1.8.3.
 
-var targetPort = "80"                         // port to be proxied to on localhost
+var targetURL = "http://localhost:80"         // protocol + host + port to be proxied to
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
 var jwtKey []byte
 var sharedKey []byte
@@ -31,12 +31,12 @@ var tokenMap = make(map[string]string)
 const keyLength = 512 / 8
 
 const (
-	errGeneric          = iota
-	errNoCookie         = iota
-	errBadSignature     = iota
-	errExpired          = iota
-	errTokenInvalid     = iota
-	errSignatureInvalid = iota
+	errGeneric = iota
+	errNoCookie
+	errBadSignature
+	errExpired
+	errTokenInvalid
+	errSignatureInvalid
 )
 
 // Get env var or default
@@ -66,15 +66,14 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request) {
 	// Modify the headers for  SSL redirection
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
 
-	proxiedURL, _ := url.Parse("http://localhost:" + targetPort)
+	proxiedURL, _ := url.Parse(targetURL)
 	proxy := httputil.NewSingleHostReverseProxy(proxiedURL)
 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
 type extendedClaims struct {
-	resourceAddress string `json:"resource"`
-	//	reqToken string `json:"req_token"`
+	resourceAddress string
 	jwt.StandardClaims
 }
 
@@ -252,7 +251,7 @@ func (p *proxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 func main() {
 
 	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
-	targetPort = getEnv("PROXY_TARGET_PORT", targetPort)
+	targetURL = getEnv("PROXY_TARGET_URL", targetURL)
 	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
