@@ -2,8 +2,6 @@ package main
 
 import (
 	"crypto/rand"
-	"fmt"
-	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -12,12 +10,14 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 //SECURITY NOTICE: Some older versions of Go have a security issue in the cryotp/elliptic.
 //Recommendation is to upgrade to at least 1.8.3.
 
-var defaultURL = "http://localhost"           // resource default url. port 80 of the localhost
+var targetPort = "80"                         // port to be proxied to on localhost
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
 var jwtKey []byte
 var sharedKey []byte
@@ -62,15 +62,13 @@ func generateCookieSigningKey(n int) ([]byte, error) {
 }
 
 // Serve a reverse proxy for a given url
-func serveReverseProxy(targetURL string, res http.ResponseWriter, req *http.Request) {
-	url, _ := url.Parse(targetURL)
-	proxy := httputil.NewSingleHostReverseProxy(url)
-
+func serveReverseProxy(res http.ResponseWriter, req *http.Request) {
 	// Modify the headers for  SSL redirection
-	req.URL.Host = url.Host
-	req.URL.Scheme = url.Scheme
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
-	req.Host = url.Host
+
+	proxiedURL, _ := url.Parse("http://localhost:" + targetPort)
+	proxy := httputil.NewSingleHostReverseProxy(proxiedURL)
+
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
@@ -101,12 +99,11 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 }
 
 // The default fallback handler.
-func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
-	res.WriteHeader(http.StatusUnauthorized)
-	//		res.WriteHeader(http.StatusBadRequest)
-	fmt.Fprintf(res, "\nWe are sorry, access denied.")
-	return
-}
+// func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
+// 	res.WriteHeader(http.StatusUnauthorized)
+// 	fmt.Fprintf(res, "\nWe are sorry, access denied.")
+// 	return
+// }
 
 func validateAuthToken(token *extendedClaims) bool {
 	// token extra validation. its signature is already verified at this point
@@ -153,8 +150,6 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
-	targetURL := defaultURL
-
 	// if we receive authorization token in the request : the user authorized by the backend
 	satToken := req.URL.Query().Get("saturn_token")
 
@@ -169,10 +164,6 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			// Breaking the loop. No more redirects. All is bad for this request.
 			res.WriteHeader(http.StatusUnauthorized)
 			return
-		}
-
-		if len(claims.resourceAddress) != 0 {
-			targetURL = claims.resourceAddress
 		}
 
 		if len(claims.Issuer) == 0 {
@@ -199,8 +190,13 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if validateAuthToken(claims) {
 			setNewCookie(res, req)
 			log.Printf("OK: Setting cookie")
-			serveReverseProxy(targetURL, res, req)
-			log.Printf("OK: Proxying to url: %s", targetURL)
+			// 301 back to self to remove saturn_token from the URL
+			q := req.URL.Query()
+			q.Del("saturn_token")
+			req.URL.RawQuery = q.Encode()
+			http.Redirect(res, req, req.URL.String(), 301)
+			log.Printf("OK: Redirecting to self (%s)", req.URL.String())
+			return
 		}
 	}
 
@@ -242,19 +238,21 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		return
 	}
 
-	if len(claims.resourceAddress) != 0 {
-		targetURL = claims.resourceAddress
-	}
-
 	// here we finally OK
-	serveReverseProxy(targetURL, res, req)
-	log.Printf("OK: Proxying to url: %s\n", targetURL)
+	serveReverseProxy(res, req)
+	log.Printf("OK: Proxying to url: %s\n", req.URL.String())
+}
+
+type proxyServer struct{}
+
+func (p *proxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
+	handleRequestAndRedirect(res, req)
 }
 
 func main() {
 
 	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
-	defaultURL = getEnv("PROXY_RESOURCE_URL", defaultURL)
+	targetPort = getEnv("PROXY_TARGET_PORT", targetPort)
 	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
@@ -293,13 +291,9 @@ func main() {
 
 	log.Printf("Listening on %s", listAddr)
 
-	log.Printf("Default target URL: %s", defaultURL)
 	log.Printf("Fallback URL:       %s", fallbackURL)
 
-	http.HandleFunc("/fallback", handleRequestFallBack)
-	http.HandleFunc("/resource", handleRequestAndRedirect)
-
-	err = http.ListenAndServe(listAddr, nil)
+	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
 		panic(err)
 	}

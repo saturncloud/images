@@ -25,7 +25,7 @@ sleep 0.1
 echo -e "\033[1;92mReady for test\033[0m"
 
 echo "
-Open this URL in your browser: $(minikube service proxy-test --url=true)/resource
+Open this URL in your browser: $(minikube service proxy-test --url=true)/
 "
 
 read -p "Press any key to stop forwarding and tear down resources."
