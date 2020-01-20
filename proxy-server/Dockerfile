@@ -1,12 +1,14 @@
-FROM golang:1.8-alpine
+FROM golang:1.13-alpine as builder
 
-RUN apk --no-cache add git
+WORKDIR /app
+ADD . .
 
-WORKDIR /go/src/proxy-main
-ADD ./go/proxy-main.go ./
+RUN go mod download
+RUN go build .
 
-RUN go get -v
-RUN go install -v .
+FROM alpine:latest
+
+COPY --from=0 /app/proxy-server /app/proxy-server
 
 ENV PROXY_LISTEN_PORT=8080
 ENV PROXY_FALLBACK_URL=http://localhost:$PROXY_LISTEN_PORT/fallback
@@ -15,5 +17,4 @@ ENV JWT_MINUTES_EXPIRE=60
 
 EXPOSE 8080
 
-CMD ["/go/bin/proxy-main"]
-
+CMD ["/app/proxy-server"]
