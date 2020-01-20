@@ -176,7 +176,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 
 		if len(claims.Issuer) == 0 {
-			log.Printf("Authorization Error: invalid token from saturn")
+			log.Printf("Authorization Error: invalid token from saturn (no issuers)")
 			res.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -191,7 +191,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		mutex.Unlock()
 
 		if !prs {
-			log.Printf("Authorization Error: invalid token from saturn")
+			log.Printf("Authorization Error: invalid token from saturn (invalid issuer)")
 			res.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -255,7 +255,7 @@ func main() {
 
 	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 	defaultURL = getEnv("PROXY_RESOURCE_URL", defaultURL)
-	fallbackURL = getEnv("PROXY_FALLBACKURL",
+	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
 
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))

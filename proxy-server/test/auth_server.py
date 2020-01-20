@@ -15,7 +15,6 @@ debug_key = "debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567
         original resource url (comes with "orig_request" in request query)
 """
 
-
 def create_token(signing_key=None, seconds_to_expire=60, **payload):
     """ Create signed token"""
     if signing_key is None:
@@ -95,7 +94,7 @@ if __name__ == "__main__":
     if len(argv) == 2:
         port = int(argv[1])
 
-    server_address = ("", port)
+    server_address = ("0.0.0.0", port)
     httpd = HTTPServer(server_address, HTTPServerHandler)
     logging.info(f"Starting httpd on port {port}")
     try:
