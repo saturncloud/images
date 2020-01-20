@@ -22,12 +22,6 @@ metadata:
   name: proxy-test
 spec:
   containers:
-  - image: dockersamples/101-tutorial
-    imagePullPolicy: IfNotPresent
-    name: web
-    ports:
-    - containerPort: 80
-      protocol: TCP
   - image: proxy-server:test
     imagePullPolicy: IfNotPresent
     name: proxy
@@ -38,11 +32,42 @@ spec:
       - name: PROXY_LISTEN_PORT
         value: "8080"
       - name: PROXY_TARGET_URL
-        value: "http://localhost:80"
+        value: "http://web-resource:80"
       - name: PROXY_FALLBACK_URL
         value: "http://localhost:8888/"
       - name: PROXY_DEBUG
         value: "true"
+  dnsPolicy: ClusterFirst
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    run: web-resource
+  name: web-resource
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+  selector:
+    run: web-resource
+  sessionAffinity: None
+  type: NodePort
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    run: web-resource
+  name: web-resource
+spec:
+  containers:
+  - image: dockersamples/101-tutorial
+    imagePullPolicy: IfNotPresent
+    name: web
+    ports:
+    - containerPort: 80
+      protocol: TCP
   dnsPolicy: ClusterFirst
 ---
 apiVersion: v1
