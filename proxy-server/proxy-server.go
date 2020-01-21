@@ -288,6 +288,7 @@ func main() {
 	log.Printf("Listening on %s", listAddr)
 
 	log.Printf("Fallback URL:       %s", fallbackURL)
+	log.Printf("Target   URL:       %s", targetURL)
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
