@@ -36,7 +36,7 @@ spec:
       - name: PROXY_TARGET_URL
         value: "http://admin-andrewdask-dask.main-namespace:8787"
       - name: PROXY_FALLBACK_URL
-        value: "http://192.168.99.100:30888/"
+        value: "http://mock-auth.test:80/"
       - name: PROXY_DEBUG
         value: "true"
   dnsPolicy: ClusterFirst
@@ -52,10 +52,24 @@ spec:
   ports:
   - port: 8888
     protocol: TCP
-    nodePort: 30888
+    targetPort: 8888
   selector:
     run: mock-auth-server
-  type: NodePort
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: mock-auth-server
+  namespace: main-namespace
+spec:
+  rules:
+    - host: mock-auth.test
+      http:
+        paths:
+        - backend:
+            serviceName: mock-auth-server
+            servicePort: 8888
 ---
 apiVersion: v1
 kind: Pod
