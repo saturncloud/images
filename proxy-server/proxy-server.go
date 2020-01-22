@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/rand"
+	"github.com/dgrijalva/jwt-go"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -10,9 +11,7 @@ import (
 	"strconv"
 	"sync"
 	"time"
-	"github.com/dgrijalva/jwt-go"
 )
-
 
 var targetURL = "http://localhost:80"         // protocol + host + port to be proxied to
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
@@ -60,8 +59,9 @@ func generateCookieSigningKey(n int) ([]byte, error) {
 
 // Serve a reverse proxy for a given url
 func serveReverseProxy(res http.ResponseWriter, req *http.Request) {
-	// Modify the headers for  SSL redirection
+	// Modify the headers for  SSL redirection and cache control
 	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+	req.Header.Set("Cache-Control", "no-cache, no-store, no-transform, must-revalidate, max-age=0")
 
 	proxiedURL, _ := url.Parse(targetURL)
 	proxy := httputil.NewSingleHostReverseProxy(proxiedURL)
