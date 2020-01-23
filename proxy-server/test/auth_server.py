@@ -52,7 +52,7 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
         query_components = parse_qs(urlparse(self.path).query)
 
         ret_token = query_components.get("ret_token")
-        orig_request = query_components.get("orig_request")
+        orig_request = query_components.get("next")
         if (
             ret_token is not None
             and len(ret_token) > 0
