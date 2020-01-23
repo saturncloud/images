@@ -32,9 +32,11 @@ spec:
       - name: PROXY_LISTEN_PORT
         value: "8080"
       - name: PROXY_TARGET_URL
-        value: "http://web-resource:80"
+        value: "http://web-resource.default.svc.cluster.local:80"
       - name: PROXY_FALLBACK_URL
-        value: "http://localhost:8888/"
+        value: "http://dev.localtest.me:8888/auth/login"
+      - name: HTTPS_SELF_REDIRECT
+        value: "false"
       - name: PROXY_DEBUG
         value: "true"
   dnsPolicy: ClusterFirst
@@ -67,36 +69,5 @@ spec:
     name: web
     ports:
     - containerPort: 80
-      protocol: TCP
-  dnsPolicy: ClusterFirst
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    run: mock-auth-server
-  name: mock-auth-server
-spec:
-  ports:
-  - port: 8888
-    protocol: TCP
-    targetPort: 8888
-  selector:
-    run: mock-auth-server
-  type: NodePort
----
-apiVersion: v1
-kind: Pod
-metadata:
-  labels:
-    run: mock-auth-server
-  name: mock-auth-server
-spec:
-  containers:
-  - image: mock-auth-server:test
-    imagePullPolicy: IfNotPresent
-    name: auth
-    ports:
-    - containerPort: 8888
       protocol: TCP
   dnsPolicy: ClusterFirst

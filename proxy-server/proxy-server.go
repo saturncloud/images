@@ -15,6 +15,7 @@ import (
 
 var targetURL = "http://localhost:80"         // protocol + host + port to be proxied to
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
+var useHTTPSForSelfRedirect = true
 var jwtKey []byte
 var sharedKey []byte
 
@@ -134,7 +135,11 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 	log.Printf("Added token %s", uniqToken)
 	mutex.Unlock()
 
-	u := fallbackURL + "?orig_request=" + origURL + "&ret_token=" + string(uniqToken)
+	qs := url.Values{}
+	qs.Add("next", origURL)
+	qs.Add("ret_token", string(uniqToken))
+
+	u := fallbackURL + "?" + qs.Encode()
 
 	if debug {
 		log.Printf("Redirecting to fallback url: %s", u)
@@ -197,7 +202,11 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	}
 
 	c, err := req.Cookie("saturn_token")
-	origURL := req.Host + req.URL.Path
+	protocol := "https://"
+	if !useHTTPSForSelfRedirect {
+		protocol = "http://"
+	}
+	origURL := protocol + req.Host + req.URL.Path
 
 	if err != nil {
 		errcode := errGeneric
@@ -251,6 +260,7 @@ func main() {
 	targetURL = getEnv("PROXY_TARGET_URL", targetURL)
 	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
+	useHTTPSForSelfRedirect = getEnv("HTTPS_SELF_REDIRECT", "true") == "true"
 
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
 	if len(sharedKey) == 0 {
