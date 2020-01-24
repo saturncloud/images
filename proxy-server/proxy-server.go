@@ -191,7 +191,6 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 	qs := url.Values{}
 
 	qs.Add("next", origURL)
-	qs.Add("orig_request", origURL)
 	qs.Add("ret_token", string(uniqToken))
 
 	u := fallbackURL + "?" + qs.Encode()
@@ -290,10 +289,6 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		errcode := errGeneric
 		if err == http.ErrNoCookie {
 			errcode = errNoCookie
-		}
-		if debug {
-			log.Printf("Debug: no good cookie orig url %s", origURL)
-
 		}
 		redirectToFallBack(res, req, errcode, origURL)
 		return
