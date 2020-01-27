@@ -1,16 +1,10 @@
-#
+#!/bin/bash
 
-mkdir saturn
-mkdir saturn/pdc
-mkdir saturn/pdc/kube
-mkdir saturn/pdc/dask
+# This is our image tag. The tag is <dask_verison>[.<added revision>], so with dask ver 2.8.1  our tags will be 2.8.1, 2.8.1.1, 2.8.1.2, ...
+# With dask 2.9  we will have 2.9, 2.9.1, 2.9.2 .....
+DASKDEV_SAT_VERSION=2.8.1
+echo "Building daskdev-sat version $DASKDEV_SAT_VERSION" 
 
-
-cp -r  ../../saturn/pdc/kubet/   ./saturn/pdc/kubet/
-cp     ../../saturn/pdc/dask/*.py  ./saturn/pdc/dask/
-
-
-sudo docker build -t saturncloud/daskdev-sat .
-#sudo docker push saturncloud/daskdev-sat
-
-rm -r ./saturn/
+sudo docker build -t saturncloud/daskdev-sat:$DASKDEV_SAT_VERSION .
+sudo docker push saturncloud/daskdev-sat:$DASKDEV_SAT_VERSION
+#sudo docker tag saturncloud/daskdev-sat:$DASKDEV_SAT_VERSION saturncloud/daskdev-sat:latest
