@@ -197,7 +197,8 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 		log.Printf("Redirecting to fallback url: %s", u)
 	}
 
-	http.Redirect(res, req, u, 301)
+	res.Header().Add("Cache-Control", "no-cache")
+	http.Redirect(res, req, u, 302)
 }
 
 // Given a request send it to the appropriate url
@@ -254,7 +255,8 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			q := req.URL.Query()
 			q.Del("saturn_token")
 			req.URL.RawQuery = q.Encode()
-			http.Redirect(res, req, req.URL.String(), 301)
+			res.Header().Add("Cache-Control", "no-cache")
+			http.Redirect(res, req, req.URL.String(), 302)
 			log.Printf("OK: Redirecting to self (%s)", req.URL.String())
 			return
 		}
