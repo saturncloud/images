@@ -1,3 +1,4 @@
+# Daskdev-sat image for dask cluster pods
 FROM daskdev/dask:2.8.1
 
 RUN apt-get -qq update && \
@@ -17,4 +18,3 @@ RUN mkdir -p /root/saturn/pdc/dask
 COPY dask_kubernetes_start.py /root/saturn/pdc/dask
 
 ENV PYTHONPATH=/root/saturn
-

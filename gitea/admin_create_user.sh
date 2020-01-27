@@ -1,4 +1,8 @@
 # Create main admin user
+#
+# This script sets up a database (migrate cmd) and then create one admin
+# user for further interaction with the HTTP API in order to manage users
+# and repos for the customer.
 
 function gitea_migrate {
   /app/gitea/gitea migrate > /dev/null
