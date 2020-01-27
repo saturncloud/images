@@ -4,6 +4,7 @@ which docker > /dev/null || (echo "docker is not installed. Exiting." && exit 1)
 which minikube > /dev/null || (echo "minikube is not installed. Exiting." && exit 1)
 
 PROXY_AUTH=${PROXY_AUTH:-"false"}
+WEB_HOSTNAME="web.localtest.me"
 
 eval $(minikube docker-env)
 
@@ -35,7 +36,8 @@ fi
 echo -e "\033[1;92mReady for test\033[0m"
 
 echo "
-Open this URL in your browser: $(minikube service proxy-test --url=true)/
+Open this URL in your browser: http://${WEB_HOSTNAME}/
+(you'll need to map web.localtest.me to $(minikube ip) in /etc/hosts if you haven't already)
 "
 
 read -p "Press any key to tear down resources."

@@ -3,7 +3,6 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
@@ -87,21 +88,18 @@ func maybeReadProxyConfig() {
 }
 
 func configReadingLoop() {
-	for _ = range time.Tick(30 * time.Second) {
+	for range time.Tick(30 * time.Second) {
 		maybeReadProxyConfig()
 	}
 }
 
-func extractTargetURLKey(urlString string) string {
-	u, _ := url.Parse(urlString)
-
-	tmp := u.Scheme
+func extractTargetURLKey(hostname string) string {
+	tmp := hostname
 	if strings.HasSuffix(tmp, urlCommonSuffix) {
 		tmp = tmp[:len(tmp)-len(urlCommonSuffix)]
 	}
 
 	return tmp
-
 }
 
 func generateCookieSigningKey(n int) ([]byte, error) {
@@ -252,7 +250,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if validateAuthToken(claims) {
 			setNewCookie(res, req)
 			log.Printf("OK: Setting cookie")
-			// 301 back to self to remove saturn_token from the URL
+			// redirect back to self to remove saturn_token from the URL
 			q := req.URL.Query()
 			q.Del("saturn_token")
 			req.URL.RawQuery = q.Encode()
@@ -273,7 +271,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			}
 		} else {
 			log.Printf("Unknown target url for %s", req.Host)
-			res.WriteHeader(http.StatusUnauthorized)
+			res.WriteHeader(http.StatusBadRequest)
 			return
 		}
 	}
