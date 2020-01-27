@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -53,6 +54,12 @@ func getEnv(key, dflt string) string {
 }
 
 var configTimeStamp time.Time
+
+func respondWithError(res http.ResponseWriter, status int, message string) {
+	res.Header().Add("Content-Type", "text/html;charset=utf-8")
+	res.WriteHeader(status)
+	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
+}
 
 func maybeReadProxyConfig() {
 
@@ -126,7 +133,7 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
-func setNewCookie(res http.ResponseWriter, req *http.Request) {
+func setNewCookie(res http.ResponseWriter, req *http.Request) error {
 
 	claims := &jwt.StandardClaims{}
 	expirationTime := time.Now().Add(time.Duration(minutesExpire) * time.Minute)
@@ -134,8 +141,7 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	// Set the new token as the users `saturn_token` cookie
@@ -144,14 +150,9 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	})
-}
 
-// The default fallback handler.
-// func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
-// 	res.WriteHeader(http.StatusUnauthorized)
-// 	fmt.Fprintf(res, "\nWe are sorry, access denied.")
-// 	return
-// }
+	return nil
+}
 
 func validateAuthToken(token *jwt.StandardClaims) bool {
 	// token extra validation. its signature is already verified at this point
@@ -217,7 +218,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if err != nil || !tkn.Valid {
 			log.Printf("Authorization Error: invalid token from saturn")
 			// Breaking the loop. No more redirects. All is bad for this request.
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
@@ -229,7 +230,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		if len(claims.Issuer) == 0 {
 			log.Printf("Authorization Error: invalid token from saturn (no issuers)")
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
@@ -244,12 +245,16 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		if !prs {
 			log.Printf("Authorization Error: invalid token from saturn (invalid issuer)")
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
 		if validateAuthToken(claims) {
-			setNewCookie(res, req)
+			err = setNewCookie(res, req)
+			if err != nil {
+				respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
+				return
+			}
 			log.Printf("OK: Setting cookie")
 			// redirect back to self to remove saturn_token from the URL
 			q := req.URL.Query()
@@ -273,7 +278,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			}
 		} else {
 			log.Printf("Unknown target url for %s", req.Host)
-			res.WriteHeader(http.StatusBadRequest)
+			respondWithError(res, http.StatusBadRequest, "Unable to route request to a valid resource.")
 			return
 		}
 	}

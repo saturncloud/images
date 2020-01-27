@@ -11,8 +11,10 @@ eval $(minikube docker-env)
 echo -e "\033[1;92mBuilding proxy image\033[0m"
 docker build -t proxy-server:test .
 
-echo -e "\033[1;92mBuilding test server image\033[0m"
-(cd test && docker build -t mock-auth-server:test .)
+if $PROXY_AUTH; then
+    echo -e "\033[1;92mBuilding test server image\033[0m"
+    (cd test && docker build -t mock-auth-server:test .)
+fi
 
 kubectl apply -f minikube-test.yaml
 if $PROXY_AUTH; then
