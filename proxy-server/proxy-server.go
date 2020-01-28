@@ -3,7 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -14,6 +14,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 var fallbackURL = "http://localhost/fallback" // not authorized fallback
@@ -53,6 +55,12 @@ func getEnv(key, dflt string) string {
 
 var configTimeStamp time.Time
 
+func respondWithError(res http.ResponseWriter, status int, message string) {
+	res.Header().Add("Content-Type", "text/html;charset=utf-8")
+	res.WriteHeader(status)
+	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
+}
+
 func maybeReadProxyConfig() {
 
 	fi, err := os.Stat(configPathName)
@@ -87,21 +95,18 @@ func maybeReadProxyConfig() {
 }
 
 func configReadingLoop() {
-	for _ = range time.Tick(30 * time.Second) {
+	for range time.Tick(30 * time.Second) {
 		maybeReadProxyConfig()
 	}
 }
 
-func extractTargetURLKey(urlString string) string {
-	u, _ := url.Parse(urlString)
-
-	tmp := u.Scheme
+func extractTargetURLKey(hostname string) string {
+	tmp := hostname
 	if strings.HasSuffix(tmp, urlCommonSuffix) {
 		tmp = tmp[:len(tmp)-len(urlCommonSuffix)]
 	}
 
 	return tmp
-
 }
 
 func generateCookieSigningKey(n int) ([]byte, error) {
@@ -128,7 +133,7 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
-func setNewCookie(res http.ResponseWriter, req *http.Request) {
+func setNewCookie(res http.ResponseWriter, req *http.Request) error {
 
 	claims := &jwt.StandardClaims{}
 	expirationTime := time.Now().Add(time.Duration(minutesExpire) * time.Minute)
@@ -136,8 +141,7 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
-		res.WriteHeader(http.StatusInternalServerError)
-		return
+		return err
 	}
 
 	// Set the new token as the users `saturn_token` cookie
@@ -146,14 +150,9 @@ func setNewCookie(res http.ResponseWriter, req *http.Request) {
 		Value:   tokenString,
 		Expires: expirationTime,
 	})
-}
 
-// The default fallback handler.
-// func handleRequestFallBack(res http.ResponseWriter, req *http.Request) {
-// 	res.WriteHeader(http.StatusUnauthorized)
-// 	fmt.Fprintf(res, "\nWe are sorry, access denied.")
-// 	return
-// }
+	return nil
+}
 
 func validateAuthToken(token *jwt.StandardClaims) bool {
 	// token extra validation. its signature is already verified at this point
@@ -199,7 +198,8 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 		log.Printf("Redirecting to fallback url: %s", u)
 	}
 
-	http.Redirect(res, req, u, 301)
+	res.Header().Add("Cache-Control", "no-cache")
+	http.Redirect(res, req, u, 302)
 }
 
 // Given a request send it to the appropriate url
@@ -218,7 +218,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if err != nil || !tkn.Valid {
 			log.Printf("Authorization Error: invalid token from saturn")
 			// Breaking the loop. No more redirects. All is bad for this request.
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
@@ -230,7 +230,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		if len(claims.Issuer) == 0 {
 			log.Printf("Authorization Error: invalid token from saturn (no issuers)")
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
@@ -245,18 +245,23 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		if !prs {
 			log.Printf("Authorization Error: invalid token from saturn (invalid issuer)")
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
 		if validateAuthToken(claims) {
-			setNewCookie(res, req)
+			err = setNewCookie(res, req)
+			if err != nil {
+				respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
+				return
+			}
 			log.Printf("OK: Setting cookie")
-			// 301 back to self to remove saturn_token from the URL
+			// redirect back to self to remove saturn_token from the URL
 			q := req.URL.Query()
 			q.Del("saturn_token")
 			req.URL.RawQuery = q.Encode()
-			http.Redirect(res, req, req.URL.String(), 301)
+			res.Header().Add("Cache-Control", "no-cache")
+			http.Redirect(res, req, req.URL.String(), 302)
 			log.Printf("OK: Redirecting to self (%s)", req.URL.String())
 			return
 		}
@@ -273,7 +278,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			}
 		} else {
 			log.Printf("Unknown target url for %s", req.Host)
-			res.WriteHeader(http.StatusUnauthorized)
+			respondWithError(res, http.StatusBadRequest, "Unable to route request to a valid resource.")
 			return
 		}
 	}
