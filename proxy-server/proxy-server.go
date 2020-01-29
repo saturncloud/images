@@ -56,6 +56,7 @@ func getEnv(key, dflt string) string {
 var configTimeStamp time.Time
 
 func respondWithError(res http.ResponseWriter, status int, message string) {
+	log.Printf("Error %d: %s", status, message)
 	res.Header().Add("Content-Type", "text/html;charset=utf-8")
 	res.WriteHeader(status)
 	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
@@ -252,6 +253,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		if validateAuthToken(claims) {
 			err = setNewCookie(res, req)
 			if err != nil {
+				log.Printf("Error setting cookie: %+v", err)
 				respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
 				return
 			}
@@ -269,7 +271,8 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 	if len(tmpTargetURL) == 0 {
 		configMutex.Lock()
-		tmp, ok := targetMap[extractTargetURLKey(req.Host)]
+		targetKey := extractTargetURLKey(req.Host)
+		tmp, ok := targetMap[targetKey]
 		configMutex.Unlock()
 		if ok {
 			tmpTargetURL = tmp
@@ -277,7 +280,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 				log.Printf("Debug: target url is %s", tmp)
 			}
 		} else {
-			log.Printf("Unknown target url for %s", req.Host)
+			log.Printf("Unknown target url for %s", targetKey)
 			respondWithError(res, http.StatusBadRequest, "Unable to route request to a valid resource.")
 			return
 		}
