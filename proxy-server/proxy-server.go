@@ -38,7 +38,6 @@ const keyLength = 512 / 8
 const (
 	errGeneric = iota
 	errNoCookie
-	errBadSignature
 	errExpired
 	errTokenInvalid
 	errSignatureInvalid
@@ -101,7 +100,8 @@ func configReadingLoop() {
 }
 
 func extractTargetURLKey(hostname string) string {
-	tmp := hostname
+
+	tmp := strings.SplitN(hostname, ":", 2)[0]
 	if strings.HasSuffix(tmp, urlCommonSuffix) {
 		tmp = tmp[:len(tmp)-len(urlCommonSuffix)]
 	}
@@ -133,7 +133,7 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
-func setNewCookie(res http.ResponseWriter, req *http.Request) error {
+func setNewCookie(res http.ResponseWriter) error {
 
 	claims := &jwt.StandardClaims{}
 	expirationTime := time.Now().Add(time.Duration(minutesExpire) * time.Minute)
@@ -250,7 +250,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 
 		if validateAuthToken(claims) {
-			err = setNewCookie(res, req)
+			err = setNewCookie(res)
 			if err != nil {
 				respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
 				return
