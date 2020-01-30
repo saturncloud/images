@@ -280,7 +280,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 				log.Printf("Debug: target url is %s", tmp)
 			}
 		} else {
-			log.Printf("Unknown target url for %s", targetKey)
+			log.Printf("Unknown target url for %s", req.Host)
 			respondWithError(res, http.StatusBadRequest, "Unable to route request to a valid resource.")
 			return
 		}
