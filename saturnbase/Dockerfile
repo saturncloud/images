@@ -21,8 +21,8 @@ RUN apt-get -qq update && \
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
-COPY jupyter.yml /tmp/jupyter.yml
-RUN cat /tmp/jupyter.yml | envsubst > /tmp/jupyter.yml
+COPY jupyter.yml /tmp/jupyter-temp.yml
+RUN cat /tmp/jupyter-temp.yml | envsubst > /tmp/jupyter.yml
 RUN cat /tmp/jupyter.yml
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
