@@ -13,6 +13,7 @@ RUN apt-get -qq update && \
         locales \
         wget \
         curl \
+        gettext-base \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
