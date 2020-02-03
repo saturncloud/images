@@ -1,4 +1,7 @@
 FROM buildpack-deps:bionic
+
+ARG JUPYTER_SATURN_VERSION=1.2.7
+
 EXPOSE 8888
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
@@ -64,6 +67,8 @@ COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY jupyter.yml /tmp/jupyter.yml
+
+RUN cat /tmp/jupyter.yml | envsubst > /tmp/jupyter.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
