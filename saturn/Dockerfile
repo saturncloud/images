@@ -1,5 +1,5 @@
-ARG SATURNBASE_IMAGE=1.2.7
-FROM SATURNBASE_IMAGE
+ARG SATURNBASE_IMAGE=saturncloud/saturnbase:0.9.3.7
+FROM ${SATURNBASE_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
 RUN conda env update -n saturn --file /tmp/environment.yml
