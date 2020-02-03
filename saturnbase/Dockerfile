@@ -20,6 +20,10 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
+
+COPY jupyter.yml /tmp/jupyter.yml
+RUN cat /tmp/jupyter.yml | envsubst > /tmp/jupyter.yml
+
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
@@ -68,9 +72,6 @@ USER ${NB_USER}
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
-COPY jupyter.yml /tmp/jupyter.yml
-
-RUN cat /tmp/jupyter.yml | envsubst > /tmp/jupyter.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
