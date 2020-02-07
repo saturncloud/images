@@ -17,3 +17,12 @@ dependencies:
   - nbdime=1.0.7
   - pyyaml
   - sutils=0.7
+  - pyarrow
+  - awscli
+  - boto3
+  - botocore
+  - s3transfer
+  - s3fs
+  - pip:
+    - snowflake-connector-python[pandas]
+    - snowflake-sqlalchemy 
