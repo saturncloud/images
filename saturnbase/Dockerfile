@@ -1,8 +1,4 @@
 FROM buildpack-deps:bionic
-
-ARG JUPYTER_SATURN_VERSION=1.2.7
-ARG SUTILS_VERSION=0.7.1
-
 EXPOSE 8888
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
@@ -13,17 +9,12 @@ RUN apt-get -qq update && \
         locales \
         wget \
         curl \
-        gettext-base \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/*
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
-
-COPY jupyter.yml /tmp/jupyter-temp.yml
-RUN cat /tmp/jupyter-temp.yml | envsubst > /tmp/jupyter.yml
-RUN cat /tmp/jupyter.yml
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
@@ -72,6 +63,7 @@ USER ${NB_USER}
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
+COPY environment.yml /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix

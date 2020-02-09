@@ -1,39 +1,19 @@
-name: saturn
 channels:
-  - https://conda.saturncloud.io/pkgs
-  - rapidsai/label/cuda10.0
-  - nvidia
-  - rapidsai
-  - numba
+  - defaults
   - conda-forge
+  - https://conda.saturncloud.io/pkgs
+  - saturncloud
 dependencies:
-  - cudf
-  - cuml
-  - cugraph
-  - xgboost
-  - dask-cuda
-  - dask-cudf
-  - dask-cuml
-  - dask-xgboost
+  - nodejs=11
   - python=3.7
-  - cudatoolkit=10.0
-  - matplotlib
-  - scikit-learn
-  - seaborn
-  - python-louvain
-  - jinja2
-  - bokeh
-  - networkx
-  - numba=0.41
-  - pyarrow=0.12.1
-  - pip
-  - pandas
-  - seaborn
-  - statsmodels
-  - xlrd
-  - ipykernel
-  - pip:
-    - graphistry
-    - mockito
-    - graphviz
-    - kaggle
+  - ipywidgets=7.5.1
+  - jupyterlab=1.0.4
+  - nbconvert
+  - notebook
+  - jupyterhub=1.0.0.devsaturn2
+  - nbserverproxy
+  - tornado=5.0
+  - jupyter_saturn=1.3.0
+  - nbdime=1.0.7
+  - pyyaml
+  - sutils=0.7.2
