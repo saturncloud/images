@@ -16,6 +16,7 @@ debug_key = "debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567
         original resource url (comes with "orig_request" in request query)
 """
 
+
 def create_token(signing_key=None, seconds_to_expire=60, **payload):
     """ Create signed token"""
     if signing_key is None:
@@ -61,13 +62,14 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
         ):
             token = get_signin_token(debug_key, orig_request[0], ret_token[0])
             self._set_response()
+
             self.wfile.write(
                 "<!DOCTYPE html><html><head><title>Mock Signin</title></head><body>"
-                f"<form action='//{html.escape(orig_request[0])}' method='GET'>"
+                f"<form action='{html.escape(orig_request[0])}' method='GET'>"
                 f"<input type='hidden' name='saturn_token' value='{html.escape(token)}'/>"
-                "<input type='text' value='my-fake-username'/><br/><input type='password' value='password'/><br/>"
-                "<button type='submit'>Sign In</button></form></body></html>"
-                .encode("utf-8"))
+                "<input type='text' value='my-fake-username'/><br/><input type='password' value='password'/><br/>"   # noqa E501
+                "<button type='submit'>Sign In</button></form></body></html>".encode("utf-8")
+            )
         else:
             logging.info(
                 "GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers)

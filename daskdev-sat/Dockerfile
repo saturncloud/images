@@ -1,3 +1,4 @@
+# Daskdev-sat image for dask cluster pods
 FROM daskdev/dask:2.8.1
 
 RUN apt-get -qq update && \

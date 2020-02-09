@@ -39,7 +39,28 @@ spec:
         value: "false"
       - name: PROXY_DEBUG
         value: "true"
+      - name: PROXY_SUFFIX
+        value: ".localtest.me"
+      - name: PROXY_CONFIG
+        value: "/etc/config/proxy.json"
+    volumeMounts:
+    - name: config-volume
+      mountPath: /etc/config
+  volumes:
+  - name: config-volume
+    configMap:
+      name: proxy-test-config
   dnsPolicy: ClusterFirst
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: proxy-test-config
+data:
+  proxy.json: |
+    {
+      "web":"http://web-resource.default.svc.cluster.local:80"
+    }
 ---
 apiVersion: v1
 kind: Service
@@ -71,3 +92,16 @@ spec:
     - containerPort: 80
       protocol: TCP
   dnsPolicy: ClusterFirst
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: web-resource
+spec:
+  rules:
+    - host: web.localtest.me
+      http:
+        paths:
+        - backend:
+            serviceName: proxy-test
+            servicePort: 80
