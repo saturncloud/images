@@ -9,7 +9,8 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 ENV SHELL /bin/bash
 
-RUN conda install -y dask=2.10.1  distributed
+RUN conda install -y dask=2.8.1  distributed
+RUN conda install -y -c https://conda.saturncloud.io/pkgs sutils=0.5.1
 RUN conda install -y -c conda-forge kubernetes=1.13.5 dask-kubernetes=0.10.0 python-kubernetes=9.0
 
 #TODO - remove this pdc crap
