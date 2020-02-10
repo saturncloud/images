@@ -44,5 +44,18 @@ RUN conda create -y -n saturn \
 FROM continuumio/miniconda3:4.7.12
 COPY --from=builder /opt/conda /opt/conda
 
+ENV NB_USER=jovyan
+ENV NB_UID=1000
+ENV USER=${NB_USER}
+ENV HOME=/home/${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER}
+
+USER ${NB_USER}
+
+
 ENTRYPOINT ["tini", "-g", "--"]
 CMD ["sh"]

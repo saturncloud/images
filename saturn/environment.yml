@@ -52,7 +52,13 @@ dependencies:
 - tensorflow=1.14.0=mkl_py37h45c423b_0
 - cvxpy
 - keras
+- pyarrow
+- boto3
+- botocore
+- s3transfer
 - pip:
+  - snowflake-connector-python[pandas]
+  - snowflake-sqlalchemy 
   - tweepy
   - geopandas==0.5.1
   - descartes==1.1.0
