@@ -32,8 +32,6 @@ dependencies:
   - statsmodels
   - xlrd
   - ipykernel
-  - snowflake-connector-python
-  - snowflake-sqlalchemy
   - pip:
     - graphistry
     - mockito
