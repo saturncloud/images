@@ -63,7 +63,7 @@ USER ${NB_USER}
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
-COPY jupyter.yml /tmp/jupyter.yml
+COPY environment.yml /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix

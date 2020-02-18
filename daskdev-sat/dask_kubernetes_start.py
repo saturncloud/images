@@ -93,7 +93,6 @@ def cli():
 @click.option("--starting-workers")
 @click.option("--max-workers")
 @click.option("--cpus-per-pod")
-@click.option("--scheduler-timeout-min")
 @click.option("--use-kube-config", default=False)
 def kube_cluster(
     name,
@@ -102,7 +101,6 @@ def kube_cluster(
     starting_workers,
     max_workers,
     cpus_per_pod,
-    scheduler_timeout_min,
     use_kube_config,
 ):
     loop = asyncio.new_event_loop()
@@ -126,15 +124,11 @@ def kube_cluster(
         params["cpus_per_pod"] = cpus_per_pod
     if kube_config_file is not None:
         params["kube_config_file"] = kube_config_file
-    if scheduler_timeout_min is not None:
-        params["scheduler_timeout_min"] = scheduler_timeout_min
-
     result = loop.run_until_complete(start_dask_kube_cluster(**params))
     log.info(f"\nDask cluster {name} in namespace {namespace}")
     log.info(f"\tworker config: {worker_config}")
     log.info(f"\tworkers: start: {starting_workers}, max: {max_workers}")
     log.info(f"\tcpus per pod {cpus_per_pod}")
-    log.info(f"\tscheduler timeout: {scheduler_timeout_min} min")
     log.info(f"\tscheduler address: {result.scheduler_address}")
 
     loop.run_forever()
