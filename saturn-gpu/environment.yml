@@ -53,13 +53,10 @@ dependencies:
 - pytorch=1.1.0=py3.7_cuda10.0.130_cudnn7.5.1_0
 - torchvision=0.3.0=py37_cu10.0.130_1
 - tensorboard=2.0.0
-- tensorflow=2.0.0
-- tensorflow-base=2.0.0
-- tensorflow-estimator=2.0.0
+- tensorflow-gpu=2.0.0
 - rapids=0.12
 - rapids-xgboost=0.12
 - cvxpy
-- keras
 - cudf
 - cuml
 - cugraph
@@ -73,6 +70,8 @@ dependencies:
 - networkx
 - numba
 - pyarrow
+- snowflake-connector-python
+- snowflake-sqlalchemy
 - pip:
   - tweepy
   - graphistry
