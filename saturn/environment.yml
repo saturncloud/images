@@ -2,12 +2,13 @@ channels:
 - https://conda.saturncloud.io/pkgs
 - pytorch
 - defaults
+- conda-forge
 dependencies:
 - blas=*=mkl
 - nodejs=10.13.0
 - python=3.7
 - numpy=1.16.4
-- pandas=0.24.2
+- pandas
 - ipywidgets=7.2*
 - numexpr
 - matplotlib
@@ -49,9 +50,11 @@ dependencies:
 - wordcloud
 - pytorch-cpu
 - torchvision-cpu
-- tensorflow=1.14.0=mkl_py37h45c423b_0
+- tensorflow=2.0
 - cvxpy
-- keras
+- pyarrow
+- snowflake-connector-python
+- snowflake-sqlalchemy
 - pip:
   - tweepy
   - geopandas==0.5.1
