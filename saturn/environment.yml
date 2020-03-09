@@ -6,8 +6,8 @@ dependencies:
 - blas=*=mkl
 - nodejs=10.13.0
 - python=3.7
-- numpy=1.16.4
-- pandas=0.24.2
+- numpy
+- pandas
 - ipywidgets=7.2*
 - numexpr
 - matplotlib
