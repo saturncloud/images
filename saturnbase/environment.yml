@@ -14,8 +14,6 @@ dependencies:
   - nbserverproxy
   - tornado=5.0
   - jupyter_saturn=${JUPYTER_SATURN_VERSION}
-  - jupyter_saturn=1.3.0
   - nbdime=1.0.7
   - pyyaml
   - sutils=${SUTILS_VERSION}
-  - idna=2.8=py37_0
