@@ -49,9 +49,10 @@ dependencies:
 - wordcloud
 - pytorch-cpu
 - torchvision-cpu
-- tensorflow=1.14.0=mkl_py37h45c423b_0
+- tensorflow=2.1.0=mkl_py37h80a91df_0
 - cvxpy
-- keras
+- pyarrow
+- fastparquet
 - pip:
   - tweepy
   - geopandas==0.5.1
