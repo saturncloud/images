@@ -1,5 +1,12 @@
 FROM buildpack-deps:bionic
 EXPOSE 8888
+
+ARG JUPYTER_SATURN_VERSION=1.2.7
+ARG SUTILS_VERSION=0.7.1
+
+ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
+ENV SUTILS_VERSION=${SUTILS_VERSION}
+
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV PATH=${PATH}:/srv/conda/bin
@@ -63,7 +70,8 @@ USER ${NB_USER}
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
-COPY environment.yml /tmp/environment.yml
+COPY jupyter.yml /tmp/jupyter-temp.yml
+RUN cat /tmp/jupyter-temp.yml | envsubst > /tmp/jupyter.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
