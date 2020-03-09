@@ -56,7 +56,10 @@ COPY environment.yml /tmp/environment-temp.yml
 RUN envsubst < /tmp/environment-temp.yml > /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash
 RUN echo '' > ${CONDA_DIR}/conda-meta/history
-
+RUN conda config --system --add channels conda-forge && \
+    conda config --system --add channels https://conda.saturncloud.io/pkgs && \
+    conda config --system --set auto_update_conda false && \
+    conda config --system --set show_channel_urls true
 ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
