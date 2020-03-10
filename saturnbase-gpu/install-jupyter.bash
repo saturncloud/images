@@ -8,6 +8,7 @@ echo "installing root env:"
 cat /tmp/environment.yml
 conda env update -n root  -f /tmp/environment.yml
 ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
+${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
 
 ${CONDA_DIR}/bin/jupyter labextension install jupyterlab_bokeh@1.0.0
 ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
