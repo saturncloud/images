@@ -1,5 +1,5 @@
-ARG SATURNBASE_IMAGE=saturncloud/saturnbase:2020.03.09.dev.1
-FROM ${SATURNBASE_IMAGE}
+ARG SATURNBASE_GPU_IMAGE=saturncloud/saturnbase:2020.03.09.dev.1
+FROM ${SATURNBASE_GPU_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
 RUN conda env update -n saturn --file /tmp/environment.yml && \
