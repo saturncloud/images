@@ -20,11 +20,14 @@ ${CONDA_DIR}/bin/jupyter labextension install
 cd ${HOME}
 rm -rf ${CONDA_DIR}/jsaturn_ext
 
+${CONDA_DIR}/bin/conda clean -tipsy
 ${CONDA_DIR}/bin/jupyter lab clean
 ${CONDA_DIR}/bin/jlpm cache clean
 ${CONDA_DIR}/bin/npm cache clean --force
+find /opt/conda/ -type f,l -name '*.pyc' -delete
+find /opt/conda/ -type f,l -name '*.a' -delete
+find /opt/conda/ -type f,l -name '*.js.map' -delete
 rm -rf $HOME/.node-gyp
 rm -rf $HOME/.local
 
 ${CONDA_DIR}/bin/conda create -n saturn
-${CONDA_DIR}/bin/conda clean -afy

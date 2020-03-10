@@ -1,14 +1,29 @@
-FROM nvidia/cuda:10.0-devel-ubuntu18.04
+FROM nvidia/cuda:10.1-devel-ubuntu18.04
 EXPOSE 8888
+
+ARG JUPYTER_SATURN_VERSION=1.2.7
+ARG SUTILS_VERSION=0.7.1
+
+ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
+ENV SUTILS_VERSION=${SUTILS_VERSION}
+
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV PATH=${PATH}:/srv/conda/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \
+        gettext-base \
+        gnupg \
         locales \
         wget \
         curl \
+        bzip2 \
+        ca-certificates \
+        git \
+        awscli \
+        rsync \
+        sudo \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
@@ -32,54 +47,25 @@ RUN wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key |  ap
     DISTRO="bionic" && \
     echo "deb https://deb.nodesource.com/node_10.x $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
     echo "deb-src https://deb.nodesource.com/node_10.x $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list
-
-RUN apt-get -qq update && \
-    apt-get -qq install --yes --no-install-recommends \
-        less \
-        nodejs \
-        unzip \
-        bzip2 \
-        ca-certificates \
-        sudo \
-        fonts-liberation \
-        git \
-        emacs-nox \
-        vim \
-        ssh \
-        build-essential \
-        awscli \
-        gcc-5 \
-        g++-5 \
-        zlib1g-dev \
-        rsync \
-     > /dev/null && \
-    apt-get -qq purge && \
-    apt-get -qq clean && \
-    rm -rf /var/lib/apt/lists/*
 RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 RUN mkdir -p ${APP_BASE} && \
     chown -R $NB_USER:$NB_USER ${APP_BASE}
 USER ${NB_USER}
+
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
+
 COPY install-jupyter.bash /tmp/install-jupyter.bash
-COPY jupyter.yml /tmp/jupyter.yml
+COPY environment.yml /tmp/environment-temp.yml
+RUN envsubst < /tmp/environment-temp.yml > /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash
 
-RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
-RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
-RUN ${CONDA_DIR}/bin/jupyter labextension install jupyterlab_bokeh
-RUN ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
-
-RUN cd ${CONDA_DIR}/jsaturn_ext && \
-    ${CONDA_DIR}/bin/npm install && \
-    ${CONDA_DIR}/bin/npm run build && \
-    ${CONDA_DIR}/bin/jupyter labextension install
-
-RUN ${CONDA_DIR}/bin/conda create -n saturn
-RUN ${CONDA_DIR}/bin/conda clean --all
-WORKDIR ${HOME}
-
+RUN echo '' > ${CONDA_DIR}/conda-meta/history
+RUN conda config --system --add channels conda-forge && \
+    conda config --system --add channels https://conda.saturncloud.io/pkgs && \
+    conda config --system --set auto_update_conda false && \
+    conda config --system --set show_channel_urls true
 ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+WORKDIR ${HOME}

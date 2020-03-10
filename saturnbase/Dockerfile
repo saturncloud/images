@@ -63,3 +63,4 @@ RUN conda config --system --add channels conda-forge && \
 ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+WORKDIR ${HOME}
