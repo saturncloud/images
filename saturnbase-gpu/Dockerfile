@@ -20,6 +20,7 @@ RUN apt-get -qq update && \
         curl \
         bzip2 \
         ca-certificates \
+        ssh \
         git \
         awscli \
         rsync \
@@ -43,10 +44,7 @@ RUN adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER}
-RUN wget --quiet -O - https://deb.nodesource.com/gpgkey/nodesource.gpg.key |  apt-key add - && \
-    DISTRO="bionic" && \
-    echo "deb https://deb.nodesource.com/node_10.x $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list && \
-    echo "deb-src https://deb.nodesource.com/node_10.x $DISTRO main" >> /etc/apt/sources.list.d/nodesource.list
+
 RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 RUN mkdir -p ${APP_BASE} && \
     chown -R $NB_USER:$NB_USER ${APP_BASE}
