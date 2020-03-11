@@ -25,9 +25,9 @@ ${CONDA_DIR}/bin/conda clean -afy
 ${CONDA_DIR}/bin/jupyter lab clean
 ${CONDA_DIR}/bin/jlpm cache clean
 ${CONDA_DIR}/bin/npm cache clean --force
-find /opt/conda/ -type f,l -name '*.pyc' -delete
-find /opt/conda/ -type f,l -name '*.a' -delete
-find /opt/conda/ -type f,l -name '*.js.map' -delete
+find ${CONDA_DIR}/ -type f,l -name '*.pyc' -delete
+find ${CONDA_DIR}/ -type f,l -name '*.a' -delete
+find ${CONDA_DIR}/ -type f,l -name '*.js.map' -delete
 rm -rf $HOME/.node-gyp
 rm -rf $HOME/.local
 

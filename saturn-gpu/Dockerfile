@@ -1,4 +1,4 @@
-ARG SATURNBASE_GPU_IMAGE=saturncloud/saturnbase:2020.03.09.dev.1
+ARG SATURNBASE_GPU_IMAGE=saturncloud/saturnbase-gpu:2020.03.09.dev.8
 FROM ${SATURNBASE_GPU_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
