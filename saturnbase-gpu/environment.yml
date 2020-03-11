@@ -16,4 +16,3 @@ dependencies:
   - jupyter_saturn=${JUPYTER_SATURN_VERSION}
   - nbdime=1.0.7
   - pyyaml
-  - sutils=${SUTILS_VERSION}
