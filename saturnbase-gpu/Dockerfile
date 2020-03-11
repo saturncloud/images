@@ -21,6 +21,7 @@ RUN apt-get -qq update && \
         bzip2 \
         ca-certificates \
         ssh \
+        file \
         git \
         awscli \
         rsync \
