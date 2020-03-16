@@ -10,6 +10,7 @@ dependencies:
 - matplotlib
 - dask=2.8.1
 - pip
+- snowflake-sqlalchemy
 - snowflake-connector-python
 - scikit-learn
 - scipy
