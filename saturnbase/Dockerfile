@@ -49,6 +49,8 @@ RUN adduser --disabled-password \
 RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 RUN mkdir -p ${APP_BASE} && \
     chown -R $NB_USER:$NB_USER ${APP_BASE}
+COPY profile /etc/profile
+
 USER ${NB_USER}
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
