@@ -18,6 +18,7 @@ dependencies:
 - dask=2.8.1
 - pip
 - snowflake-connector-python
+- snowflake-sqlalchemy
 - scikit-learn
 - scipy
 - numba
@@ -38,8 +39,6 @@ dependencies:
 - nltk
 - gensim
 - wordcloud
-- pytorch-cpu
-- torchvision-cpu
 - cvxpy
 - pyarrow
 - fastparquet
