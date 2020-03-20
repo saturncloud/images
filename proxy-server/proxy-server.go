@@ -16,24 +16,29 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/patrickmn/go-cache"
 )
 
-var fallbackURL = "http://localhost/fallback" // not authorized fallback
+const keyLength = 512 / 8
+const accessKeyRetentionTime = 10 * time.Minute
+
+var fallbackURL = "http://localhost/fallback"          // not authorized fallback
+var keyVerificationURL = "http://localhost/key-verify" //
 var useHTTPSForSelfRedirect = true
 var jwtKey []byte
 var sharedKey []byte
 
-var minutesExpire = 60 //  1 hour to expiration
+var jwtExpirationMinutes = 60 //  1 hour to expiration
 var debug = true
 var defaultPort = "8080"
-var mutex sync.Mutex
+var tokenMapMutex sync.Mutex
 var tokenMap = make(map[string]string)
 var configPathName = "/etc/config/proxy.json"
 var targetMap = make(map[string]string)
 var configMutex sync.Mutex
 var urlCommonSuffix = ".localhost"
-
-const keyLength = 512 / 8
+var accessKeyMutex sync.Mutex
+var accessKeyCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
 const (
 	errGeneric = iota
@@ -95,7 +100,9 @@ func maybeReadProxyConfig() {
 }
 
 func configReadingLoop() {
-	for range time.Tick(30 * time.Second) {
+	// it's ok to loop frequently - the function checks if the file has been modified
+	// before loading it
+	for range time.Tick(1 * time.Second) {
 		maybeReadProxyConfig()
 	}
 }
@@ -137,7 +144,7 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 func setNewCookie(res http.ResponseWriter) error {
 
 	claims := &jwt.StandardClaims{}
-	expirationTime := time.Now().Add(time.Duration(minutesExpire) * time.Minute)
+	expirationTime := time.Now().Add(time.Duration(jwtExpirationMinutes) * time.Minute)
 	claims.ExpiresAt = expirationTime.Unix()
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
@@ -183,10 +190,10 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 
 	uniqToken, _ := generateCookieSigningKey(40)
 
-	mutex.Lock()
+	tokenMapMutex.Lock()
 	tokenMap[string(uniqToken)] = ""
 	log.Printf("Added token %s", uniqToken)
-	mutex.Unlock()
+	tokenMapMutex.Unlock()
 
 	qs := url.Values{}
 
@@ -205,12 +212,16 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 
 // Given a request send it to the appropriate url
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
-
-	// if we receive authorization token in the request : the user authorized by the backend
-	satToken := req.URL.Query().Get("saturn_token")
 	tmpTargetURL := ""
 
-	if satToken != "" {
+	accessKey := req.Header.Get("X-Saturn-Access-Key")
+	satToken := req.URL.Query().Get("saturn_token")
+	if accessKey != "" {
+		if !checkAccessKeyAuth(res, req, accessKey) {
+			return
+		}
+	} else if satToken != "" {
+		// if we receive authorization token in the request : the user authorized by the backend
 		claims := &jwt.StandardClaims{}
 		tkn, err := jwt.ParseWithClaims(satToken, claims, func(token *jwt.Token) (interface{}, error) {
 			return sharedKey, nil
@@ -235,14 +246,14 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		mutex.Lock()
+		tokenMapMutex.Lock()
 		_, prs := tokenMap[claims.Issuer]
 		if prs {
 			delete(tokenMap, claims.Issuer)
 			log.Printf("Deleted token %s", claims.Issuer)
 
 		}
-		mutex.Unlock()
+		tokenMapMutex.Unlock()
 
 		if !prs {
 			log.Printf("Authorization Error: invalid token from saturn (invalid issuer)")
@@ -269,6 +280,49 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	if accessKey == "" {
+		c, err := req.Cookie("saturn_token")
+		protocol := "https://"
+		if !useHTTPSForSelfRedirect {
+			protocol = "http://"
+		}
+		origURL := protocol + req.Host + req.URL.Path
+
+		if err != nil {
+			errcode := errGeneric
+			if err == http.ErrNoCookie {
+				errcode = errNoCookie
+			}
+			redirectToFallBack(res, req, errcode, origURL)
+			return
+		}
+
+		// Get the JWT string from the cookie
+		tknStr := c.Value
+		claims := &jwt.StandardClaims{}
+
+		// Parse the JWT string and store the result in `claims`.
+		tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
+			return jwtKey, nil
+		})
+		if err != nil {
+			errcode := errGeneric
+			if err == jwt.ErrSignatureInvalid {
+				errcode = errSignatureInvalid
+			}
+			redirectToFallBack(res, req, errcode, origURL)
+			return
+		}
+		if !tkn.Valid {
+			redirectToFallBack(res, req, errTokenInvalid, origURL)
+			return
+		}
+		if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(jwtExpirationMinutes)*time.Minute {
+			redirectToFallBack(res, req, errExpired, origURL)
+			return
+		}
+	}
+
 	if len(tmpTargetURL) == 0 {
 		configMutex.Lock()
 		targetKey := extractTargetURLKey(req.Host)
@@ -286,50 +340,69 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	c, err := req.Cookie("saturn_token")
-	protocol := "https://"
-	if !useHTTPSForSelfRedirect {
-		protocol = "http://"
-	}
-	origURL := protocol + req.Host + req.URL.Path
-
-	if err != nil {
-		errcode := errGeneric
-		if err == http.ErrNoCookie {
-			errcode = errNoCookie
-		}
-		redirectToFallBack(res, req, errcode, origURL)
-		return
-	}
-
-	// Get the JWT string from the cookie
-	tknStr := c.Value
-	claims := &jwt.StandardClaims{}
-
-	// Parse the JWT string and store the result in `claims`.
-	tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
-	if err != nil {
-		errcode := errGeneric
-		if err == jwt.ErrSignatureInvalid {
-			errcode = errSignatureInvalid
-		}
-		redirectToFallBack(res, req, errcode, origURL)
-		return
-	}
-	if !tkn.Valid {
-		redirectToFallBack(res, req, errTokenInvalid, origURL)
-		return
-	}
-	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(minutesExpire)*time.Minute {
-		redirectToFallBack(res, req, errExpired, origURL)
-		return
-	}
-
 	// here we finally OK
 	serveReverseProxy(res, req, tmpTargetURL)
 	log.Printf("OK: Proxying to url: %s %s\n", tmpTargetURL, req.URL.String())
+}
+
+// Check access key validity for the requested resource. Returns true if no error has been thrown.
+// If false is returned, the caller should assume that a response has already been written out.
+func checkAccessKeyAuth(res http.ResponseWriter, req *http.Request, key string) bool {
+	target := extractTargetURLKey(req.Host)
+	// check if the access key is already in our cache for this host
+	accessKeyMutex.Lock()
+	keyTarget, found := accessKeyCache.Get(key)
+	accessKeyMutex.Unlock()
+	if found {
+		if keyTarget == target {
+			// valid key, valid target - good to go
+			if debug {
+				log.Printf("Valid cached key for %s", target)
+			}
+			return true
+		}
+		// valid key, but not for this target
+		if debug {
+			log.Printf("Invalid key - key is for %s, but requested %s", keyTarget, target)
+		}
+		res.WriteHeader(403)
+		fmt.Fprint(res, "This token is not valid for this resource.")
+		return false
+	}
+
+	valid, err := checkAccessKeyValidity(key, target)
+	if err != nil {
+		panic(err)
+	}
+	if valid {
+		// add to cache
+		log.Printf("Caching key for %s", target)
+		accessKeyMutex.Lock()
+		accessKeyCache.Set(key, target, accessKeyRetentionTime)
+		accessKeyMutex.Unlock()
+		return true
+	}
+	res.WriteHeader(403)
+	fmt.Fprint(res, "This token is not valid for this resource.")
+	return false
+}
+
+func checkAccessKeyValidity(key, target string) (bool, error) {
+	client := &http.Client{}
+	request, err := http.NewRequest("GET", keyVerificationURL+"?targetResource="+target, nil)
+	if err != nil {
+		return false, err
+	}
+	request.Header.Add("X-Saturn-Access-Key", key)
+	resp, err := client.Do(request)
+	if err != nil {
+		return false, err
+	}
+	if resp.StatusCode == 204 {
+		return true, nil
+	}
+	log.Printf("Rejecting key %s* - received response code %d", key[:4], resp.StatusCode)
+	return false, nil
 }
 
 type proxyServer struct{}
@@ -347,6 +420,7 @@ func main() {
 
 	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
+	keyVerificationURL = getEnv("PROXY_KEY_VERIFICATION_URL", keyVerificationURL)
 	useHTTPSForSelfRedirect = getEnv("HTTPS_SELF_REDIRECT", "true") == "true"
 
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
@@ -377,8 +451,8 @@ func main() {
 	log.Printf("JWT signing key generated and has length %d bytes: \"%20.20s...\"", len(tmpKey), tmpKey)
 
 	jwtKey = tmpKey
-	minutesExpire, _ = strconv.Atoi(getEnv("JWT_EXPIRE_MIN", "60"))
-	log.Printf("JWT cookie expiration time: %d", minutesExpire)
+	jwtExpirationMinutes, _ = strconv.Atoi(getEnv("JWT_EXPIRE_MIN", "60"))
+	log.Printf("JWT cookie expiration time: %d", jwtExpirationMinutes)
 
 	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
 
