@@ -1,6 +1,5 @@
 import json
 import os
-import math
 import yaml
 import logging
 
@@ -9,7 +8,7 @@ from tornado.web import RequestHandler, Application
 
 from distributed import LocalCluster
 from distributed.utils import ignoring
-from dask_kubernetes import KubeCluster, InCluster, make_pod_from_dict
+from dask_kubernetes import KubeCluster, make_pod_from_dict
 
 
 logging.basicConfig(level=logging.INFO)
@@ -20,23 +19,22 @@ NAME = os.environ.get("DASK_NAME")
 NAMESPACE = os.environ.get("DASK_NAMESPACE", "main-namespace")
 DASHBOARD_LINK = os.environ.get("DASK_DASHBOARD_LINK", None)
 WORKER_CONFIG = "/etc/config/worker_spec.yaml"
-TIMEOUT_MIN = os.environ.get("DASK_WORKER_TOUT", math.inf)
 
 
-async def make_cluster():
-    kube_auth = InCluster()  # with ServiceAccount
-    await kube_auth.load()  # kubernetes authentication
-
+def make_cluster():
     with open(WORKER_CONFIG) as f:
         d = yaml.safe_load(f)
         pod_template = make_pod_from_dict(d)
+
+    log.info(f"Starting dask cluster {NAME} in namespace {NAMESPACE}")
+    log.info(f"worker config: {WORKER_CONFIG}")
+    log.info(f"dashboard address: {DASHBOARD_LINK}")
 
     return SaturnCluster(
         pod_template=pod_template,
         deploy_mode="remote",
         name=NAME,
         namespace=NAMESPACE,
-        scheduler_timeout=f"{TIMEOUT_MIN} m",
         dashboard_link=DASHBOARD_LINK
     )
 
@@ -58,6 +56,9 @@ class SaturnClusterApplication(Application):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.cluster = make_cluster()
+        log.info("Cluster successfully created in tornado!")
+        log.info(f"Scheduler: {self.cluster.scheduler_address}")
+        log.info(f"Dashboard: {self.cluster.dashboard_link}")
 
 
 class MainHandler(RequestHandler):
