@@ -1,0 +1,14 @@
+name: dask-saturn
+channels:
+  - saturncloud
+  - https://conda.saturncloud.io/pkgs
+  - conda-forge
+dependencies:
+  - python=3.7
+  - dask
+  - distributed
+  - sutils=0.5.1
+  - kubernetes
+  - dask-kubernetes
+  - python-kubernetes
+  - tornado
