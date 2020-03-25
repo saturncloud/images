@@ -22,8 +22,8 @@ import (
 const keyLength = 512 / 8
 const accessKeyRetentionTime = 10 * time.Minute
 
-var fallbackURL = "http://localhost/fallback"          // not authorized fallback
-var keyVerificationURL = "http://localhost/key-verify" //
+var fallbackURL = "http://localhost/fallback"            // not authorized fallback
+var tokenVerificationURL = "http://localhost/key-verify" //
 var useHTTPSForSelfRedirect = true
 var jwtKey []byte
 var sharedKey []byte
@@ -37,8 +37,8 @@ var configPathName = "/etc/config/proxy.json"
 var targetMap = make(map[string]string)
 var configMutex sync.Mutex
 var urlCommonSuffix = ".localhost"
-var accessKeyMutex sync.Mutex
-var accessKeyCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
+var authTokenMutex sync.Mutex
+var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
 const (
 	errGeneric = iota
@@ -214,10 +214,10 @@ func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, o
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	tmpTargetURL := ""
 
-	accessKey := req.Header.Get("X-Saturn-Access-Key")
+	authHeader := req.Header.Get("Authorization")
 	satToken := req.URL.Query().Get("saturn_token")
-	if accessKey != "" {
-		if !checkAccessKeyAuth(res, req, accessKey) {
+	if authHeader != "" {
+		if !checkTokenAuth(res, req, authHeader) {
 			return
 		}
 	} else if satToken != "" {
@@ -280,7 +280,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 	}
 
-	if accessKey == "" {
+	if authHeader == "" {
 		c, err := req.Cookie("saturn_token")
 		protocol := "https://"
 		if !useHTTPSForSelfRedirect {
@@ -345,41 +345,33 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	log.Printf("OK: Proxying to url: %s %s\n", tmpTargetURL, req.URL.String())
 }
 
-// Check access key validity for the requested resource. Returns true if no error has been thrown.
+// Check token validity for the requested resource. Returns true if no error has been thrown.
 // If false is returned, the caller should assume that a response has already been written out.
-func checkAccessKeyAuth(res http.ResponseWriter, req *http.Request, key string) bool {
+func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader string) bool {
 	target := extractTargetURLKey(req.Host)
-	// check if the access key is already in our cache for this host
-	accessKeyMutex.Lock()
-	keyTarget, found := accessKeyCache.Get(key)
-	accessKeyMutex.Unlock()
+	cacheKey := fmt.Sprintf("%s/%s", target, authHeader)
+	// check if the header is already in our cache for this host
+	authTokenMutex.Lock()
+	_, found := authTokenCache.Get(cacheKey)
+	authTokenMutex.Unlock()
 	if found {
-		if keyTarget == target {
-			// valid key, valid target - good to go
-			if debug {
-				log.Printf("Valid cached key for %s", target)
-			}
-			return true
-		}
-		// valid key, but not for this target
+		// valid key, valid target - good to go
 		if debug {
-			log.Printf("Invalid key - key is for %s, but requested %s", keyTarget, target)
+			log.Printf("Valid cache hit for %s", target)
 		}
-		res.WriteHeader(403)
-		fmt.Fprint(res, "This token is not valid for this resource.")
-		return false
+		return true
 	}
 
-	valid, err := checkAccessKeyValidity(key, target)
+	valid, err := checkTokenValidity(authHeader, target)
 	if err != nil {
 		panic(err)
 	}
 	if valid {
 		// add to cache
-		log.Printf("Caching key for %s", target)
-		accessKeyMutex.Lock()
-		accessKeyCache.Set(key, target, accessKeyRetentionTime)
-		accessKeyMutex.Unlock()
+		log.Printf("Caching token for %s", target)
+		authTokenMutex.Lock()
+		authTokenCache.Set(cacheKey, true, accessKeyRetentionTime)
+		authTokenMutex.Unlock()
 		return true
 	}
 	res.WriteHeader(403)
@@ -387,13 +379,13 @@ func checkAccessKeyAuth(res http.ResponseWriter, req *http.Request, key string) 
 	return false
 }
 
-func checkAccessKeyValidity(key, target string) (bool, error) {
+func checkTokenValidity(authHeader, target string) (bool, error) {
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", keyVerificationURL+"?targetResource="+target, nil)
+	request, err := http.NewRequest("GET", tokenVerificationURL+"?targetResource="+target, nil)
 	if err != nil {
 		return false, err
 	}
-	request.Header.Add("X-Saturn-Access-Key", key)
+	request.Header.Add("Authorization", authHeader)
 	resp, err := client.Do(request)
 	if err != nil {
 		return false, err
@@ -401,7 +393,7 @@ func checkAccessKeyValidity(key, target string) (bool, error) {
 	if resp.StatusCode == 204 {
 		return true, nil
 	}
-	log.Printf("Rejecting key %s* - received response code %d", key[:4], resp.StatusCode)
+	log.Printf("Rejecting token - received response code %d", resp.StatusCode)
 	return false, nil
 }
 
@@ -420,7 +412,7 @@ func main() {
 
 	fallbackURL = getEnv("PROXY_FALLBACK_URL",
 		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
-	keyVerificationURL = getEnv("PROXY_KEY_VERIFICATION_URL", keyVerificationURL)
+	tokenVerificationURL = getEnv("PROXY_AUTH_VERIFICATION_URL", tokenVerificationURL)
 	useHTTPSForSelfRedirect = getEnv("HTTPS_SELF_REDIRECT", "true") == "true"
 
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
