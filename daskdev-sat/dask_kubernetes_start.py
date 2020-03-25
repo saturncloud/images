@@ -15,8 +15,18 @@ This function authorizes with kubernetes and creates KubeCluster object.
 The worker pod yaml file must be ready at this point.
 """
 
+class SaturnCluster(KubeCluster):
+    def __init__(self, *args, dashboard_link=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._dashboard_link = dashboard_link
+
+    @property
+    def dashboard_link(self):
+        return self._dashboard_link
+
 
 async def start_dask_kube_cluster(**params):
+    dashboard_link = params.get("dashboard_link")
 
     name = params.get("name", os.environ.get("DASK_NAME", None))  # unique name of the cluster
     namespace = params.get(
@@ -59,12 +69,13 @@ async def start_dask_kube_cluster(**params):
 
     log.debug(f"\nPod template:\n{pod_template}\n")
 
-    cluster = KubeCluster(
+    cluster = SaturnCluster(
         pod_template=pod_template,
         deploy_mode="remote",
         name=name,
         namespace=namespace,
         scheduler_timeout=f"{scheduler_timeout_min} m",
+        dashboard_link=dashboard_link,
     )
 
     if starting_workers > 1:
@@ -88,6 +99,7 @@ def cli():
 
 @cli.command()
 @click.argument("name")  # cluster name
+@click.option("--dashboard-link")  # dask cluster namespace
 @click.option("--namespace")  # dask cluster namespace
 @click.option("--worker-config")  # worker config filename
 @click.option("--starting-workers")
@@ -102,6 +114,7 @@ def kube_cluster(
     max_workers,
     cpus_per_pod,
     use_kube_config,
+    dashboard_link,
 ):
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
@@ -110,7 +123,7 @@ def kube_cluster(
     if kube_config_file is not None:
         log.info(f"Using kube config file: {kube_config_file}")
 
-    params = {"name": name}
+    params = {"name": name, "dashboard_link": dashboard_link}
 
     if namespace is not None:
         params["namespace"] = namespace
