@@ -6,7 +6,6 @@ import logging
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
-from distributed import LocalCluster
 from distributed.utils import ignoring
 from dask_kubernetes import KubeCluster, make_pod_from_dict
 
@@ -100,5 +99,5 @@ def make_app():
 
 if __name__ == "__main__":
     app = make_app()
-    app.listen(80)
+    app.listen(8788, "0.0.0.0")
     tornado.ioloop.IOLoop.current().start()
