@@ -66,10 +66,26 @@ class MainHandler(RequestHandler):
         self.write(str(cluster))
 
 
+class InfoHandler(RequestHandler):
+    def get(self):
+        cluster = self.application.cluster
+        info = {
+            "scheduler_address": cluster.scheduler_address,
+            "dashboard_link": cluster.dashboard_link
+        }
+        self.write(json.dumps(info))
+
+
+class SchedulerInfoHandler(RequestHandler):
+    def get(self):
+        cluster = self.application.cluster
+        self.write(json.dumps(cluster.scheduler_info))
+
+
 class StatusHandler(RequestHandler):
     def get(self):
         cluster = self.application.cluster
-        self.write(cluster.status)
+        self.write(json.dumps({"status": cluster.status}))
 
 
 class ScaleHandler(RequestHandler):
@@ -91,6 +107,8 @@ class AdaptHandler(RequestHandler):
 def make_app():
     return SaturnClusterApplication([
         (r"/", MainHandler),
+        (r"/info", InfoHandler),
+        (r"/scheduler_info", SchedulerInfoHandler),
         (r"/status", StatusHandler),
         (r"/scale", ScaleHandler),
         (r"/adapt", AdaptHandler),
