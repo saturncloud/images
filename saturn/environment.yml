@@ -1,6 +1,7 @@
 channels:
 - defaults
 - pytorch
+- saturncloud
 dependencies:
 - blas=*=mkl
 - python=3.7
@@ -9,6 +10,7 @@ dependencies:
 - ipywidgets
 - matplotlib
 - dask=2.8.1
+- dask-saturn
 - pip
 - snowflake-sqlalchemy
 - snowflake-connector-python
