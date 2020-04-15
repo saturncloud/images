@@ -11,7 +11,7 @@ dependencies:
 - matplotlib
 - dask=2.12.0
 - distributed=2.12.0
-- dask-saturn
+- dask-saturn=0.0.2
 - pip
 - snowflake-sqlalchemy
 - snowflake-connector-python
