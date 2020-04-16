@@ -18,19 +18,25 @@ NAME = os.environ.get("DASK_NAME")
 NAMESPACE = os.environ.get("DASK_NAMESPACE", "main-namespace")
 DASHBOARD_LINK = os.environ.get("DASK_DASHBOARD_LINK", None)
 WORKER_CONFIG = "/etc/config/worker_spec.yaml"
+SCHEDULER_CONFIG = "/etc/config/scheduler_spec.yaml"
 
 
 def make_cluster():
     with open(WORKER_CONFIG) as f:
         d = yaml.safe_load(f)
         pod_template = make_pod_from_dict(d)
+    with open(SCHEDULER_CONFIG) as f:
+        d = yaml.safe_load(f)
+        scheduler_pod_template = make_pod_from_dict(d)
 
     log.info(f"Starting dask cluster {NAME} in namespace {NAMESPACE}")
     log.info(f"worker config: {WORKER_CONFIG}")
+    log.info(f"scheduler config: {SCHEDULER_CONFIG}")
     log.info(f"dashboard address: {DASHBOARD_LINK}")
 
     return SaturnCluster(
         pod_template=pod_template,
+        scheduler_pod_template=scheduler_pod_template,
         deploy_mode="remote",
         name=NAME,
         namespace=NAMESPACE,
