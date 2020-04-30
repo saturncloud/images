@@ -9,3 +9,8 @@ RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete
 RUN echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
+RUN ${CONDA_DIR}/bin/conda install -n root -c saturncloud dask-labextension "dask-saturn=0.0.2" "dask=2.12.0" "distributed=2.12.0"
+
+RUN ${CONDA_DIR}/bin/jupyter labextension install dask-labextension
+RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py dask_labextension --sys-prefix
+
