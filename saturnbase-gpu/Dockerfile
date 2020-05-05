@@ -26,10 +26,13 @@ RUN apt-get -qq update && \
         awscli \
         rsync \
         sudo \
+        openssh-server \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
-    rm -rf /var/lib/apt/lists/*
+    rm -rf /var/lib/apt/lists/* && \
+    mkdir -p /run/sshd && \
+    chmod 755 /run/sshd
 RUN echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 ENV LC_ALL en_US.UTF-8
