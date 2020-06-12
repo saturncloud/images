@@ -9,7 +9,8 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 ENV SHELL /bin/bash
 
-RUN conda install -y -c conda-forge tornado kubernetes dask-kubernetes python-kubernetes
+RUN conda install -y -c conda-forge tornado kubernetes dask-kubernetes python-kubernetes && \
+    conda clean --yes --all
 
 #TODO - remove this pdc crap
 #TODO - run as non-root user
