@@ -36,7 +36,7 @@ def make_cluster(n_workers):
     log.info(f"scheduler config: {SCHEDULER_CONFIG}")
     log.info(f"dashboard address: {DASHBOARD_LINK}")
 
-    return SaturnCluster(
+    return SaturnKubeCluster(
         n_workers=n_workers,
         pod_template=pod_template,
         scheduler_pod_template=scheduler_pod_template,
@@ -47,7 +47,7 @@ def make_cluster(n_workers):
     )
 
 
-class SaturnCluster(KubeCluster):
+class SaturnKubeCluster(KubeCluster):
     """Class that inherits from dask-kubernetes cluster"""
     def __init__(self, *args, dashboard_link=None, **kwargs):
         """Init as usual, but add dashboard_link to object"""
