@@ -11,7 +11,7 @@ dependencies:
 - matplotlib
 - dask=2.12.0
 - distributed=2.12.0
-- dask-saturn=0.0.2
+- dask-saturn=0.0.3
 - pip
 - snowflake-sqlalchemy
 - snowflake-connector-python
@@ -42,4 +42,6 @@ dependencies:
 - pyarrow
 - fastparquet
 - geopandas
+- prefect
+- voila
 name: saturn

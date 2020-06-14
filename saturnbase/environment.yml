@@ -16,3 +16,4 @@ dependencies:
   - jupyter_saturn=${JUPYTER_SATURN_VERSION}
   - nbdime
   - pyyaml
+  - voila
