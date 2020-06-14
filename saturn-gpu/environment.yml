@@ -64,3 +64,4 @@ dependencies:
 - pyarrow
 - snowflake-connector-python
 - prefect
+- voila
