@@ -17,11 +17,12 @@ log = logging.getLogger(__name__)
 NAME = os.environ.get("DASK_NAME")
 NAMESPACE = os.environ.get("DASK_NAMESPACE", "main-namespace")
 DASHBOARD_LINK = os.environ.get("DASK_DASHBOARD_LINK", None)
+N_WORKERS = int(os.environ.get("DASK_N_WORKERS", 0))
 WORKER_CONFIG = "/etc/config/worker_spec.yaml"
 SCHEDULER_CONFIG = "/etc/config/scheduler_spec.yaml"
 
 
-def make_cluster():
+def make_cluster(n_workers):
     with open(WORKER_CONFIG) as f:
         d = yaml.safe_load(f)
         pod_template = make_pod_from_dict(d)
@@ -30,11 +31,13 @@ def make_cluster():
         scheduler_pod_template = make_pod_from_dict(d)
 
     log.info(f"Starting dask cluster {NAME} in namespace {NAMESPACE}")
+    log.info(f"n_workers: {N_WORKERS}")
     log.info(f"worker config: {WORKER_CONFIG}")
     log.info(f"scheduler config: {SCHEDULER_CONFIG}")
     log.info(f"dashboard address: {DASHBOARD_LINK}")
 
-    return SaturnCluster(
+    return SaturnKubeCluster(
+        n_workers=n_workers,
         pod_template=pod_template,
         scheduler_pod_template=scheduler_pod_template,
         deploy_mode="remote",
@@ -44,7 +47,7 @@ def make_cluster():
     )
 
 
-class SaturnCluster(KubeCluster):
+class SaturnKubeCluster(KubeCluster):
     """Class that inherits from dask-kubernetes cluster"""
     def __init__(self, *args, dashboard_link=None, **kwargs):
         """Init as usual, but add dashboard_link to object"""
@@ -60,7 +63,7 @@ class SaturnCluster(KubeCluster):
 class SaturnClusterApplication(Application):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.cluster = make_cluster()
+        self.cluster = make_cluster(n_workers=N_WORKERS)
         log.info("Cluster successfully created in tornado!")
         log.info(f"Scheduler: {self.cluster.scheduler_address}")
         log.info(f"Dashboard: {self.cluster.dashboard_link}")
