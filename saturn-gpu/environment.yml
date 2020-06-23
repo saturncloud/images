@@ -25,7 +25,7 @@ dependencies:
 - scikit-learn
 - scipy
 - numba
-- bokeh
+- bokeh=2.0
 - h5py
 - ipykernel
 - graphviz
