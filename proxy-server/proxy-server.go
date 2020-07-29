@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -28,7 +29,7 @@ var useHTTPSForSelfRedirect = true
 var jwtKey []byte
 var sharedKey []byte
 
-var jwtExpirationMinutes = 60 //  1 hour to expiration
+var jwtExpirationSeconds = 3600 //  1 hour to expiration
 var debug = true
 var defaultPort = "8080"
 var tokenMapMutex sync.Mutex
@@ -40,12 +41,11 @@ var urlCommonSuffix = ".localhost"
 var authTokenMutex sync.Mutex
 var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
-const (
-	errGeneric = iota
-	errNoCookie
-	errExpired
-	errTokenInvalid
-	errSignatureInvalid
+var (
+	errExpired        = errors.New("Token expired")
+	errTokenInvalid   = errors.New("Unauthorized atteimpt to access resource: invalid token")
+	errNoIssuers      = errors.New("Invalid token from saturn (no issuers)")
+	errInvalidIssuers = errors.New("Invalid token from saturn (invalid issuer)")
 )
 
 // Get env var or default
@@ -142,10 +142,11 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 }
 
 func setNewCookie(res http.ResponseWriter) error {
-
-	claims := &jwt.StandardClaims{}
-	expirationTime := time.Now().Add(time.Duration(jwtExpirationMinutes) * time.Minute)
-	claims.ExpiresAt = expirationTime.Unix()
+	expirationTime := time.Now().Add(time.Duration(jwtExpirationSeconds) * time.Second)
+	claims := &jwt.StandardClaims{
+		ExpiresAt: expirationTime.Unix(),
+		Issuer:    "saturn-auth-proxy",
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString(jwtKey)
 	if err != nil {
@@ -157,57 +158,105 @@ func setNewCookie(res http.ResponseWriter) error {
 		Name:    "saturn_token",
 		Value:   tokenString,
 		Expires: expirationTime,
+		Path:    "/",
 	})
 
 	return nil
 }
 
-func validateAuthToken(token *jwt.StandardClaims) bool {
-	// token extra validation. its signature is already verified at this point
-	// considerations: -
-	//			check expiration time for this token
-	//          any extra user access limitations
-	return true
+func validateSaturnToken(saturnToken string, key []byte) (*jwt.StandardClaims, error) {
+	claims := &jwt.StandardClaims{}
+
+	// Parse the JWT string and store the result in `claims`.
+	tkn, err := jwt.ParseWithClaims(saturnToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return key, nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !tkn.Valid {
+		return nil, errTokenInvalid
+	}
+	if len(claims.Issuer) == 0 {
+		return nil, errNoIssuers
+	}
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
+		return nil, errExpired
+	}
+	return claims, nil
 }
 
-func redirectToFallBack(res http.ResponseWriter, req *http.Request, error int, origURL string) {
+type proxyAuthResponse struct {
+	SaturnToken string `json:"saturn_token"`
+}
 
-	if debug {
-		log.Printf("fallback code: %d %s", error, origURL)
+func authenticate(res http.ResponseWriter, req *http.Request) bool {
+	res.Header().Add("Cache-Control", "no-cache")
+
+	protocol := "https://"
+	if !useHTTPSForSelfRedirect {
+		protocol = "http://"
 	}
-	switch error {
-	case errNoCookie:
-		log.Printf("Fallback: no cookie token presented or bad cookie")
-	case errExpired:
-		log.Printf("Fallback: cookie expired")
-	case errSignatureInvalid:
-		log.Printf("Fallback: Unauthorized attempt to access resource: wrong signature\n")
-	case errTokenInvalid:
-		log.Printf("Fallback: Unauthorized attempt to access resource: invalid token\n")
-	case errGeneric:
-		log.Printf("Fallback: bad request")
+
+	origURL := protocol + req.Host + req.URL.RequestURI()
+	if debug {
+		log.Printf("fallback: %s", origURL)
 	}
 
 	uniqToken, _ := generateCookieSigningKey(40)
+
+	proxyParams := url.Values{}
+	proxyParams.Add("ret_token", string(uniqToken))
+	proxyParams.Add("proxy_auth", "true")
+	proxyAuthUrl := fallbackURL + "?" + proxyParams.Encode()
+
+	// Check for session cookie
+	if pdcSessionCookie, err := req.Cookie("PDC_SESSION"); err == nil {
+		// Proxy auth request to Atlas
+		if debug {
+			log.Printf("Proxying authentication request for %s", origURL)
+		}
+		authReq, _ := http.NewRequest("GET", proxyAuthUrl, nil)
+		authReq.Header.Set(
+			"Cookie", fmt.Sprintf("%s=%s;", pdcSessionCookie.Name, pdcSessionCookie.Value),
+		)
+		client := &http.Client{}
+		authResp, err := client.Do(authReq)
+		if err != nil {
+			log.Printf("Error: %s\n", err)
+			return false
+		}
+		defer authResp.Body.Close()
+		var result proxyAuthResponse
+		json.NewDecoder(authResp.Body).Decode(&result)
+
+		// Check for valid token in response
+		if result.SaturnToken != "" {
+			if _, err = validateSaturnToken(result.SaturnToken, sharedKey); err != nil {
+				log.Printf("Invalid token returned: %s", err)
+			} else {
+				setNewCookie(res)
+				return true
+			}
+		}
+	}
+
+	// If proxy auth req failed or PDC_COOKIE not found, fallback to redirect
+	redirectParams := url.Values{}
+	redirectParams.Add("next", origURL)
+	redirectParams.Add("ret_token", string(uniqToken))
+	redirectUrl := fallbackURL + "?" + redirectParams.Encode()
 
 	tokenMapMutex.Lock()
 	tokenMap[string(uniqToken)] = ""
 	log.Printf("Added token %s", uniqToken)
 	tokenMapMutex.Unlock()
 
-	qs := url.Values{}
-
-	qs.Add("next", origURL)
-	qs.Add("ret_token", string(uniqToken))
-
-	u := fallbackURL + "?" + qs.Encode()
-
 	if debug {
-		log.Printf("Redirecting to fallback url: %s", u)
+		log.Printf("Redirecting to fallback url: %s", redirectUrl)
 	}
-
-	res.Header().Add("Cache-Control", "no-cache")
-	http.Redirect(res, req, u, 302)
+	http.Redirect(res, req, redirectUrl, 302)
+	return false
 }
 
 // Given a request send it to the appropriate url
@@ -222,104 +271,59 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		}
 	} else if satToken != "" {
 		// if we receive authorization token in the request : the user authorized by the backend
-		claims := &jwt.StandardClaims{}
-		tkn, err := jwt.ParseWithClaims(satToken, claims, func(token *jwt.Token) (interface{}, error) {
-			return sharedKey, nil
-		})
 
-		if err != nil || !tkn.Valid {
-			log.Printf("Authorization Error: invalid token from saturn")
-			// Breaking the loop. No more redirects. All is bad for this request.
+		claims, err := validateSaturnToken(satToken, sharedKey)
+		if err != nil {
+			fmt.Printf("Authorization Erorr: %s", err)
 			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
-			return
-		}
-
-		// in case authorization body wants to proxy to some different url
-		if len(claims.Subject) != 0 {
-			tmpTargetURL = claims.Subject
-			return
-		}
-
-		if len(claims.Issuer) == 0 {
-			log.Printf("Authorization Error: invalid token from saturn (no issuers)")
-			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
-			return
 		}
 
 		tokenMapMutex.Lock()
-		_, prs := tokenMap[claims.Issuer]
-		if prs {
+		_, ok := tokenMap[claims.Issuer]
+		if ok {
 			delete(tokenMap, claims.Issuer)
 			log.Printf("Deleted token %s", claims.Issuer)
 
 		}
 		tokenMapMutex.Unlock()
 
-		if !prs {
-			log.Printf("Authorization Error: invalid token from saturn (invalid issuer)")
+		if !ok {
+			log.Printf("Authorization Error: %s", errInvalidIssuers)
 			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
-		if validateAuthToken(claims) {
-			err = setNewCookie(res)
-			if err != nil {
-				log.Printf("Error setting cookie: %+v", err)
-				respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
-				return
-			}
-			log.Printf("OK: Setting cookie")
-			// redirect back to self to remove saturn_token from the URL
-			q := req.URL.Query()
-			q.Del("saturn_token")
-			req.URL.RawQuery = q.Encode()
-			res.Header().Add("Cache-Control", "no-cache")
-			http.Redirect(res, req, req.URL.String(), 302)
-			log.Printf("OK: Redirecting to self (%s)", req.URL.String())
+		err = setNewCookie(res)
+		if err != nil {
+			log.Printf("Error setting cookie: %+v", err)
+			respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
 			return
 		}
+		log.Printf("OK: Setting cookie")
+		// redirect back to self to remove saturn_token from the URL
+		q := req.URL.Query()
+		q.Del("saturn_token")
+		req.URL.RawQuery = q.Encode()
+		res.Header().Add("Cache-Control", "no-cache")
+		http.Redirect(res, req, req.URL.String(), 302)
+		log.Printf("OK: Redirecting to self (%s)", req.URL.String())
+		return
 	}
 
 	if authHeader == "" {
-		c, err := req.Cookie("saturn_token")
-		protocol := "https://"
-		if !useHTTPSForSelfRedirect {
-			protocol = "http://"
+		// Check for valid cookie token
+		var tokenCookie *http.Cookie
+		var err error
+		if tokenCookie, err = req.Cookie("saturn_token"); err == nil {
+			// Validate cookie
+			_, err = validateSaturnToken(tokenCookie.Value, jwtKey)
 		}
-		origURL := protocol + req.Host + req.URL.Path
-
 		if err != nil {
-			errcode := errGeneric
-			if err == http.ErrNoCookie {
-				errcode = errNoCookie
+			// Cookie is invalid or missing
+			log.Printf("Invalid cookie: %s", err)
+			if !authenticate(res, req) {
+				return
 			}
-			redirectToFallBack(res, req, errcode, origURL)
-			return
-		}
-
-		// Get the JWT string from the cookie
-		tknStr := c.Value
-		claims := &jwt.StandardClaims{}
-
-		// Parse the JWT string and store the result in `claims`.
-		tkn, err := jwt.ParseWithClaims(tknStr, claims, func(token *jwt.Token) (interface{}, error) {
-			return jwtKey, nil
-		})
-		if err != nil {
-			errcode := errGeneric
-			if err == jwt.ErrSignatureInvalid {
-				errcode = errSignatureInvalid
-			}
-			redirectToFallBack(res, req, errcode, origURL)
-			return
-		}
-		if !tkn.Valid {
-			redirectToFallBack(res, req, errTokenInvalid, origURL)
-			return
-		}
-		if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > time.Duration(jwtExpirationMinutes)*time.Minute {
-			redirectToFallBack(res, req, errExpired, origURL)
-			return
 		}
 	}
 
@@ -432,7 +436,7 @@ func main() {
 		return
 	}
 
-	log.Printf("Saturn signing key obtained and has length %d bytes: \"%20.20s...\"", len(sharedKey), sharedKey)
+	log.Printf("Saturn signing key obtained and has length %d bytes", len(sharedKey))
 
 	tmpKey, err := generateCookieSigningKey(keyLength)
 	if err != nil {
@@ -440,11 +444,11 @@ func main() {
 		return
 	}
 
-	log.Printf("JWT signing key generated and has length %d bytes: \"%20.20s...\"", len(tmpKey), tmpKey)
+	log.Printf("JWT signing key generated and has length %d bytes", len(tmpKey))
 
 	jwtKey = tmpKey
-	jwtExpirationMinutes, _ = strconv.Atoi(getEnv("JWT_EXPIRE_MIN", "60"))
-	log.Printf("JWT cookie expiration time: %d", jwtExpirationMinutes)
+	jwtExpirationSeconds, _ = strconv.Atoi(getEnv("JWT_EXPIRE_SEC", "3600"))
+	log.Printf("JWT cookie expiration time: %ds", jwtExpirationSeconds)
 
 	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
 
