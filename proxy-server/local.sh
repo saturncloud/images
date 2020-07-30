@@ -1,4 +1,5 @@
 #!/bin/bash
+set -eo pipefail
 
 usage() {
     echo '
@@ -72,7 +73,7 @@ DIR=$(dirname $0)
 IMAGE=localhost:32000/proxy-server
 TAG_PREFIX=test
 
-LATEST_TAG=$(docker images | grep $IMAGE | head -n 1 | awk '{print $2}')
+LATEST_TAG=$(docker images | grep "$IMAGE" |  awk 'NR==1{print $2}')
 TAG="$TAG_PREFIX$(($(echo $LATEST_TAG | sed 's/'$TAG_PREFIX'//') + 1))"
 
 header Build

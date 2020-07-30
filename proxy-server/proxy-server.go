@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"crypto/rand"
 	"encoding/json"
 	"errors"
@@ -23,15 +24,21 @@ import (
 const keyLength = 512 / 8
 const accessKeyRetentionTime = 10 * time.Minute
 
-var fallbackURL = "http://localhost/fallback"            // not authorized fallback
-var tokenVerificationURL = "http://localhost/key-verify" //
+// Atlas URLs for authenticating
+var proxyURLs = struct {
+	Base    string
+	Login   string
+	Refresh string
+	Token   string
+}{}
 var useHTTPSForSelfRedirect = true
 var jwtKey []byte
 var sharedKey []byte
 
-var jwtExpirationSeconds = 3600 //  1 hour to expiration
+var saturnTokenExpirationSeconds = 3600   //  1 hour to expiration
+var refreshTokenExpirationSeconds = 86400 //  24 hours to expiration
 var debug = true
-var defaultPort = "8080"
+var defaultPort = "8888"
 var tokenMapMutex sync.Mutex
 var tokenMap = make(map[string]string)
 var configPathName = "/etc/config/proxy.json"
@@ -41,14 +48,37 @@ var urlCommonSuffix = ".localhost"
 var authTokenMutex sync.Mutex
 var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
+// Used for identifying principal actors in JWTs
+var jwtPrincipals = struct {
+	Atlas           string
+	SaturnAuthProxy string
+}{
+	Atlas:           "atlas",
+	SaturnAuthProxy: "saturn-auth-proxy",
+}
+
+// Cookies used for proxy auth
+var proxyCookies = struct {
+	RefreshToken string
+	SaturnToken  string
+}{
+	RefreshToken: "refresh_token",
+	SaturnToken:  "saturn_token",
+}
+
 var (
-	errExpired        = errors.New("Token expired")
-	errTokenInvalid   = errors.New("Unauthorized atteimpt to access resource: invalid token")
-	errNoIssuers      = errors.New("Invalid token from saturn (no issuers)")
-	errInvalidIssuers = errors.New("Invalid token from saturn (invalid issuer)")
+	errExpired              = errors.New("Token expired")
+	errTokenInvalid         = errors.New("Unauthorized attempt to access resource: invalid token")
+	errNoIssuers            = errors.New("Invalid token, missing issuer")
+	errInvalidIssuers       = errors.New("Invalid token issuer")
+	errInvalidAudience      = errors.New("Invalid token audience")
+	errInvalidResource      = errors.New("Token is not valid for the requested host")
+	errInvalidRedirectToken = errors.New("Invalid redirect token")
 )
 
-// Get env var or default
+/*
+	Get env var or default
+*/
 func getEnv(key, dflt string) string {
 	value, ok := os.LookupEnv(key)
 	if ok {
@@ -59,6 +89,9 @@ func getEnv(key, dflt string) string {
 
 var configTimeStamp time.Time
 
+/*
+	Basic error page
+*/
 func respondWithError(res http.ResponseWriter, status int, message string) {
 	log.Printf("Error %d: %s", status, message)
 	res.Header().Add("Content-Type", "text/html;charset=utf-8")
@@ -66,6 +99,9 @@ func respondWithError(res http.ResponseWriter, status int, message string) {
 	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
 }
 
+/*
+	Check for changes in proxy configuration file
+*/
 func maybeReadProxyConfig() {
 
 	fi, err := os.Stat(configPathName)
@@ -99,6 +135,9 @@ func maybeReadProxyConfig() {
 	configTimeStamp = cfgTime
 }
 
+/*
+	Check for proxy config changes every second
+*/
 func configReadingLoop() {
 	// it's ok to loop frequently - the function checks if the file has been modified
 	// before loading it
@@ -117,6 +156,9 @@ func extractTargetURLKey(hostname string) string {
 	return tmp
 }
 
+/*
+	Generate a key for signing JWTs
+*/
 func generateCookieSigningKey(n int) ([]byte, error) {
 	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
 	b := make([]byte, n)
@@ -130,10 +172,12 @@ func generateCookieSigningKey(n int) ([]byte, error) {
 	return b, nil
 }
 
-// Serve a reverse proxy for a given url
+/*
+	Serve a reverse proxy for a given url
+*/
 func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL string) {
 	// Modify the headers for  SSL redirection and cache control
-	req.Header.Set("X-Forwarded-Host", req.Header.Get("Host"))
+	req.Header.Set("X-Forwarded-Host", req.Host)
 	req.Header.Set("Cache-Control", "no-cache, no-store, no-transform, must-revalidate, max-age=0")
 
 	proxiedURL, _ := url.Parse(tmpTargetURL)
@@ -141,21 +185,71 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
-func setNewCookie(res http.ResponseWriter) error {
-	expirationTime := time.Now().Add(time.Duration(jwtExpirationSeconds) * time.Second)
-	claims := &jwt.StandardClaims{
-		ExpiresAt: expirationTime.Unix(),
-		Issuer:    "saturn-auth-proxy",
+// Extend standard claims for saturn specific requirements
+type SaturnClaims struct {
+	Resource      string `json:"resource"`
+	RedirectToken string `json:"redirect_token,omitempty"`
+	jwt.StandardClaims
+}
+
+/*
+	Create JWT for proxy authentication or auth refresh
+*/
+func createToken(host, username string, expiration time.Time, refreshToken bool) (string, error) {
+	var audience string
+	var key []byte
+	if refreshToken {
+		// Audience indicates that this token is a refresh token
+		// and cannot be used for authenticating in the proxy
+		audience = jwtPrincipals.Atlas
+		key = sharedKey
+	} else {
+		audience = jwtPrincipals.SaturnAuthProxy
+		key = jwtKey
+	}
+	claims := &SaturnClaims{
+		Resource: host,
+		StandardClaims: jwt.StandardClaims{
+			Audience:  audience,
+			ExpiresAt: expiration.Unix(),
+			Issuer:    jwtPrincipals.SaturnAuthProxy,
+			Subject:   username,
+		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString(jwtKey)
+	tokenString, err := token.SignedString(key)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+/*
+	Create new JWT cookies for session auth and refresh token
+*/
+func setNewCookies(res http.ResponseWriter, req *http.Request, username string) error {
+	// Create a new refresh_token
+	refreshExpiration := time.Now().Add(time.Duration(refreshTokenExpirationSeconds) * time.Second)
+	refreshTokenString, err := createToken(req.Host, username, refreshExpiration, true)
 	if err != nil {
 		return err
 	}
-
-	// Set the new token as the users `saturn_token` cookie
 	http.SetCookie(res, &http.Cookie{
-		Name:    "saturn_token",
+		Name:    proxyCookies.RefreshToken,
+		Value:   refreshTokenString,
+		Expires: refreshExpiration,
+		Path:    "/",
+	})
+
+	// Create a new saturn_token
+	expirationTime := time.Now().Add(time.Duration(saturnTokenExpirationSeconds) * time.Second)
+	tokenString, err := createToken(req.Host, username, expirationTime, false)
+	if err != nil {
+		return err
+	}
+	http.SetCookie(res, &http.Cookie{
+		Name:    proxyCookies.SaturnToken,
 		Value:   tokenString,
 		Expires: expirationTime,
 		Path:    "/",
@@ -164,8 +258,19 @@ func setNewCookie(res http.ResponseWriter) error {
 	return nil
 }
 
-func validateSaturnToken(saturnToken string, key []byte) (*jwt.StandardClaims, error) {
-	claims := &jwt.StandardClaims{}
+/*
+	Validate JWT tokens based on issuer, audience, and request host
+*/
+func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*SaturnClaims, error) {
+	claims := &SaturnClaims{}
+
+	var key []byte
+	switch issuer {
+	case jwtPrincipals.Atlas:
+		key = sharedKey
+	case jwtPrincipals.SaturnAuthProxy:
+		key = jwtKey
+	}
 
 	// Parse the JWT string and store the result in `claims`.
 	tkn, err := jwt.ParseWithClaims(saturnToken, claims, func(token *jwt.Token) (interface{}, error) {
@@ -173,23 +278,34 @@ func validateSaturnToken(saturnToken string, key []byte) (*jwt.StandardClaims, e
 	})
 	if err != nil {
 		return nil, err
-	}
-	if !tkn.Valid {
+	} else if !tkn.Valid {
 		return nil, errTokenInvalid
-	}
-	if len(claims.Issuer) == 0 {
+	} else if len(claims.Issuer) == 0 {
 		return nil, errNoIssuers
-	}
-	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
+	} else if claims.Issuer != issuer {
+		return nil, errInvalidIssuers
+	} else if claims.Audience != jwtPrincipals.SaturnAuthProxy {
+		return nil, errInvalidAudience
+	} else if claims.Resource != req.Host {
+		log.Printf("\n\n%s\n\n", claims.Resource)
+		return nil, errInvalidResource
+	} else if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
 		return nil, errExpired
 	}
 	return claims, nil
+}
+
+type proxyAuthRequest struct {
+	RefreshToken string `json:"refresh_token"`
 }
 
 type proxyAuthResponse struct {
 	SaturnToken string `json:"saturn_token"`
 }
 
+/*
+	Check for a refresh token cookie to reauthenticate, or redirect to Atlas login
+*/
 func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	res.Header().Add("Cache-Control", "no-cache")
 
@@ -200,30 +316,24 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 
 	origURL := protocol + req.Host + req.URL.RequestURI()
 	if debug {
-		log.Printf("fallback: %s", origURL)
+		log.Printf("Authenticating URL: %s", origURL)
 	}
 
 	uniqToken, _ := generateCookieSigningKey(40)
 
-	proxyParams := url.Values{}
-	proxyParams.Add("ret_token", string(uniqToken))
-	proxyParams.Add("proxy_auth", "true")
-	proxyAuthUrl := fallbackURL + "?" + proxyParams.Encode()
-
-	// Check for session cookie
-	if pdcSessionCookie, err := req.Cookie("PDC_SESSION"); err == nil {
+	// Check for refresh token
+	if refreshCookie, err := req.Cookie(proxyCookies.RefreshToken); err == nil {
 		// Proxy auth request to Atlas
 		if debug {
-			log.Printf("Proxying authentication request for %s", origURL)
+			log.Println("Found refresh_token, proxying authentication request.")
 		}
-		authReq, _ := http.NewRequest("GET", proxyAuthUrl, nil)
-		authReq.Header.Set(
-			"Cookie", fmt.Sprintf("%s=%s;", pdcSessionCookie.Name, pdcSessionCookie.Value),
-		)
-		client := &http.Client{}
-		authResp, err := client.Do(authReq)
+		buffer := new(bytes.Buffer)
+		json.NewEncoder(buffer).Encode(&proxyAuthRequest{
+			RefreshToken: refreshCookie.Value,
+		})
+		authResp, err := http.Post(proxyURLs.Refresh, "application/json", buffer)
 		if err != nil {
-			log.Printf("Error: %s\n", err)
+			log.Printf("Authentication failed: %s", err)
 			return false
 		}
 		defer authResp.Body.Close()
@@ -232,20 +342,22 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 
 		// Check for valid token in response
 		if result.SaturnToken != "" {
-			if _, err = validateSaturnToken(result.SaturnToken, sharedKey); err != nil {
+			if claims, err := validateSaturnToken(result.SaturnToken, jwtPrincipals.Atlas, req); err != nil {
 				log.Printf("Invalid token returned: %s", err)
+			} else if claims.Issuer != jwtPrincipals.Atlas {
+				log.Printf("Authentication failed: %s, expected %s", errInvalidIssuers, jwtPrincipals.Atlas)
 			} else {
-				setNewCookie(res)
+				setNewCookies(res, req, claims.Subject)
 				return true
 			}
 		}
 	}
 
-	// If proxy auth req failed or PDC_COOKIE not found, fallback to redirect
+	// If proxy auth req failed or refresh_token not found, fallback to redirect
 	redirectParams := url.Values{}
 	redirectParams.Add("next", origURL)
-	redirectParams.Add("ret_token", string(uniqToken))
-	redirectUrl := fallbackURL + "?" + redirectParams.Encode()
+	redirectParams.Add("redirect_token", string(uniqToken))
+	redirectUrl := proxyURLs.Login + "?" + redirectParams.Encode()
 
 	tokenMapMutex.Lock()
 	tokenMap[string(uniqToken)] = ""
@@ -259,7 +371,11 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	return false
 }
 
-// Given a request send it to the appropriate url
+/*
+	Given a request, check for valid authentication in headers, URL params, and cookies.
+	If no valid authentication is found, attempt to reauthenticate before sending request
+	to its destination.
+*/
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	tmpTargetURL := ""
 
@@ -272,28 +388,29 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	} else if satToken != "" {
 		// if we receive authorization token in the request : the user authorized by the backend
 
-		claims, err := validateSaturnToken(satToken, sharedKey)
+		claims, err := validateSaturnToken(satToken, jwtPrincipals.Atlas, req)
 		if err != nil {
 			fmt.Printf("Authorization Erorr: %s", err)
 			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
+			return
 		}
 
 		tokenMapMutex.Lock()
-		_, ok := tokenMap[claims.Issuer]
+		_, ok := tokenMap[claims.RedirectToken]
 		if ok {
-			delete(tokenMap, claims.Issuer)
-			log.Printf("Deleted token %s", claims.Issuer)
+			delete(tokenMap, claims.RedirectToken)
+			log.Printf("Deleted token %s", claims.RedirectToken)
 
 		}
 		tokenMapMutex.Unlock()
 
 		if !ok {
-			log.Printf("Authorization Error: %s", errInvalidIssuers)
+			log.Printf("Authorization Error: %s", errInvalidRedirectToken)
 			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
 
-		err = setNewCookie(res)
+		err = setNewCookies(res, req, claims.Subject)
 		if err != nil {
 			log.Printf("Error setting cookie: %+v", err)
 			respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
@@ -316,7 +433,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 		var err error
 		if tokenCookie, err = req.Cookie("saturn_token"); err == nil {
 			// Validate cookie
-			_, err = validateSaturnToken(tokenCookie.Value, jwtKey)
+			_, err = validateSaturnToken(tokenCookie.Value, jwtPrincipals.SaturnAuthProxy, req)
 		}
 		if err != nil {
 			// Cookie is invalid or missing
@@ -349,8 +466,10 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	log.Printf("OK: Proxying to url: %s %s\n", tmpTargetURL, req.URL.String())
 }
 
-// Check token validity for the requested resource. Returns true if no error has been thrown.
-// If false is returned, the caller should assume that a response has already been written out.
+/*
+	Check authorization header validity for the requested resource. Returns true if no error has been thrown.
+	If false is returned, the caller should assume that a response has already been written out.
+*/
 func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader string) bool {
 	target := extractTargetURLKey(req.Host)
 	cacheKey := fmt.Sprintf("%s/%s", target, authHeader)
@@ -368,7 +487,7 @@ func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader strin
 
 	valid, err := checkTokenValidity(authHeader, target)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 	if valid {
 		// add to cache
@@ -385,7 +504,7 @@ func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader strin
 
 func checkTokenValidity(authHeader, target string) (bool, error) {
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", tokenVerificationURL+"?targetResource="+target, nil)
+	request, err := http.NewRequest("GET", proxyURLs.Token+"?targetResource="+target, nil)
 	if err != nil {
 		return false, err
 	}
@@ -414,11 +533,33 @@ func main() {
 	configPathName = getEnv("PROXY_CONFIG", configPathName)
 	urlCommonSuffix = getEnv("PROXY_SUFFIX", urlCommonSuffix)
 
-	fallbackURL = getEnv("PROXY_FALLBACK_URL",
-		"http://localhost:"+getEnv("PROXY_LISTEN_PORT", defaultPort)+"/fallback")
-	tokenVerificationURL = getEnv("PROXY_AUTH_VERIFICATION_URL", tokenVerificationURL)
+	defaultPort = getEnv("PROXY_LISTEN_PORT", defaultPort)
+
+	// Parse URLs
+	baseURL, err := url.Parse(getEnv("PROXY_BASE_URL", "http://dev.localtest.me:8888"))
+	if err != nil {
+		log.Panic(err)
+	}
+	loginURL, err := baseURL.Parse(getEnv("PROXY_LOGIN_PATH", "/auth/login"))
+	if err != nil {
+		log.Panic(err)
+	}
+	refreshURL, err := baseURL.Parse(getEnv("PROXY_REFRESH_PATH", "/auth/refresh"))
+	if err != nil {
+		log.Panic(err)
+	}
+	tokenURL, err := baseURL.Parse(getEnv("PROXY_TOKEN_PATH", "/api/deployments/auth"))
+	if err != nil {
+		log.Panic(err)
+	}
+	proxyURLs.Base = baseURL.String()
+	proxyURLs.Login = loginURL.String()
+	proxyURLs.Refresh = refreshURL.String()
+	proxyURLs.Token = tokenURL.String()
+
 	useHTTPSForSelfRedirect = getEnv("HTTPS_SELF_REDIRECT", "true") == "true"
 
+	// Parse and generate keys
 	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
 	if len(sharedKey) == 0 {
 		if debug {
@@ -428,7 +569,6 @@ func main() {
 			log.Printf("Critical error: unable to obtain shared saturn signing key.\n - set environment variable PROXY_SHARED_KEY")
 			return
 		}
-
 	}
 
 	if len(sharedKey) < keyLength {
@@ -446,21 +586,24 @@ func main() {
 
 	log.Printf("JWT signing key generated and has length %d bytes", len(tmpKey))
 
+	// Token/Cookie expirations
 	jwtKey = tmpKey
-	jwtExpirationSeconds, _ = strconv.Atoi(getEnv("JWT_EXPIRE_SEC", "3600"))
-	log.Printf("JWT cookie expiration time: %ds", jwtExpirationSeconds)
+	saturnTokenExpirationSeconds, _ = strconv.Atoi(getEnv("SATURN_TOKEN_EXPIRE_SEC", "3600"))
+	refreshTokenExpirationSeconds, _ = strconv.Atoi(getEnv("REFRESH_TOKEN_EXPIRE_SEC", "86400"))
+	log.Printf("JWT cookie expiration time: %ds", saturnTokenExpirationSeconds)
+	log.Printf("Refresh cookie expiration time: %ds", refreshTokenExpirationSeconds)
 
-	listAddr := ":" + getEnv("PROXY_LISTEN_PORT", defaultPort)
+	listAddr := fmt.Sprintf(":%s", defaultPort)
 
 	log.Printf("Listening on %s", listAddr)
-
-	log.Printf("Authentication URL:       %s", fallbackURL)
+	log.Printf("Redirect URL:    %s", proxyURLs.Login)
+	log.Printf("Refresh URL:     %s", proxyURLs.Refresh)
 
 	maybeReadProxyConfig()
 	go configReadingLoop()
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 }

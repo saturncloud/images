@@ -12,9 +12,6 @@ COPY --from=0 /app/proxy-server /app/proxy-server
 COPY etc/nsswitch.conf /etc/nsswitch.conf
 
 ENV PROXY_LISTEN_PORT=8080
-ENV PROXY_FALLBACK_URL=http://localhost:$PROXY_LISTEN_PORT/fallback
-ENV PROXY_RESOURCE_URL=http://localhost:80
-ENV JWT_EXPIRE_SEC=3600
 
 EXPOSE 8080
 
