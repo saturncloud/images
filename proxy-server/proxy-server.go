@@ -195,7 +195,7 @@ type SaturnClaims struct {
 /*
 	Create JWT for proxy authentication or auth refresh
 */
-func createToken(host, username string, expiration time.Time, refreshToken bool) (string, error) {
+func createToken(host, user_id string, expiration time.Time, refreshToken bool) (string, error) {
 	var audience string
 	var key []byte
 	if refreshToken {
@@ -213,7 +213,7 @@ func createToken(host, username string, expiration time.Time, refreshToken bool)
 			Audience:  audience,
 			ExpiresAt: expiration.Unix(),
 			Issuer:    jwtPrincipals.SaturnAuthProxy,
-			Subject:   username,
+			Subject:   user_id,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -228,10 +228,10 @@ func createToken(host, username string, expiration time.Time, refreshToken bool)
 /*
 	Create new JWT cookies for session auth and refresh token
 */
-func setNewCookies(res http.ResponseWriter, req *http.Request, username string) error {
+func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) error {
 	// Create a new refresh_token
 	refreshExpiration := time.Now().Add(time.Duration(refreshTokenExpirationSeconds) * time.Second)
-	refreshTokenString, err := createToken(req.Host, username, refreshExpiration, true)
+	refreshTokenString, err := createToken(req.Host, user_id, refreshExpiration, true)
 	if err != nil {
 		return err
 	}
@@ -244,7 +244,7 @@ func setNewCookies(res http.ResponseWriter, req *http.Request, username string) 
 
 	// Create a new saturn_token
 	expirationTime := time.Now().Add(time.Duration(saturnTokenExpirationSeconds) * time.Second)
-	tokenString, err := createToken(req.Host, username, expirationTime, false)
+	tokenString, err := createToken(req.Host, user_id, expirationTime, false)
 	if err != nil {
 		return err
 	}
