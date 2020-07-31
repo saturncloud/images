@@ -469,6 +469,10 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 /*
 	Check authorization header validity for the requested resource. Returns true if no error has been thrown.
 	If false is returned, the caller should assume that a response has already been written out.
+
+	This is used only for customers to access their deployments via Authorization header with a fixed token,
+	(e.g. for creating automation against a deployment) so that they don't have to mess with cookies and token
+	expiration.
 */
 func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader string) bool {
 	target := extractTargetURLKey(req.Host)
