@@ -390,7 +390,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 		claims, err := validateSaturnToken(satToken, jwtPrincipals.Atlas, req)
 		if err != nil {
-			fmt.Printf("Authorization Erorr: %s", err)
+			fmt.Printf("Authorization Error: %s", err)
 			respondWithError(res, http.StatusUnauthorized, "Invalid token.")
 			return
 		}
