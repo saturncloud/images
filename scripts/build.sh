@@ -10,6 +10,3 @@ popd
 pushd saturn-gpu
 docker build -t saturncloud/saturn-gpu:0.9.3.7 .
 popd
-pushd saturn-r
-docker build -t saturncloud/saturn-r:0.9.3.7 .
-popd

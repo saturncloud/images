@@ -99,12 +99,6 @@ def run(config_path, copy):
         if copy:
             rsync("../jupyterlab_saturn", join(out, 'jupyterlab_saturn'),
                   exclude_git=True)
-    out = join(dirname(__file__), 'saturn-r')
-    template(data,
-             template_path,
-             out,
-             'saturn-r'
-    )
     out = join(dirname(__file__), 'saturn-gpu')
     template(data,
              template_path,
