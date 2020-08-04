@@ -27,6 +27,8 @@ RUN apt-get -qq update && \
         rsync \
         sudo \
         openssh-server \
+        htop \
+        screen \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
