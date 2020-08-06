@@ -1,4 +1,4 @@
-package main
+package proxy
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/http/httputil"
@@ -20,6 +19,11 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/patrickmn/go-cache"
 )
+
+// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+// corev1 "k8s.io/client-go/kubernetes/typed/core/v1/"
+// "k8s.io/client-go/tools/cache"
+// "k8s.io/client-go/tools/clientcmd"
 
 const keyLength = 512 / 8
 const accessKeyRetentionTime = 10 * time.Minute
@@ -41,12 +45,15 @@ var debug = true
 var defaultPort = "8888"
 var tokenMapMutex sync.Mutex
 var tokenMap = make(map[string]string)
-var configPathName = "/etc/config/proxy.json"
-var targetMap = make(map[string]string)
-var configMutex sync.Mutex
 var urlCommonSuffix = ".localhost"
 var authTokenMutex sync.Mutex
 var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
+
+var namespace = "main-namespace"
+var userSessionConfigmapName = "saturn-proxy-sessions"
+var proxyConfigmapName = "saturn-auth-proxy"
+
+var configWatcher *ConfigWatcher
 
 // Used for identifying principal actors in JWTs
 var jwtPrincipals = struct {
@@ -74,6 +81,7 @@ var (
 	errInvalidAudience      = errors.New("Invalid token audience")
 	errInvalidResource      = errors.New("Token is not valid for the requested host")
 	errInvalidRedirectToken = errors.New("Invalid redirect token")
+	errInvalidUserSession   = errors.New("Invalid session, user is not logged in")
 )
 
 /*
@@ -87,8 +95,6 @@ func getEnv(key, dflt string) string {
 	return dflt
 }
 
-var configTimeStamp time.Time
-
 /*
 	Basic error page
 */
@@ -97,53 +103,6 @@ func respondWithError(res http.ResponseWriter, status int, message string) {
 	res.Header().Add("Content-Type", "text/html;charset=utf-8")
 	res.WriteHeader(status)
 	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
-}
-
-/*
-	Check for changes in proxy configuration file
-*/
-func maybeReadProxyConfig() {
-
-	fi, err := os.Stat(configPathName)
-	if err != nil {
-		return
-	}
-	cfgTime := fi.ModTime()
-	if configTimeStamp == cfgTime {
-		return // file not changed
-	}
-
-	file, _ := ioutil.ReadFile(configPathName)
-	data := make(map[string]string)
-	err = json.Unmarshal([]byte(file), &data)
-
-	if err != nil {
-		return
-	}
-
-	log.Printf("Reading proxy config file %s", configPathName)
-	for k, v := range data {
-		log.Printf("Destination '%s' --> url '%s' \n", k, v)
-	}
-
-	configMutex.Lock()
-	defer configMutex.Unlock()
-	targetMap = make(map[string]string)
-	for key, value := range data {
-		targetMap[key] = value
-	}
-	configTimeStamp = cfgTime
-}
-
-/*
-	Check for proxy config changes every second
-*/
-func configReadingLoop() {
-	// it's ok to loop frequently - the function checks if the file has been modified
-	// before loading it
-	for range time.Tick(1 * time.Second) {
-		maybeReadProxyConfig()
-	}
 }
 
 func extractTargetURLKey(hostname string) string {
@@ -291,6 +250,8 @@ func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*Saturn
 		return nil, errInvalidResource
 	} else if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
 		return nil, errExpired
+	} else if !configWatcher.ProxyConfig.CheckUser(claims.Subject) {
+		return nil, errInvalidUserSession
 	}
 	return claims, nil
 }
@@ -445,14 +406,12 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(tmpTargetURL) == 0 {
-		configMutex.Lock()
 		targetKey := extractTargetURLKey(req.Host)
-		tmp, ok := targetMap[targetKey]
-		configMutex.Unlock()
-		if ok {
-			tmpTargetURL = tmp
+		service := configWatcher.ProxyConfig.GetService(targetKey)
+		if service != "" {
+			tmpTargetURL = service
 			if debug {
-				log.Printf("Debug: target url is %s", tmp)
+				log.Printf("Debug: target url is %s", service)
 			}
 		} else {
 			log.Printf("Unknown target url for %s", req.Host)
@@ -530,11 +489,10 @@ func (p *proxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	handleRequestAndRedirect(res, req)
 }
 
-func main() {
+func Run() {
 
 	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
 
-	configPathName = getEnv("PROXY_CONFIG", configPathName)
 	urlCommonSuffix = getEnv("PROXY_SUFFIX", urlCommonSuffix)
 
 	defaultPort = getEnv("PROXY_LISTEN_PORT", defaultPort)
@@ -599,12 +557,15 @@ func main() {
 
 	listAddr := fmt.Sprintf(":%s", defaultPort)
 
+	namespace = getEnv("NAMESPACE", namespace)
+
 	log.Printf("Listening on %s", listAddr)
 	log.Printf("Redirect URL:    %s", proxyURLs.Login)
 	log.Printf("Refresh URL:     %s", proxyURLs.Refresh)
 
-	maybeReadProxyConfig()
-	go configReadingLoop()
+	configWatcher = NewConfigWatcher("saturn-auth-proxy", namespace)
+	go configWatcher.Watch()
+	// go watchProxyConfig(userSessionConfigmapName)
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
