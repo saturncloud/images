@@ -248,8 +248,6 @@ func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*Saturn
 	} else if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
 		return nil, errExpired
 	} else if !sessionConfig.CheckUser(claims.Subject) {
-		log.Printf("Failed to auth %s", claims.Subject)
-		log.Printf("Sessions: %v", sessionConfig.UserSessions)
 		return nil, errInvalidUserSession
 	}
 	return claims, nil
