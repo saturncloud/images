@@ -18,6 +18,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/patrickmn/go-cache"
+	kubecache "k8s.io/client-go/tools/cache"
 )
 
 // metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,10 +51,11 @@ var authTokenMutex sync.Mutex
 var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
 var namespace = "main-namespace"
-var userSessionConfigmapName = "saturn-proxy-sessions"
-var proxyConfigmapName = "saturn-auth-proxy"
+var userSessionConfigMapName = "saturn-proxy-sessions"
+var proxyConfigMapName = "saturn-auth-proxy"
 
-var configWatcher *ConfigWatcher
+var proxyConfig *ProxyConfig
+var sessionConfig *SessionConfig
 
 // Used for identifying principal actors in JWTs
 var jwtPrincipals = struct {
@@ -250,7 +252,9 @@ func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*Saturn
 		return nil, errInvalidResource
 	} else if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
 		return nil, errExpired
-	} else if !configWatcher.ProxyConfig.CheckUser(claims.Subject) {
+	} else if !sessionConfig.CheckUser(claims.Subject) {
+		log.Printf("Failed to auth %s", claims.Subject)
+		log.Printf("Sessions: %v", sessionConfig.UserSessions)
 		return nil, errInvalidUserSession
 	}
 	return claims, nil
@@ -407,7 +411,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 	if len(tmpTargetURL) == 0 {
 		targetKey := extractTargetURLKey(req.Host)
-		service := configWatcher.ProxyConfig.GetService(targetKey)
+		service := proxyConfig.GetTarget(targetKey)
 		if service != "" {
 			tmpTargetURL = service
 			if debug {
@@ -563,9 +567,50 @@ func Run() {
 	log.Printf("Redirect URL:    %s", proxyURLs.Login)
 	log.Printf("Refresh URL:     %s", proxyURLs.Refresh)
 
-	configWatcher = NewConfigWatcher("saturn-auth-proxy", namespace)
-	go configWatcher.Watch()
-	// go watchProxyConfig(userSessionConfigmapName)
+	proxyConfigMapName = getEnv("PROXY_CONFIGMAP", proxyConfigMapName)
+	userSessionConfigMapName = getEnv("SESSIONS_CONFIGMAP", userSessionConfigMapName)
+
+	// Watch for changes to proxy target configmap
+	proxyConfig = &ProxyConfig{TargetMap: make(map[string]string)}
+	targetWatcher := NewConfigWatcher(proxyConfigMapName, namespace)
+	go targetWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update proxy target config
+			proxyConfig.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update proxy target config
+			proxyConfig.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear proxy target config
+			proxyConfig.mutex.Lock()
+			defer proxyConfig.mutex.Unlock()
+			proxyConfig.TargetMap = make(map[string]string)
+			log.Println("Deleted proxy target configuration")
+		},
+	})
+
+	// Watch for changes to user proxy sessions configmap
+	sessionConfig = &SessionConfig{UserSessions: make(map[string]struct{})}
+	sessionWatcher := NewConfigWatcher(userSessionConfigMapName, namespace)
+	go sessionWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update user sessions
+			sessionConfig.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update user sessions
+			sessionConfig.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear user sessions
+			sessionConfig.mutex.Lock()
+			defer sessionConfig.mutex.Unlock()
+			sessionConfig.UserSessions = make(map[string]struct{})
+			log.Println("Deleted user sessions")
+		},
+	})
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {

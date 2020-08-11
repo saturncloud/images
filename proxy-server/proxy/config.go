@@ -1,7 +1,7 @@
 package proxy
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -19,39 +19,95 @@ import (
 )
 
 type ProxyConfig struct {
-	UserSessions map[string]bool   `json:"user_sessions"`
-	ServiceMap   map[string]string `json:"service_map"`
+	// Map of requested domain prefix to k8s dst address
+	TargetMap map[string]string
+	mutex     sync.Mutex
+}
+
+/*
+	Get service address for proxy target
+*/
+func (pc *ProxyConfig) GetTarget(key string) string {
+	pc.mutex.Lock()
+	defer pc.mutex.Unlock()
+	target, ok := pc.TargetMap[key]
+	if !ok {
+		return ""
+	}
+	return target
+}
+
+func (pc *ProxyConfig) Load(configmap interface{}) error {
+	pc.mutex.Lock()
+	defer pc.mutex.Unlock()
+
+	data, err := loadConfigMap(configmap)
+	if err != nil {
+		return err
+	}
+
+	// Check for changes to avoid spamming logs with "Loaded proxy config"
+	targetsUpdated := len(pc.TargetMap) != len(data)
+	for key, val := range data {
+		if old, ok := pc.TargetMap[key]; !ok || old != val {
+			targetsUpdated = true
+		}
+	}
+
+	if targetsUpdated {
+		log.Println("Loaded proxy config:")
+		pc.TargetMap = data
+		if len(pc.TargetMap) == 0 {
+			log.Println("No proxy targets")
+		}
+		for key, val := range pc.TargetMap {
+			log.Printf("Destination '%s' --> url '%s' \n", key, val)
+		}
+	}
+	return nil
+}
+
+type SessionConfig struct {
+	// Set of user IDs that are actively logged in
+	UserSessions map[string]struct{}
 	mutex        sync.Mutex
 }
 
 /*
 	Check if user has active session
 */
-func (p *ProxyConfig) CheckUser(userID string) bool {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	_, ok := p.UserSessions[userID]
+func (sc *SessionConfig) CheckUser(userID string) bool {
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()
+	_, ok := sc.UserSessions[userID]
 	return ok
 }
 
-/*
-	Get service address for proxy target
-*/
-func (p *ProxyConfig) GetService(targetKey string) string {
-	p.mutex.Lock()
-	defer p.mutex.Unlock()
-	service, ok := p.ServiceMap[targetKey]
-	if !ok {
-		return ""
-	}
-	return service
-}
+func (sc *SessionConfig) Load(configmap interface{}) error {
+	sc.mutex.Lock()
+	defer sc.mutex.Unlock()
 
-func newProxyConfig() *ProxyConfig {
-	return &ProxyConfig{
-		UserSessions: make(map[string]bool),
-		ServiceMap:   make(map[string]string),
+	data, err := loadConfigMap(configmap)
+	if err != nil {
+		return err
 	}
+
+	// Load sessions and check for changes
+	userSessions := make(map[string]struct{})
+	sessionsUpdated := len(data) != len(sc.UserSessions)
+	for key, _ := range data {
+		userSessions[key] = struct{}{}
+		if _, ok := sc.UserSessions[key]; !ok {
+			sessionsUpdated = true
+		}
+	}
+
+	// Update onchanges
+	if sessionsUpdated {
+		log.Printf("Loaded user sessions: %d active proxy session(s)", len(userSessions))
+		sc.UserSessions = userSessions
+	}
+	return nil
 }
 
 func NewConfigWatcher(name, namespace string) *ConfigWatcher {
@@ -78,25 +134,23 @@ func NewConfigWatcher(name, namespace string) *ConfigWatcher {
 
 	// Create watcher
 	return &ConfigWatcher{
-		Name:        name,
-		Namespace:   namespace,
-		ProxyConfig: newProxyConfig(),
-		client:      client,
+		Name:      name,
+		Namespace: namespace,
+		client:    client,
 	}
 }
 
 type ConfigWatcher struct {
-	Name        string
-	Namespace   string
-	ProxyConfig *ProxyConfig
-	client      *kubernetes.Clientset
+	Name      string
+	Namespace string
+	client    *kubernetes.Clientset
 }
 
 /*
-	Watch for updates to proxy configmaps.
+	Watch for updates to proxy configmaps, using the given event handlers to process the data.
 	This will block execution, so it should be run on its own goroutine.
 */
-func (cw *ConfigWatcher) Watch() {
+func (cw *ConfigWatcher) Watch(eventHandler kubecache.ResourceEventHandlerFuncs) {
 
 	// Resync period, triggers UpdateFunc even when no change events were found
 	defaultResync := time.Second * 30
@@ -111,30 +165,12 @@ func (cw *ConfigWatcher) Watch() {
 	cfgInformer := kubeInformerFactory.Core().V1().ConfigMaps().Informer()
 
 	// Add handler functions for add/update/delete
-	cfgInformer.AddEventHandler(kubecache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Update proxy config
-			cw.parseConfig(obj)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			// Update proxy config
-			cw.parseConfig(newObj)
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Clear proxy config
-			cw.ProxyConfig.mutex.Lock()
-			defer cw.ProxyConfig.mutex.Unlock()
-			cw.ProxyConfig = newProxyConfig()
-			log.Println("Deleted proxy configuration")
-		},
-	})
+	cfgInformer.AddEventHandler(eventHandler)
 
 	// Start event watcher
 	stop := make(chan struct{})
 	defer close(stop)
 	kubeInformerFactory.Start(stop)
-
-	log.Println("Started factory")
 
 	// Block until process ends
 	sig := make(chan os.Signal, 0)
@@ -143,44 +179,12 @@ func (cw *ConfigWatcher) Watch() {
 }
 
 /*
-	Load configmap data into struct
+	Load the data from a configmap obj interface (as passed in by ResourceEventHandlerFuncs)
 */
-func (cw *ConfigWatcher) parseConfig(configmap interface{}) {
-	log.Println("Loading config")
+func loadConfigMap(configmap interface{}) (map[string]string, error) {
 	cfg, ok := configmap.(*corev1.ConfigMap)
 	if !ok {
-		log.Println("Watcher returned non-configmap object")
-		return
+		return nil, errors.New("Watcher returned non-configmap object")
 	}
-
-	cw.ProxyConfig.mutex.Lock()
-	defer cw.ProxyConfig.mutex.Unlock()
-	// proxyConfig := newProxyConfig()
-	userSessions := make(map[string]bool)
-	serviceMap := make(map[string]string)
-
-	if userSessionsStr, ok := cfg.Data["user_sessions"]; ok {
-		if err := json.Unmarshal([]byte(userSessionsStr), &userSessions); err != nil {
-			log.Printf("Failed to unmarshal user sessions: %s", err)
-		}
-	}
-	// Always set user sessions
-	// if something went wrong we don't want to authenticate a logged-out user.
-	cw.ProxyConfig.UserSessions = userSessions
-
-	if serviceMapStr, ok := cfg.Data["service_map"]; ok {
-		if err := json.Unmarshal([]byte(serviceMapStr), &serviceMap); err != nil {
-			log.Printf("Failed to unmarshal service map: %s", err)
-		} else {
-			// Only set service map on successful unmarshal
-			// Worst case on failure is some services might not be valid any more,
-			// but others will still work.
-			cw.ProxyConfig.ServiceMap = serviceMap
-		}
-	}
-
-	log.Println("Loaded proxy config:")
-	for k, v := range cw.ProxyConfig.ServiceMap {
-		log.Printf("Destination '%s' --> url '%s' \n", k, v)
-	}
+	return cfg.Data, nil
 }
