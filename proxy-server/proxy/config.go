@@ -37,6 +37,9 @@ func (pc *ProxyConfig) GetTarget(key string) string {
 	return target
 }
 
+/*
+	Load proxy target map from a ConfigMap
+*/
 func (pc *ProxyConfig) Load(configmap interface{}) error {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
@@ -83,6 +86,9 @@ func (sc *SessionConfig) CheckUser(userID string) bool {
 	return ok
 }
 
+/*
+	Load user proxy sessions from configmap
+*/
 func (sc *SessionConfig) Load(configmap interface{}) error {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
@@ -110,6 +116,9 @@ func (sc *SessionConfig) Load(configmap interface{}) error {
 	return nil
 }
 
+/*
+	Create a new watcher for a ConfigMap
+*/
 func NewConfigWatcher(name, namespace string) *ConfigWatcher {
 	// Load kubeconfig
 	kubeconfigPath := "~/.kube/config"
@@ -140,6 +149,9 @@ func NewConfigWatcher(name, namespace string) *ConfigWatcher {
 	}
 }
 
+/*
+	Watches for changes to a given ConfigMap
+*/
 type ConfigWatcher struct {
 	Name      string
 	Namespace string

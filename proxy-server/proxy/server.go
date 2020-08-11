@@ -21,11 +21,6 @@ import (
 	kubecache "k8s.io/client-go/tools/cache"
 )
 
-// metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-// corev1 "k8s.io/client-go/kubernetes/typed/core/v1/"
-// "k8s.io/client-go/tools/cache"
-// "k8s.io/client-go/tools/clientcmd"
-
 const keyLength = 512 / 8
 const accessKeyRetentionTime = 10 * time.Minute
 
