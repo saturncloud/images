@@ -93,10 +93,16 @@ fi
 
 header Rollout
 for NS in $NAMESPACES; do
-    kubectl -n $NS set image deployment/saturn-auth-proxy --record proxy=$IMAGE:$TAG
+    echo "$NS"
+    if kubectl -n $NS get deployment saturn-auth-proxy &>/dev/null; then
+        kubectl -n $NS set image deployment/saturn-auth-proxy --record proxy=$IMAGE:$TAG
+    else
+        echo "No deployment found"
+    fi
 done
 
 if [ "$TAIL" ]; then
+    header Wait
     kubectl -n $TAIL_NS rollout status deployment saturn-auth-proxy
     header Logs
     kubectl -n $TAIL_NS logs -f deployment/saturn-auth-proxy

@@ -1,9 +1,12 @@
 FROM golang:1.13-alpine as builder
 
 WORKDIR /app
-ADD . .
 
+ADD go.* ./
 RUN go mod download
+
+ADD main.go .
+ADD proxy/ ./proxy/
 RUN go build .
 
 FROM alpine:latest
