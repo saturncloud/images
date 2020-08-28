@@ -2,12 +2,16 @@ import json
 import logging
 import os
 import yaml
+import asyncio
+import kubernetes
 
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
 from distributed.utils import ignoring
+from distributed.core import rpc as dask_rpc
 from dask_kubernetes import KubeCluster, make_pod_from_dict
+from dask_kubernetes.core import Scheduler, SCHEDULER_PORT
 
 
 logging.basicConfig(level=logging.INFO)
@@ -51,9 +55,38 @@ class SaturnKubeCluster(KubeCluster):
     """Class that inherits from dask-kubernetes cluster"""
 
     def __init__(self, *args, dashboard_link=None, **kwargs):
-        """Init as usual, but add dashboard_link to object"""
+        """Init as usual, but add dashboard_link to object and start workers"""
         super().__init__(*args, **kwargs)
+
         self._dashboard_link = dashboard_link
+
+    async def _start(self):
+        if self._n_workers > 0:
+            name = self._generate_name
+            namespace = self._namespace
+            scheduler_address = f"tcp://{name}.{namespace}:{SCHEDULER_PORT}"
+            self.scheduler = Scheduler(
+                idle_timeout=self._idle_timeout,
+                service_wait_timeout_s=self._scheduler_service_wait_timeout,
+                core_api=kubernetes.client.CoreV1Api(),
+                pod_template=self.scheduler_pod_template,
+                namespace=namespace,
+            )
+            self.scheduler.address = scheduler_address
+            self.scheduler_comm = dask_rpc(
+                scheduler_address,
+                connection_args=self.security.get_connection_args("client"),
+            )
+            self.pod_template.spec.containers[0].env.append(
+                kubernetes.client.V1EnvVar(
+                    name="SATURN_DASK_SCHEDULER_ADDRESS", value=scheduler_address
+                )
+            )
+            self._lock = asyncio.Lock()
+            log.info("Starting workers")
+            asyncio.gather(self._correct_state(), super()._start())
+        else:
+            await super()._start()
 
     @property
     def dashboard_link(self):
