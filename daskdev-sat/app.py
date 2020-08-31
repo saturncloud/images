@@ -1,7 +1,7 @@
 import json
+import logging
 import os
 import yaml
-import logging
 
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
@@ -43,12 +43,13 @@ def make_cluster(n_workers):
         deploy_mode="remote",
         name=NAME,
         namespace=NAMESPACE,
-        dashboard_link=DASHBOARD_LINK
+        dashboard_link=DASHBOARD_LINK,
     )
 
 
 class SaturnKubeCluster(KubeCluster):
     """Class that inherits from dask-kubernetes cluster"""
+
     def __init__(self, *args, dashboard_link=None, **kwargs):
         """Init as usual, but add dashboard_link to object"""
         super().__init__(*args, **kwargs)
@@ -80,7 +81,7 @@ class InfoHandler(RequestHandler):
         cluster = self.application.cluster
         info = {
             "scheduler_address": cluster.scheduler_address,
-            "dashboard_link": cluster.dashboard_link
+            "dashboard_link": cluster.dashboard_link,
         }
         self.write(json.dumps(info))
 
@@ -114,14 +115,16 @@ class AdaptHandler(RequestHandler):
 
 
 def make_app():
-    return SaturnClusterApplication([
-        (r"/", MainHandler),
-        (r"/info", InfoHandler),
-        (r"/scheduler_info", SchedulerInfoHandler),
-        (r"/status", StatusHandler),
-        (r"/scale", ScaleHandler),
-        (r"/adapt", AdaptHandler),
-    ])
+    return SaturnClusterApplication(
+        [
+            (r"/", MainHandler),
+            (r"/info", InfoHandler),
+            (r"/scheduler_info", SchedulerInfoHandler),
+            (r"/status", StatusHandler),
+            (r"/scale", ScaleHandler),
+            (r"/adapt", AdaptHandler),
+        ]
+    )
 
 
 if __name__ == "__main__":

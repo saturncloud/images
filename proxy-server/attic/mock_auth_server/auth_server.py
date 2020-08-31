@@ -67,7 +67,7 @@ class HTTPServerHandler(BaseHTTPRequestHandler):
                 "<!DOCTYPE html><html><head><title>Mock Signin</title></head><body>"
                 f"<form action='{html.escape(orig_request[0])}' method='GET'>"
                 f"<input type='hidden' name='saturn_token' value='{html.escape(token)}'/>"
-                "<input type='text' value='my-fake-username'/><br/><input type='password' value='password'/><br/>"   # noqa E501
+                "<input type='text' value='my-fake-username'/><br/><input type='password' value='password'/><br/>"  # noqa E501
                 "<button type='submit'>Sign In</button></form></body></html>".encode("utf-8")
             )
         else:
