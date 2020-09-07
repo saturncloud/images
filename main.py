@@ -1,24 +1,17 @@
 import os
-import base64
-import uuid
-from os.path import dirname, join, exists, relpath
+from os.path import dirname, join, relpath
 from jinja2 import Environment, FileSystemLoader
 import subprocess
-import base64
-import shutil
 import logging
 
 import click
 import yaml
 from sutils.files import ensure_directory
-from sutils.string import to_bytes, to_string
 
 logger = logging.getLogger(__name__)
 ROOT = dirname(__file__)
-template_path = join(ROOT, 'templates')
-jinja_env = Environment(
-    loader=FileSystemLoader([template_path])
-)
+template_path = join(ROOT, "templates")
+jinja_env = Environment(loader=FileSystemLoader([template_path]))
 jinja_env.trim_blocks = True
 jinja_env.lstrip_blocks = True
 
@@ -33,7 +26,7 @@ def template(data, template_path, dest, suffix):
             _dest = join(dest, rpath)
             ensure_directory(_dest)
             with open(_dest, "w+") as f:
-                print('writing to %s' % _dest)
+                print("writing to %s" % _dest)
                 f.write(jinja_env.get_template(tpath).render(**data))
 
 
@@ -43,9 +36,9 @@ def cli():
 
 
 def rsync(path1, path2, exclude_git=False):
-    if path1.endswith('/'):
+    if path1.endswith("/"):
         path1 = path1[:-1]
-    if path2.endswith('/'):
+    if path2.endswith("/"):
         path2 = path2[:-1]
     if exclude_git:
         cmd = "rsync -av --exclude .git/ %s/ %s"
@@ -56,67 +49,33 @@ def rsync(path1, path2, exclude_git=False):
             path1,
             path2,
         )
-        output = subprocess.check_output(
-            cmd,
-            stderr=subprocess.STDOUT, shell=True
-        )
+        _ = subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
     except subprocess.CalledProcessError as e:
         logger.error(e.output)
         raise
 
 
 @cli.command()
-@click.argument('config_path')
-@click.option('--copy', is_flag=True)
+@click.argument("config_path")
+@click.option("--copy", is_flag=True)
 def run(config_path, copy):
     with open(config_path) as f:
         data = yaml.load(f.read(), Loader=yaml.CLoader)
-    out = join(dirname(__file__), 'saturnbase')
-    template(data,
-             template_path,
-             out,
-             'saturnbase'
-    )
-    out = join(dirname(__file__), 'saturnbase-gpu')
-    template(data,
-             template_path,
-             out,
-             'saturnbase'
-    )
-    out = join(dirname(__file__), 'saturnbase-gpu')
-    template(data,
-             template_path,
-             out,
-             'saturnbase-gpu'
-    )
-    out = join(dirname(__file__), 'saturn')
-    template(data,
-             template_path,
-             out,
-             'saturn'
-    )
-    if data['jsaturn_version'] == 'local':
+    out = join(dirname(__file__), "saturnbase")
+    template(data, template_path, out, "saturnbase")
+    out = join(dirname(__file__), "saturnbase-gpu")
+    template(data, template_path, out, "saturnbase")
+    out = join(dirname(__file__), "saturnbase-gpu")
+    template(data, template_path, out, "saturnbase-gpu")
+    out = join(dirname(__file__), "saturn")
+    template(data, template_path, out, "saturn")
+    if data["jsaturn_version"] == "local":
         if copy:
-            rsync("../jupyterlab_saturn", join(out, 'jupyterlab_saturn'),
-                  exclude_git=True)
-    out = join(dirname(__file__), 'saturn-r')
-    template(data,
-             template_path,
-             out,
-             'saturn-r'
-    )
-    out = join(dirname(__file__), 'saturn-gpu')
-    template(data,
-             template_path,
-             out,
-             'saturn-gpu'
-    )
-    out = join(dirname(__file__), 'scripts')
-    template(data,
-             template_path,
-             out,
-             'scripts'
-    )
+            rsync("../jupyterlab_saturn", join(out, "jupyterlab_saturn"), exclude_git=True)
+    out = join(dirname(__file__), "saturn-gpu")
+    template(data, template_path, out, "saturn-gpu")
+    out = join(dirname(__file__), "scripts")
+    template(data, template_path, out, "scripts")
 
 
 if __name__ == "__main__":
