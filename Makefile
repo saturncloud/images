@@ -1,6 +1,3 @@
-cpu_image:
-	bash scripts/build_cpu.sh
-
 .PHONY: format
 format:
 	black --line-length 100 .
