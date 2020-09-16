@@ -10,7 +10,7 @@ dependencies:
   - jupyterlab=1.0.4
   - nbconvert
   - notebook
-  - nbserverproxy
+  - jupyter-server-proxy
   - tornado=5.0
   - jupyter_saturn={{jsaturn_version}}
   - nbdime=1.0.7

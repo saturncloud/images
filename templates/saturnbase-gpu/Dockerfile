@@ -66,7 +66,7 @@ COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY jupyter.yml /tmp/jupyter.yml
 RUN bash /tmp/install-jupyter.bash
 
-RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py nbserverproxy --sys-prefix
+RUN ${CONDA_DIR}/bin/jupyter serverextension enable jupyter-server-proxy --sys-prefix
 RUN ${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
 RUN ${CONDA_DIR}/bin/jupyter labextension install jupyterlab_bokeh
 RUN ${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
