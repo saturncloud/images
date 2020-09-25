@@ -8,7 +8,6 @@ import kubernetes
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
-from distributed.utils import ignoring
 from distributed.core import rpc as dask_rpc
 from dask_kubernetes import KubeCluster, make_pod_from_dict
 from dask_kubernetes.core import Scheduler, SCHEDULER_PORT
@@ -128,13 +127,13 @@ class SchedulerInfoHandler(RequestHandler):
 class StatusHandler(RequestHandler):
     def get(self):
         cluster = self.application.cluster
-        self.write(json.dumps({"status": cluster.status}))
+        self.write(json.dumps({"status": cluster.status.value}))
 
 
 class ScaleHandler(RequestHandler):
     def post(self):
         cluster = self.application.cluster
-        with ignoring(AttributeError):
+        if hasattr(cluster, "_adaptive"):
             cluster._adaptive.stop()
         body = json.loads(self.request.body)
         cluster.scale(**body)

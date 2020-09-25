@@ -1,5 +1,5 @@
 # Daskdev-sat image for dask cluster pods
-FROM daskdev/dask:2.11.0
+FROM daskdev/dask:2.27.0
 
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends locales > /dev/null && \
