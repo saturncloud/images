@@ -9,7 +9,7 @@ dependencies:
 - bokeh
 - cvxpy
 - dask-ml
-- dask-saturn==0.0.4
+- dask-saturn==0.1.1
 - dask-xgboost
 - dask==2.20.0
 - datashader
