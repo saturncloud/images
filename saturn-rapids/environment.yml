@@ -1,0 +1,27 @@
+name: saturn
+channels:
+- nvidia
+- rapidsai
+- numba
+- defaults
+- saturncloud
+dependencies:
+- blas=*=mkl
+- dask-ml
+- dask-saturn==0.1.1
+- dask
+- distributed
+- numba
+- numpy
+- pandas
+- prefect>0.13.0
+- pip
+- pyarrow
+- python=3.7
+- rapids=0.15.1=cuda10.1_py37_gc1db54b_5
+- s3fs==0.4.2
+- scikit-learn
+- scipy
+- snowflake-connector-python==2.3.2
+- pip:
+  - prefect-saturn>=0.2.0
