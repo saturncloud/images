@@ -1,12 +1,21 @@
 import os
-from os.path import dirname, join, relpath
+from os.path import dirname, exists, join, relpath
 from jinja2 import Environment, FileSystemLoader
 import subprocess
 import logging
 
 import click
 import yaml
-from sutils.files import ensure_directory
+
+
+def ensure_directory(fpath, isdir=False):
+    if not isdir:
+        path = dirname(fpath)
+    else:
+        path = fpath
+    if not exists(path):
+        os.makedirs(path)
+
 
 logger = logging.getLogger(__name__)
 ROOT = dirname(__file__)

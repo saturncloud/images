@@ -15,4 +15,3 @@ dependencies:
   - jupyter_saturn={{jsaturn_version}}
   - nbdime=1.0.7
   - pyyaml
-  - sutils=0.7
