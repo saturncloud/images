@@ -2,10 +2,8 @@ FROM nvidia/cuda:10.1-devel-ubuntu18.04
 EXPOSE 8888
 
 ARG JUPYTER_SATURN_VERSION=1.2.7
-ARG SUTILS_VERSION=0.7.1
 
 ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
-ENV SUTILS_VERSION=${SUTILS_VERSION}
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
@@ -27,6 +25,8 @@ RUN apt-get -qq update && \
         rsync \
         sudo \
         openssh-server \
+        htop \
+        screen \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
