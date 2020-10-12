@@ -20,7 +20,7 @@ dependencies:
 - dash-renderer
 - dash-table
 - dask-ml
-- dask-saturn=0.1.1
+- dask-saturn=0.1.2
 - dask-xgboost
 - dask=2.20.0
 - distributed=2.20.0
