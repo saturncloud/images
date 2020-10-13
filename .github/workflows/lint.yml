@@ -1,14 +1,7 @@
-name: Linting and Unit Tests
+name: Linting
 
-# only run this workflow on new commits to main
-# or PRs into main
 on:
   push:
-    branches:
-    - main
-  pull_request:
-    branches:
-    - main
   schedule:
     # Run every Monday morning at 11:00a UTC, 6:00a CST
     - cron: '0 11 * * 1'
@@ -26,7 +19,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v1
       - name: Set up Python 3.7
-        uses: s-weigand/setup-conda@v1.0.3
+        uses: actions/setup-python@v2
         with:
           python-version: 3.7
       - name: linting
