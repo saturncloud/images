@@ -1,0 +1,24 @@
+name: saturn
+channels:
+- https://conda.saturncloud.io/pkgs
+- nvidia
+- rapidsai
+- pytorch
+- numba
+- defaults
+- conda-forge
+- saturncloud
+dependencies:
+- blas=*=mkl
+- bokeh
+- dask-saturn
+- dask-xgboost
+- dask=2.30.0
+- distributed=2.30.0
+- pyarrow
+- python=3.7
+- rapids=0.15.1=cuda10.1_py37_gc1db54b_5
+- s3fs
+- snowflake-connector-python
+- voila
+- xgboost
