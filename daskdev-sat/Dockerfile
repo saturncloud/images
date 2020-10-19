@@ -1,5 +1,5 @@
 # Daskdev-sat image for dask cluster pods
-FROM daskdev/dask:2.11.0
+FROM daskdev/dask:2.30.0
 
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends locales > /dev/null && \
@@ -9,7 +9,7 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 ENV SHELL /bin/bash
 
-RUN conda install -y -c conda-forge tornado kubernetes dask-kubernetes=0.10.1 python-kubernetes && \
+RUN conda install -y -c conda-forge tornado kubernetes dask-kubernetes=0.11.0 python-kubernetes && \
     conda clean --yes --all
 
 #TODO - remove this pdc crap
