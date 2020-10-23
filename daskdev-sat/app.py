@@ -9,6 +9,8 @@ import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
 from distributed.core import rpc as dask_rpc
+from distributed.comm import resolve_address
+from distributed.worker import get_worker, get_client
 from dask_kubernetes import KubeCluster, make_pod_from_dict
 from dask_kubernetes.core import Scheduler, SCHEDULER_PORT
 
@@ -84,9 +86,23 @@ class SaturnKubeCluster(KubeCluster):
             )
             self._lock = asyncio.Lock()
             log.info("Starting workers")
-            asyncio.gather(self._correct_state(), super()._start())
+            await asyncio.gather(self._correct_state(), super()._start())
         else:
             await super()._start()
+
+        self.scheduler.address = resolve_address(self.scheduler.address)
+        self.pod_template.spec.containers[0].env.append(
+            kubernetes.client.V1EnvVar(
+                name="SATURN_DASK_SCHEDULER_ADDRESS", value=self.scheduler.address
+            )
+        )
+        if self._n_workers > 0:
+            def ip_fixer():
+                worker = get_worker()
+                worker.scheduler.address = resolve_address(self.scheduler.address)
+
+            with get_client(self.scheduler.address) as c:
+                c.run(ip_fixer)
 
     @property
     def dashboard_link(self):
