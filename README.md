@@ -19,16 +19,20 @@ dependencies:
 - dask-saturn
 - dask
 - distributed
+- matplotlib
 - numpy
 - pandas
 - pip
 - prefect
-- prefect-saturn
 - pyarrow
 - python=3.7
 - s3fs
+- voila
+- ipykernel
+- ipywidgets
 - pip:
   - snowflake-connector-python
+  - prefect-saturn
 ```
 
 We need to keep images as small as possible, because image size directly impacts instance spinup time.

@@ -7,21 +7,24 @@ channels:
 - saturncloud
 dependencies:
 - blas=*=mkl
-- dask-ml
-- dask-saturn==0.1.1
+- bokeh
+- dask-saturn
 - dask
 - distributed
-- numba
+- matplotlib
 - numpy
 - pandas
-- prefect>0.13.0
 - pip
+- prefect
 - pyarrow
 - python=3.7
+- s3fs
+- voila
+- ipykernel
+- ipywidgets
+- dask-ml
 - rapids=0.15.1=cuda10.1_py37_gc1db54b_5
-- s3fs==0.4.2
-- scikit-learn
-- scipy
-- snowflake-connector-python==2.3.2
+- dask-xgboost
 - pip:
-  - prefect-saturn>=0.2.0
+  - snowflake-connector-python
+  - prefect-saturn
