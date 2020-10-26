@@ -1,8 +1,6 @@
 name: saturn
 channels:
-- https://conda.saturncloud.io/pkgs
 - pytorch
-- numba
 - defaults
 - conda-forge
 - saturncloud

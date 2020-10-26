@@ -1,7 +1,6 @@
 channels:
   - defaults
   - conda-forge
-  - https://conda.saturncloud.io/pkgs
   - saturncloud
 dependencies:
   - nodejs=11
