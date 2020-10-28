@@ -22,8 +22,8 @@ dependencies:
 - dask-ml
 - dask-saturn=0.1.2
 - dask-xgboost
-- dask=2.20.0
-- distributed=2.20.0
+- dask=2.30.0
+- distributed=2.30.0
 - fastparquet
 - gensim
 - geopandas
