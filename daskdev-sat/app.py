@@ -183,7 +183,7 @@ def make_app():
             (r"/status", StatusHandler),
             (r"/scale", ScaleHandler),
             (r"/adapt", AdaptHandler),
-            (r"/register", RegisterPluginHandler)
+            (r"/register", RegisterPluginHandler),
         ]
     )
 
