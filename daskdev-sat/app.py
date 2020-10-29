@@ -4,11 +4,14 @@ import os
 import yaml
 import asyncio
 import kubernetes
+from time import sleep
 
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
 from distributed.core import rpc as dask_rpc
+from distributed.comm import resolve_address
+from distributed.worker import get_client
 from dask_kubernetes import KubeCluster, make_pod_from_dict
 from dask_kubernetes.core import Scheduler, SCHEDULER_PORT
 
@@ -48,6 +51,16 @@ def make_cluster(n_workers):
         namespace=NAMESPACE,
         dashboard_link=DASHBOARD_LINK,
     )
+
+
+class SaturnSetup:
+    name = "saturn_setup"
+
+    def __init__(self, scheduler_address=None):
+        self.scheduler_address = scheduler_address
+
+    def setup(self, worker=None):
+        worker.scheduler.addr = resolve_address(self.scheduler_address)
 
 
 class SaturnKubeCluster(KubeCluster):
@@ -119,6 +132,16 @@ class InfoHandler(RequestHandler):
         self.write(json.dumps(info))
 
 
+class RegisterPluginHandler(RequestHandler):
+    def post(self):
+        log.info(f"Registering default plugins")
+        cluster = self.application.cluster
+        scheduler_address = cluster.scheduler_address
+        with get_client(scheduler_address) as client:
+            output = client.register_worker_plugin(SaturnSetup(scheduler_address=scheduler_address))
+            log.info(output)
+
+
 class SchedulerInfoHandler(RequestHandler):
     def get(self):
         cluster = self.application.cluster
@@ -156,6 +179,7 @@ def make_app():
             (r"/status", StatusHandler),
             (r"/scale", ScaleHandler),
             (r"/adapt", AdaptHandler),
+            (r"/register", RegisterPluginHandler)
         ]
     )
 
