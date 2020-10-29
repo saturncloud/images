@@ -4,7 +4,6 @@ import os
 import yaml
 import asyncio
 import kubernetes
-from time import sleep
 
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
@@ -41,6 +40,7 @@ def make_cluster(n_workers):
     log.info(f"worker config: {WORKER_CONFIG}")
     log.info(f"scheduler config: {SCHEDULER_CONFIG}")
     log.info(f"dashboard address: {DASHBOARD_LINK}")
+    log.info(f"distributed version: {distributed.__version__}")
 
     return SaturnKubeCluster(
         n_workers=n_workers,
@@ -73,6 +73,7 @@ class SaturnKubeCluster(KubeCluster):
         self._dashboard_link = dashboard_link
 
     async def _start(self):
+        log.info("Starting scheduler")
         if self._n_workers > 0:
             name = self._generate_name
             namespace = self._namespace
@@ -134,7 +135,7 @@ class InfoHandler(RequestHandler):
 
 class RegisterPluginHandler(RequestHandler):
     def post(self):
-        log.info(f"Registering default plugins")
+        log.info("Registering default plugins")
         cluster = self.application.cluster
         scheduler_address = cluster.scheduler_address
         with get_client(scheduler_address) as client:
@@ -160,6 +161,7 @@ class ScaleHandler(RequestHandler):
         if hasattr(cluster, "_adaptive"):
             cluster._adaptive.stop()
         body = json.loads(self.request.body)
+        log.info(f"Scaling cluster: {body}")
         cluster.scale(**body)
 
 
@@ -167,6 +169,7 @@ class AdaptHandler(RequestHandler):
     def post(self):
         cluster = self.application.cluster
         body = json.loads(self.request.body)
+        log.info(f"Adapting cluster: {body}")
         cluster.adapt(**body)
 
 
