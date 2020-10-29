@@ -8,6 +8,7 @@ import kubernetes
 import tornado.ioloop
 from tornado.web import RequestHandler, Application
 
+import distributed
 from distributed.core import rpc as dask_rpc
 from distributed.comm import resolve_address
 from distributed.worker import get_client
