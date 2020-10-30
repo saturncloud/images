@@ -7,7 +7,7 @@ cd $(dirname $0)
 echo "installing root env:"
 cat /tmp/environment.yml
 conda env update -n root  -f /tmp/environment.yml
-${CONDA_DIR}/bin/jupyter serverextension enable jupyter-server-proxy --sys-prefix
+${CONDA_DIR}/bin/jupyter serverextension enable jupyter_server_proxy --sys-prefix
 ${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
 
 ${CONDA_DIR}/bin/jupyter labextension install @bokeh/jupyter_bokeh
