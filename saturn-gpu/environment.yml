@@ -46,7 +46,6 @@ dependencies:
 - s3fs
 - scikit-learn
 - scipy
-- snowflake-connector-python
 - snowflake-sqlalchemy
 - tensorboard=2.1.0
 - tensorflow-base=2.1.0=gpu_py37h6c5654b_0
