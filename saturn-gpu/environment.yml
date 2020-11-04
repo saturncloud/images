@@ -55,3 +55,5 @@ dependencies:
 - voila
 - wordcloud
 - xgboost
+- pip:
+  - snowflake-connector-python==2.3.1
