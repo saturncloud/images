@@ -31,10 +31,10 @@ dependencies:
 - h5py
 - ipykernel
 - ipywidgets
-- llvmlite=0.32.1
+- llvmlite
 - matplotlib
 - nltk
-- numba=0.49.1
+- numba
 - numpy
 - pandas
 - pip
@@ -42,10 +42,11 @@ dependencies:
 - pyarrow
 - python=3.7
 - pytorch=1.4.0=py3.7_cuda10.1.243_cudnn7.6.3_0
-- rapids=0.14.1=cuda10.1_py37_0
+- rapids=0.15.1=cuda10.1_py37_gc1db54b_5
 - s3fs
 - scikit-learn
 - scipy
+- snowflake-connector-python==2.3.2
 - snowflake-sqlalchemy
 - tensorboard=2.1.0
 - tensorflow-base=2.1.0=gpu_py37h6c5654b_0
@@ -55,5 +56,3 @@ dependencies:
 - voila
 - wordcloud
 - xgboost
-- pip:
-  - snowflake-connector-python==2.3.1
