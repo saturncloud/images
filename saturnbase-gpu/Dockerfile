@@ -7,7 +7,7 @@ ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
-ENV CONDA_BIN=/srv/conda/bin
+ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \

@@ -18,10 +18,9 @@ if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
 fi
 
 bash ${INSTALLER_PATH} -b -p ${CONDA_DIR}
-export PATH="${CONDA_DIR}/bin:$PATH"
 
 # Allow easy direct installs from conda forge
-conda config --system --add channels conda-forge
-conda config --system --add channels https://conda.saturncloud.io/pkgs
-conda config --system --set auto_update_conda false
-conda config --system --set show_channel_urls true
+${CONDA_BIN}/conda config --system --add channels conda-forge
+${CONDA_BIN}/conda config --system --add channels https://conda.saturncloud.io/pkgs
+${CONDA_BIN}/conda config --system --set auto_update_conda false
+${CONDA_BIN}/conda config --system --set show_channel_urls true

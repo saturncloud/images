@@ -1,34 +1,35 @@
 #!/bin/bash
 
 set -ex
+export PATH="${CONDA_BIN}:${PATH}"
 
 cd $(dirname $0)
 
 echo "installing root env:"
 cat /tmp/environment.yml
 conda env update -n root  -f /tmp/environment.yml
-${CONDA_DIR}/bin/jupyter serverextension enable --sys-prefix jupyter_server_proxy
-${CONDA_DIR}/bin/jupyter serverextension enable --py jsaturn --sys-prefix
+jupyter serverextension enable --sys-prefix jupyter_server_proxy
+jupyter serverextension enable --py jsaturn --sys-prefix
 
-${CONDA_DIR}/bin/jupyter labextension install @bokeh/jupyter_bokeh
-${CONDA_DIR}/bin/jupyter labextension install @jupyter-widgets/jupyterlab-manager
+jupyter labextension install @bokeh/jupyter_bokeh
+jupyter labextension install @jupyter-widgets/jupyterlab-manager
 
 cd ${CONDA_DIR}/jsaturn_ext
-${CONDA_DIR}/bin/npm install
-${CONDA_DIR}/bin/npm run build
-${CONDA_DIR}/bin/jupyter labextension install
+npm install
+npm run build
+jupyter labextension install
 
 cd ${HOME}
 rm -rf ${CONDA_DIR}/jsaturn_ext
 
-${CONDA_DIR}/bin/conda clean -afy
-${CONDA_DIR}/bin/jupyter lab clean
-${CONDA_DIR}/bin/jlpm cache clean
-${CONDA_DIR}/bin/npm cache clean --force
+conda clean -afy
+jupyter lab clean
+jlpm cache clean
+npm cache clean --force
 find ${CONDA_DIR}/ -type f,l -name '*.pyc' -delete
 find ${CONDA_DIR}/ -type f,l -name '*.a' -delete
 find ${CONDA_DIR}/ -type f,l -name '*.js.map' -delete
 rm -rf $HOME/.node-gyp
 rm -rf $HOME/.local
 
-${CONDA_DIR}/bin/conda create -n saturn
+conda create -n saturn
