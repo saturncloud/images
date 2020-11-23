@@ -18,7 +18,7 @@ if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
 fi
 
 bash ${INSTALLER_PATH} -b -p ${CONDA_DIR}
-export PATH="${CONDA_DIR}/bin:$PATH"
+export PATH="${CONDA_BIN}:$PATH"
 
 # Allow easy direct installs from conda forge
 conda config --system --add channels conda-forge
