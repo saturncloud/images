@@ -1,4 +1,4 @@
-ARG SATURNBASE_IMAGE=saturncloud/saturnbase:2020.03.09.dev.1
+ARG SATURNBASE_IMAGE
 FROM ${SATURNBASE_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
