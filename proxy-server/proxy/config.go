@@ -147,7 +147,7 @@ func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string) *HAProx
 	os.MkdirAll(configDir, os.ModeDir)
 
 	return &HAProxyConfig{
-		TCPTargetMap:  map[string]TCPTarget{},
+		TCPTargetMap:  map[string]*TCPTarget{},
 		TLSSecrets:    NewTLSSecrets(certsDir, pending),
 		Namespace:     namespace,
 		ClusterDomain: clusterDomain,
@@ -159,7 +159,7 @@ func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string) *HAProx
 }
 
 type HAProxyConfig struct {
-	TCPTargetMap  map[string]TCPTarget
+	TCPTargetMap  map[string]*TCPTarget
 	TLSSecrets    *TLSSecrets
 	Namespace     string
 	ClusterDomain string
@@ -184,21 +184,12 @@ func (hpc *HAProxyConfig) Load(configmap interface{}) error {
 	}
 
 	// Load and check for changes
-	tcpTargets := make(map[string]TCPTarget)
+	tcpTargets := make(map[string]*TCPTarget)
 	targetsUpdated := false
 	for hostname, targetYAML := range data {
-		var target TCPTarget
-		err := yaml.Unmarshal([]byte(targetYAML), &target)
+		target, err := NewTCPTarget(targetYAML, hpc.Namespace, hpc.ClusterDomain)
 		if err != nil {
-			log.Printf("Error: Failed to load HAProxy config for %s", hostname)
-			continue
-		}
-		if target.Port == 0 || target.ServicePort == 0 || target.ServiceName == "" {
-			log.Printf("Error: Invalid TCP target configuration for %s", hostname)
-			continue
-		}
-		if err := target.setFQDN(hpc.Namespace, hpc.ClusterDomain); err != nil {
-			log.Printf("Error: Failed to configure target FQDN for %s: %s", hostname, err)
+			log.Printf("Error loading %s TCP config: %s", hostname, err.Error())
 			continue
 		}
 
@@ -287,7 +278,7 @@ func (hpc *HAProxyConfig) Clear() {
 	hpc.mutex.Lock()
 	defer hpc.mutex.Unlock()
 
-	hpc.TCPTargetMap = map[string]TCPTarget{}
+	hpc.TCPTargetMap = map[string]*TCPTarget{}
 	log.Println("Removed HAProxy configuration")
 
 	// Signal for update
@@ -321,6 +312,29 @@ func (hpc *HAProxyConfig) reload() error {
 	return syscall.Kill(pid, syscall.SIGUSR2)
 }
 
+func NewTCPTarget(targetYAML, namespace, clusterDomain string) (*TCPTarget, error) {
+	var tt TCPTarget
+	err := yaml.Unmarshal([]byte(targetYAML), &tt)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to load TCP target YAML")
+	}
+	if tt.Port == 0 || tt.ServicePort == 0 || tt.ServiceName == "" {
+		return nil, fmt.Errorf("Invalid TCP target configuration")
+	}
+
+	switch len(strings.Split(tt.ServiceName, ".")) {
+	case 1:
+		tt.ServiceFQDN = fmt.Sprintf("%s.%s.svc.%s", tt.ServiceName, namespace, clusterDomain)
+	case 2:
+		tt.ServiceFQDN = fmt.Sprintf("%s.svc.%s", tt.ServiceName, clusterDomain)
+	default:
+		if !strings.HasSuffix(tt.ServiceName, fmt.Sprintf(".svc.%s", clusterDomain)) {
+			return nil, fmt.Errorf("Invalid service name \"%s\"", tt.ServiceName)
+		}
+	}
+	return &tt, nil
+}
+
 type TCPTarget struct {
 	Port        int    `yaml:"port"`
 	ServiceName string `yaml:"serviceName"`
@@ -334,25 +348,11 @@ type TCPTarget struct {
 /*
 	Return true if the targets match
 */
-func (tt *TCPTarget) Compare(target TCPTarget) bool {
+func (tt *TCPTarget) Compare(target *TCPTarget) bool {
 	return tt.Port == target.Port &&
 		tt.ServiceName == target.ServiceName &&
 		tt.ServicePort == target.ServicePort &&
 		tt.SecretName == target.SecretName
-}
-
-func (tt *TCPTarget) setFQDN(namespace, clusterDomain string) error {
-	switch len(strings.Split(tt.ServiceName, ".")) {
-	case 1:
-		tt.ServiceFQDN = fmt.Sprintf("%s.%s.svc.%s", tt.ServiceName, namespace, clusterDomain)
-	case 2:
-		tt.ServiceFQDN = fmt.Sprintf("%s.svc.%s", tt.ServiceName, clusterDomain)
-	default:
-		if !strings.HasSuffix(tt.ServiceName, fmt.Sprintf(".svc.%s", clusterDomain)) {
-			return fmt.Errorf("Invalid service name \"%s\"", tt.ServiceName)
-		}
-	}
-	return nil
 }
 
 func NewTLSSecrets(certsDir string, pending chan bool) *TLSSecrets {
