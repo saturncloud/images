@@ -21,7 +21,6 @@ NAME = os.environ.get("DASK_NAME")
 NAMESPACE = os.environ.get("DASK_NAMESPACE", "main-namespace")
 DASHBOARD_LINK = os.environ.get("DASK_DASHBOARD_LINK", None)
 N_WORKERS = int(os.environ.get("DASK_N_WORKERS", 0))
-TLS_ENABLED = os.environ.get("TLS_ENABLED", "false").lower() == "true"
 WORKER_CONFIG = "/etc/config/worker_spec.yaml"
 SCHEDULER_CONFIG = "/etc/config/scheduler_spec.yaml"
 
@@ -64,8 +63,7 @@ class SaturnKubeCluster(KubeCluster):
         if self._n_workers > 0:
             name = self._generate_name
             namespace = self._namespace
-            protocol = "tls" if TLS_ENABLED else "tcp"
-            scheduler_address = f"{protocol}://{name}.{namespace}:{SCHEDULER_PORT}"
+            scheduler_address = f"tcp://{name}.{namespace}:{SCHEDULER_PORT}"
             self.scheduler = Scheduler(
                 cluster=self,
                 idle_timeout=self._idle_timeout,
