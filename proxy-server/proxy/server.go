@@ -11,6 +11,8 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
+	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -18,7 +20,11 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/patrickmn/go-cache"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	kubecache "k8s.io/client-go/tools/cache"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 const keyLength = 512 / 8
@@ -46,8 +52,14 @@ var authTokenMutex sync.Mutex
 var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
 
 var namespace = "main-namespace"
+var clusterDomain = "cluster.local"
 var userSessionConfigMapName = "saturn-proxy-sessions"
 var proxyConfigMapName = "saturn-auth-proxy"
+var haproxyConfigMapName = "saturn-tcp-proxy"
+
+var haproxyDir = "/etc/haproxy"
+var haproxyPIDFile string
+var haproxyReloadRateLimit time.Duration
 
 var proxyConfig *ProxyConfig
 var sessionConfig *SessionConfig
@@ -555,6 +567,7 @@ func Run() {
 	listAddr := fmt.Sprintf(":%s", defaultPort)
 
 	namespace = getEnv("NAMESPACE", namespace)
+	clusterDomain = getEnv("CLUSTER_DOMAIN", clusterDomain)
 
 	log.Printf("Listening on %s", listAddr)
 	log.Printf("Redirect URL:    %s", proxyURLs.Login)
@@ -562,10 +575,43 @@ func Run() {
 
 	proxyConfigMapName = getEnv("PROXY_CONFIGMAP", proxyConfigMapName)
 	userSessionConfigMapName = getEnv("SESSIONS_CONFIGMAP", userSessionConfigMapName)
+	haproxyConfigMapName = getEnv("TCP_PROXY_CONFIGMAP", haproxyConfigMapName)
+
+	haproxyDir = getEnv("HAPROXY_CONFIG_DIR", haproxyDir)
+	haproxyPIDFile = getEnv("HAPROXY_PID_FILE", filepath.Join(haproxyDir, "haproxy.pid"))
+	haproxyReloadRateLimit, err = time.ParseDuration(getEnv("HAPROXY_RELOAD_RATE_LIMIT", "5s"))
+	if err != nil {
+		log.Panicf("Error: Invalid HAPROXY_RELOAD_RATE_LIMIT: %s", err)
+	}
+
+	// Load kubeconfig
+	kubeconfigPath := "~/.kube/config"
+	var kubeconfig *rest.Config
+	if _, err := os.Stat(kubeconfigPath); err == nil {
+		kubeconfig, err = clientcmd.BuildConfigFromFlags("", "")
+		if err != nil {
+			log.Panic(err)
+		}
+	} else {
+		kubeconfig, err = rest.InClusterConfig()
+		if err != nil {
+			log.Panic(err)
+		}
+	}
+
+	// Create kube client
+	client, err := kubernetes.NewForConfig(kubeconfig)
+	if err != nil {
+		log.Panic(err)
+	}
 
 	// Watch for changes to proxy target configmap
 	proxyConfig = &ProxyConfig{TargetMap: make(map[string]string)}
-	targetWatcher := NewConfigWatcher(proxyConfigMapName, namespace)
+	targetWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
 	go targetWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			// Update proxy target config
@@ -582,11 +628,17 @@ func Run() {
 			proxyConfig.TargetMap = make(map[string]string)
 			log.Println("Deleted proxy target configuration")
 		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", proxyConfigMapName)
 	})
 
 	// Watch for changes to user proxy sessions configmap
 	sessionConfig = &SessionConfig{UserSessions: make(map[string]struct{})}
-	sessionWatcher := NewConfigWatcher(userSessionConfigMapName, namespace)
+	sessionWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
 	go sessionWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			// Update user sessions
@@ -603,7 +655,85 @@ func Run() {
 			sessionConfig.UserSessions = make(map[string]struct{})
 			log.Println("Deleted user sessions")
 		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", userSessionConfigMapName)
 	})
+
+	// Watch for changes to TCP proxy configmap
+	haproxyConfig := NewHAProxyConfig(namespace, clusterDomain, haproxyDir, haproxyPIDFile)
+	haproxyWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
+	go haproxyWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update HAProxy config
+			haproxyConfig.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update HAProxy config
+			haproxyConfig.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear HAProxy config
+			haproxyConfig.Clear()
+		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", haproxyConfigMapName)
+	})
+
+	// Watch for changes to TLS secrets
+	tlsSecretWatcher := NewConfigWatcher(
+		configKinds.secret,
+		namespace,
+		client,
+	)
+	go tlsSecretWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Add TLS Secret
+			haproxyConfig.TLSSecrets.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update TLS Secret
+			haproxyConfig.TLSSecrets.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Remove TLS Secret
+			haproxyConfig.TLSSecrets.Delete(obj)
+		},
+	}, func(options *metav1.ListOptions) {
+		options.LabelSelector = "saturncloud.io/certificate=server"
+	})
+
+	go func() {
+		// Watch for pending updates in haproxy config + TLS certs
+		exit := make(chan os.Signal, 0)
+		signal.Notify(exit, os.Kill, os.Interrupt)
+		ticker := time.NewTicker(haproxyReloadRateLimit)
+		for {
+			select {
+			case <-exit:
+				break
+			case <-haproxyConfig.Pending:
+				// Rate limit updates, while still checking for exit signal
+				select {
+				case <-exit:
+					break
+				case <-ticker.C:
+				}
+				// Update and reload HAProxy
+				if err := haproxyConfig.Update(); err != nil {
+					log.Printf("Error: %s", err)
+					// Retry on failure
+					select {
+					case haproxyConfig.Pending <- true:
+					default:
+					}
+				}
+			}
+		}
+	}()
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
