@@ -57,6 +57,7 @@ var userSessionConfigMapName = "saturn-proxy-sessions"
 var proxyConfigMapName = "saturn-auth-proxy"
 var haproxyConfigMapName = "saturn-tcp-proxy"
 
+var haproxyEnabled = false
 var haproxyDir = "/etc/haproxy"
 var haproxyPIDFile string
 var haproxyReloadRateLimit time.Duration
@@ -577,6 +578,7 @@ func Run() {
 	userSessionConfigMapName = getEnv("SESSIONS_CONFIGMAP", userSessionConfigMapName)
 	haproxyConfigMapName = getEnv("TCP_PROXY_CONFIGMAP", haproxyConfigMapName)
 
+	haproxyEnabled, err = strconv.ParseBool(getEnv("HAPROXY_ENABLED", "false"))
 	haproxyDir = getEnv("HAPROXY_CONFIG_DIR", haproxyDir)
 	haproxyPIDFile = getEnv("HAPROXY_PID_FILE", filepath.Join(haproxyDir, "haproxy.pid"))
 	haproxyReloadRateLimit, err = time.ParseDuration(getEnv("HAPROXY_RELOAD_RATE_LIMIT", "5s"))
@@ -659,81 +661,83 @@ func Run() {
 		options.FieldSelector = fmt.Sprintf("metadata.name=%s", userSessionConfigMapName)
 	})
 
-	// Watch for changes to TCP proxy configmap
-	haproxyConfig := NewHAProxyConfig(namespace, clusterDomain, haproxyDir, haproxyPIDFile)
-	haproxyWatcher := NewConfigWatcher(
-		configKinds.configMap,
-		namespace,
-		client,
-	)
-	go haproxyWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Update HAProxy config
-			haproxyConfig.Load(obj)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			// Update HAProxy config
-			haproxyConfig.Load(newObj)
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Clear HAProxy config
-			haproxyConfig.Clear()
-		},
-	}, func(options *metav1.ListOptions) {
-		options.FieldSelector = fmt.Sprintf("metadata.name=%s", haproxyConfigMapName)
-	})
+	if haproxyEnabled {
+		// Watch for changes to TCP proxy configmap
+		haproxyConfig := NewHAProxyConfig(namespace, clusterDomain, haproxyDir, haproxyPIDFile)
+		haproxyWatcher := NewConfigWatcher(
+			configKinds.configMap,
+			namespace,
+			client,
+		)
+		go haproxyWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				// Update HAProxy config
+				haproxyConfig.Load(obj)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				// Update HAProxy config
+				haproxyConfig.Load(newObj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				// Clear HAProxy config
+				haproxyConfig.Clear()
+			},
+		}, func(options *metav1.ListOptions) {
+			options.FieldSelector = fmt.Sprintf("metadata.name=%s", haproxyConfigMapName)
+		})
 
-	// Watch for changes to TLS secrets
-	tlsSecretWatcher := NewConfigWatcher(
-		configKinds.secret,
-		namespace,
-		client,
-	)
-	go tlsSecretWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Add TLS Secret
-			haproxyConfig.TLSSecrets.Load(obj)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			// Update TLS Secret
-			haproxyConfig.TLSSecrets.Load(newObj)
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Remove TLS Secret
-			haproxyConfig.TLSSecrets.Delete(obj)
-		},
-	}, func(options *metav1.ListOptions) {
-		options.LabelSelector = "saturncloud.io/certificate=server"
-	})
+		// Watch for changes to TLS secrets
+		tlsSecretWatcher := NewConfigWatcher(
+			configKinds.secret,
+			namespace,
+			client,
+		)
+		go tlsSecretWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				// Add TLS Secret
+				haproxyConfig.TLSSecrets.Load(obj)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				// Update TLS Secret
+				haproxyConfig.TLSSecrets.Load(newObj)
+			},
+			DeleteFunc: func(obj interface{}) {
+				// Remove TLS Secret
+				haproxyConfig.TLSSecrets.Delete(obj)
+			},
+		}, func(options *metav1.ListOptions) {
+			options.LabelSelector = "saturncloud.io/certificate=server"
+		})
 
-	go func() {
-		// Watch for pending updates in haproxy config + TLS certs
-		exit := make(chan os.Signal, 0)
-		signal.Notify(exit, os.Kill, os.Interrupt)
-		ticker := time.NewTicker(haproxyReloadRateLimit)
-		for {
-			select {
-			case <-exit:
-				break
-			case <-haproxyConfig.Pending:
-				// Rate limit updates, while still checking for exit signal
+		go func() {
+			// Watch for pending updates in haproxy config + TLS certs
+			exit := make(chan os.Signal, 0)
+			signal.Notify(exit, os.Kill, os.Interrupt)
+			ticker := time.NewTicker(haproxyReloadRateLimit)
+			for {
 				select {
 				case <-exit:
 					break
-				case <-ticker.C:
-				}
-				// Update and reload HAProxy
-				if err := haproxyConfig.Update(); err != nil {
-					log.Printf("Error: %s", err)
-					// Retry on failure
+				case <-haproxyConfig.Pending:
+					// Rate limit updates, while still checking for exit signal
 					select {
-					case haproxyConfig.Pending <- true:
-					default:
+					case <-exit:
+						break
+					case <-ticker.C:
+					}
+					// Update and reload HAProxy
+					if err := haproxyConfig.Update(); err != nil {
+						log.Printf("Error: %s", err)
+						// Retry on failure
+						select {
+						case haproxyConfig.Pending <- true:
+						default:
+						}
 					}
 				}
 			}
-		}
-	}()
+		}()
+	}
 
 	err = http.ListenAndServe(listAddr, &proxyServer{})
 	if err != nil {
