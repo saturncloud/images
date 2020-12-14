@@ -221,51 +221,44 @@ func (hpc *HAProxyConfig) Update() error {
 	hpc.TLSSecrets.mutex.Lock()
 	defer hpc.TLSSecrets.mutex.Unlock()
 
-	certListFile := filepath.Join(hpc.ConfigDir, "crt-list.txt")
 	configFile := filepath.Join(hpc.ConfigDir, "haproxy.cfg")
 
-	configData := map[int]map[string]string{}
-	certListData := []map[string]string{}
+	configData := map[int][]map[string]string{}
 	for hostname, target := range hpc.TCPTargetMap {
-		if target.SecretName != "" {
-			tlsConfig, ok := hpc.TLSSecrets.TLSMap[target.SecretName]
-			if !ok {
-				log.Printf("Skipping TCP target %s: Missing TLS secret %s", hostname, target.SecretName)
-				continue
-			} else if err := verifyCert(tlsConfig.Cert, tlsConfig.CA, hostname); err != nil {
-				log.Printf("Skipping TCP target %s: %s", hostname, err.Error())
-				continue
-			}
-
-			// Update certificates
-			if err := tlsConfig.Write(); err != nil {
-				log.Printf(
-					"Error: Failed to write certificate from secret \"%s\" to %s",
-					target.SecretName,
-					hpc.TLSSecrets.CertsDir,
-				)
-				continue
-			}
-
-			// Add to crt-list
-			certListData = append(certListData, map[string]string{
-				"certBundle": tlsConfig.BundleFilepath,
-				"caFile":     tlsConfig.CAFilepath,
-				"hostname":   hostname,
-			})
+		tlsConfig, ok := hpc.TLSSecrets.TLSMap[target.SecretName]
+		if !ok {
+			log.Printf("Skipping TCP target %s: Missing TLS secret %s", hostname, target.SecretName)
+			continue
+		} else if err := verifyCert(tlsConfig.Cert, tlsConfig.CA, hostname); err != nil {
+			log.Printf("Skipping TCP target %s: %s", hostname, err.Error())
+			continue
 		}
+
+		// Update certificates
+		if err := tlsConfig.Write(); err != nil {
+			log.Printf(
+				"Error: Failed to write certificate from secret \"%s\" to %s",
+				target.SecretName,
+				hpc.TLSSecrets.CertsDir,
+			)
+			continue
+		}
+
 		if _, ok := configData[target.Port]; !ok {
-			configData[target.Port] = map[string]string{}
+			configData[target.Port] = []map[string]string{}
 		}
-		configData[target.Port][hostname] = fmt.Sprintf("%s:%d", target.ServiceFQDN, target.ServicePort)
+		configData[target.Port] = append(configData[target.Port], map[string]string{
+			"hostname":       hostname,
+			"serviceAddress": fmt.Sprintf("%s:%d", target.ServiceFQDN, target.ServicePort),
+			"serviceName":    target.ServiceName,
+			"certBundle":     tlsConfig.BundleFilepath,
+			"caFile":         tlsConfig.CAFilepath,
+		})
 	}
 
 	log.Printf("Writing HAProxy config to %s", configFile)
 	if err := renderTemplate(haproxyConfigTemplate, configFile, configData); err != nil {
 		return fmt.Errorf("Failed to render HAProxy config template: %s", err)
-	}
-	if err := renderTemplate(haproxyCertListTemplate, certListFile, certListData); err != nil {
-		return fmt.Errorf("Failed to render HAProxy cert list template: %s", err)
 	}
 
 	if err := hpc.reload(); err != nil {
@@ -426,8 +419,8 @@ func (ts *TLSSecrets) Delete(secretObj interface{}) error {
 		delete(ts.TLSMap, secretName)
 
 		// Removing the cert files is not the most critical part of deleting the TLS configuration,
-		// so just logging the error is fine. Removing the TLSConfig from the map will remove it from
-		// the crt-list.txt on next update, so the certificates will not be in use.
+		// so just logging the error is fine. Removing the TLSConfig from the map will make any related
+		// TCP proxy get skipped on next update, so the certficiates will not be in use.
 		if err := os.Remove(tlsConfig.BundleFilepath); err != nil {
 			if !os.IsNotExist(err) {
 				log.Printf("Error: Failed to delete %s certificate bundle: %s", secretName, err)

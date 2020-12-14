@@ -581,7 +581,7 @@ func Run() {
 	haproxyEnabled, err = strconv.ParseBool(getEnv("HAPROXY_ENABLED", "false"))
 	haproxyDir = getEnv("HAPROXY_CONFIG_DIR", haproxyDir)
 	haproxyPIDFile = getEnv("HAPROXY_PID_FILE", filepath.Join(haproxyDir, "haproxy.pid"))
-	haproxyReloadRateLimit, err = time.ParseDuration(getEnv("HAPROXY_RELOAD_RATE_LIMIT", "5s"))
+	haproxyReloadRateLimit, err = time.ParseDuration(getEnv("HAPROXY_RELOAD_RATE_LIMIT", "3s"))
 	if err != nil {
 		log.Panicf("Error: Invalid HAPROXY_RELOAD_RATE_LIMIT: %s", err)
 	}
