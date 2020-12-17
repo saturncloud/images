@@ -42,15 +42,13 @@ var tlsSecretKeys = struct {
 	ca:   "ca.crt",
 }
 
+// ProxyConfig stores a map of requested domain prefix to k8s service address
 type ProxyConfig struct {
-	// Map of requested domain prefix to k8s dst address
 	TargetMap map[string]string
 	mutex     sync.Mutex
 }
 
-/*
-	Get service address for proxy target
-*/
+// GetTarget returns the service address for requested domain
 func (pc *ProxyConfig) GetTarget(key string) string {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
@@ -61,9 +59,7 @@ func (pc *ProxyConfig) GetTarget(key string) string {
 	return target
 }
 
-/*
-	Load proxy target map from a ConfigMap
-*/
+// Load proxy target map from a ConfigMap
 func (pc *ProxyConfig) Load(configmap interface{}) error {
 	pc.mutex.Lock()
 	defer pc.mutex.Unlock()
@@ -94,15 +90,41 @@ func (pc *ProxyConfig) Load(configmap interface{}) error {
 	return nil
 }
 
+// Watch configures a configmap watcher to stream updates from k8s
+func (pc *ProxyConfig) Watch(name, namespace string, client *kubernetes.Clientset) {
+	targetWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
+	go targetWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update proxy target config
+			pc.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update proxy target config
+			pc.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear proxy target config
+			pc.mutex.Lock()
+			defer pc.mutex.Unlock()
+			pc.TargetMap = make(map[string]string)
+			log.Println("Deleted proxy target configuration")
+		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", name)
+	})
+}
+
+// SessionConfig stores the set of user IDs that are actively logged in
 type SessionConfig struct {
-	// Set of user IDs that are actively logged in
 	UserSessions map[string]struct{}
 	mutex        sync.Mutex
 }
 
-/*
-	Check if user has active session
-*/
+// CheckUser returns true if user has active session
 func (sc *SessionConfig) CheckUser(userID string) bool {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
@@ -110,9 +132,7 @@ func (sc *SessionConfig) CheckUser(userID string) bool {
 	return ok
 }
 
-/*
-	Load user proxy sessions from configmap
-*/
+// Load user proxy sessions from configmap
 func (sc *SessionConfig) Load(configmap interface{}) error {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
@@ -140,6 +160,35 @@ func (sc *SessionConfig) Load(configmap interface{}) error {
 	return nil
 }
 
+// Watch configures a configmap watcher to stream updates from k8s
+func (sc *SessionConfig) Watch(name, namespace string, client *kubernetes.Clientset) {
+	sessionWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
+	go sessionWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update user sessions
+			sc.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update user sessions
+			sc.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear user sessions
+			sc.mutex.Lock()
+			defer sc.mutex.Unlock()
+			sc.UserSessions = make(map[string]struct{})
+			log.Println("Deleted user sessions")
+		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", name)
+	})
+}
+
+// NewHAProxyConfig creates an HAProxyConfig object for TCP proxy
 func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string) *HAProxyConfig {
 	certsDir := filepath.Join(baseDir, "certs")
 	configDir := filepath.Join(baseDir, "config")
@@ -154,10 +203,11 @@ func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string) *HAProx
 		BaseDir:       baseDir,
 		ConfigDir:     configDir,
 		PIDFile:       pidFile,
-		Pending:       pending,
+		pending:       pending,
 	}
 }
 
+// HAProxyConfig stores TCP target and TLS configuration settings for HAProxy
 type HAProxyConfig struct {
 	TCPTargetMap  map[string]*TCPTarget
 	TLSSecrets    *TLSSecrets
@@ -167,13 +217,11 @@ type HAProxyConfig struct {
 	ConfigDir     string
 	PIDFile       string
 
-	Pending chan bool
+	pending chan bool
 	mutex   sync.Mutex
 }
 
-/*
-	Load HAProxy configuration from configmap
-*/
+// Load HAProxy configuration from configmap
 func (hpc *HAProxyConfig) Load(configmap interface{}) error {
 	hpc.mutex.Lock()
 	defer hpc.mutex.Unlock()
@@ -208,13 +256,14 @@ func (hpc *HAProxyConfig) Load(configmap interface{}) error {
 		log.Printf("Loaded HAProxy config: %d TCP targets", len(tcpTargets))
 		// Signal for update
 		select {
-		case hpc.Pending <- true:
+		case hpc.pending <- true:
 		default:
 		}
 	}
 	return nil
 }
 
+// Update generates HAProxy config, writes TLS certs to disk, and soft-reloads HAProxy
 func (hpc *HAProxyConfig) Update() error {
 	hpc.mutex.Lock()
 	defer hpc.mutex.Unlock()
@@ -267,6 +316,7 @@ func (hpc *HAProxyConfig) Update() error {
 	return nil
 }
 
+// Clear removes all TCP target configuration
 func (hpc *HAProxyConfig) Clear() {
 	hpc.mutex.Lock()
 	defer hpc.mutex.Unlock()
@@ -276,11 +326,12 @@ func (hpc *HAProxyConfig) Clear() {
 
 	// Signal for update
 	select {
-	case hpc.Pending <- true:
+	case hpc.pending <- true:
 	default:
 	}
 }
 
+// getPID returns the PID of the HAProxy master process
 func (hpc *HAProxyConfig) getPID() (int, error) {
 	f, err := os.Open(hpc.PIDFile)
 	if err != nil {
@@ -293,9 +344,7 @@ func (hpc *HAProxyConfig) getPID() (int, error) {
 	return pid, err
 }
 
-/*
-	Retrieve the PID of HAProxy and signal to reload its configuration
-*/
+// reload signals HAProxy master process to soft-reload its config
 func (hpc *HAProxyConfig) reload() error {
 	pid, err := hpc.getPID()
 	if err != nil {
@@ -305,6 +354,93 @@ func (hpc *HAProxyConfig) reload() error {
 	return syscall.Kill(pid, syscall.SIGUSR2)
 }
 
+// Watch configures a configmap and secrets watcher to stream updates from k8s
+// 	It also starts an extra goroutine to syncronize updating the HAProxy process
+// 	based on configmap and secret changes.
+func (hpc *HAProxyConfig) Watch(
+	name,
+	namespace,
+	tlsLabelSelector string,
+	reloadRateLimit time.Duration,
+	client *kubernetes.Clientset,
+) {
+	// Watch for changes to TCP proxy configmap
+	haproxyWatcher := NewConfigWatcher(
+		configKinds.configMap,
+		namespace,
+		client,
+	)
+	go haproxyWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Update HAProxy config
+			hpc.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update HAProxy config
+			hpc.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Clear HAProxy config
+			hpc.Clear()
+		},
+	}, func(options *metav1.ListOptions) {
+		options.FieldSelector = fmt.Sprintf("metadata.name=%s", name)
+	})
+
+	// Watch for changes to TLS secrets
+	tlsSecretWatcher := NewConfigWatcher(
+		configKinds.secret,
+		namespace,
+		client,
+	)
+	go tlsSecretWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
+		AddFunc: func(obj interface{}) {
+			// Add TLS Secret
+			hpc.TLSSecrets.Load(obj)
+		},
+		UpdateFunc: func(oldObj, newObj interface{}) {
+			// Update TLS Secret
+			hpc.TLSSecrets.Load(newObj)
+		},
+		DeleteFunc: func(obj interface{}) {
+			// Remove TLS Secret
+			hpc.TLSSecrets.Delete(obj)
+		},
+	}, func(options *metav1.ListOptions) {
+		options.LabelSelector = tlsLabelSelector
+	})
+
+	// Watch for pending updates in haproxy config + TLS certs
+	go func() {
+		exit := make(chan os.Signal, 0)
+		signal.Notify(exit, os.Kill, os.Interrupt)
+		ticker := time.NewTicker(reloadRateLimit)
+		for {
+			select {
+			case <-exit:
+				break
+			case <-hpc.pending:
+				// Rate limit updates, while still checking for exit signal
+				select {
+				case <-exit:
+					break
+				case <-ticker.C:
+				}
+				// Update and reload HAProxy
+				if err := hpc.Update(); err != nil {
+					log.Printf("Error: %s", err)
+					// Retry on failure
+					select {
+					case hpc.pending <- true:
+					default:
+					}
+				}
+			}
+		}
+	}()
+}
+
+// NewTCPTarget unmarshals YAML configuration for a TCP target and parses the service FQDN
 func NewTCPTarget(targetYAML, namespace, clusterDomain string) (*TCPTarget, error) {
 	var tt TCPTarget
 	err := yaml.Unmarshal([]byte(targetYAML), &tt)
@@ -328,6 +464,7 @@ func NewTCPTarget(targetYAML, namespace, clusterDomain string) (*TCPTarget, erro
 	return &tt, nil
 }
 
+// TCPTarget stores information for a TCP backend service
 type TCPTarget struct {
 	Port        int    `yaml:"port"`
 	ServiceName string `yaml:"serviceName"`
@@ -338,9 +475,7 @@ type TCPTarget struct {
 	ServiceFQDN string
 }
 
-/*
-	Return true if the targets match
-*/
+// Compare returns true if the TCPTargets match
 func (tt *TCPTarget) Compare(target *TCPTarget) bool {
 	return tt.Port == target.Port &&
 		tt.ServiceName == target.ServiceName &&
@@ -348,6 +483,7 @@ func (tt *TCPTarget) Compare(target *TCPTarget) bool {
 		tt.SecretName == target.SecretName
 }
 
+// NewTLSSecrets returns a TLSSecrets struct and ensures the certsDir exists
 func NewTLSSecrets(certsDir string, pending chan bool) *TLSSecrets {
 	os.MkdirAll(certsDir, 0600)
 	return &TLSSecrets{
@@ -357,6 +493,7 @@ func NewTLSSecrets(certsDir string, pending chan bool) *TLSSecrets {
 	}
 }
 
+// TLSSecrets stores TLS certificates mapped by secret name
 type TLSSecrets struct {
 	TLSMap   map[string]*TLSConfig
 	CertsDir string
@@ -364,9 +501,7 @@ type TLSSecrets struct {
 	mutex    sync.Mutex
 }
 
-/*
-	Load TLS certificates from Secret
-*/
+// Load TLS certificates from Secret
 func (ts *TLSSecrets) Load(secretObj interface{}) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
@@ -401,9 +536,7 @@ func (ts *TLSSecrets) Load(secretObj interface{}) error {
 	return nil
 }
 
-/*
-	Remove secret from TLS configuration, and delete associated cert files
-*/
+// Delete removes a secret from the TLSMap, and deletes associated cert files
 func (ts *TLSSecrets) Delete(secretObj interface{}) error {
 	ts.mutex.Lock()
 	defer ts.mutex.Unlock()
@@ -444,6 +577,7 @@ func (ts *TLSSecrets) Delete(secretObj interface{}) error {
 	return nil
 }
 
+// TLSConfig stores TLS certificate bytes and paths
 type TLSConfig struct {
 	Cert []byte
 	Key  []byte
@@ -453,9 +587,7 @@ type TLSConfig struct {
 	CAFilepath     string
 }
 
-/*
-	Return true if the TLSConfigs match
-*/
+// Compare returns true if the TLSConfigs match
 func (tc *TLSConfig) Compare(config *TLSConfig) bool {
 	if diff := bytes.Compare(tc.Cert, config.Cert); diff != 0 {
 		return false
@@ -469,6 +601,7 @@ func (tc *TLSConfig) Compare(config *TLSConfig) bool {
 	return true
 }
 
+// Write creates/updates TLS certificate files on disk
 func (tc *TLSConfig) Write() error {
 	f, err := os.OpenFile(tc.BundleFilepath, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
@@ -501,9 +634,7 @@ func (tc *TLSConfig) Write() error {
 	return nil
 }
 
-/*
-	Create a new watcher for ConfigMaps or Secrets
-*/
+// NewConfigWatcher creates a new watcher for ConfigMaps or Secrets
 func NewConfigWatcher(kind, namespace string, client *kubernetes.Clientset) *ConfigWatcher {
 	if kind != configKinds.configMap && kind != configKinds.secret {
 		log.Panicf("Invalid config kind \"%s\"", kind)
@@ -515,19 +646,15 @@ func NewConfigWatcher(kind, namespace string, client *kubernetes.Clientset) *Con
 	}
 }
 
-/*
-	Watches for changes to ConfigMaps or Secrets
-*/
+// ConfigWatcher streams changes to ConfigMaps or Secrets
 type ConfigWatcher struct {
 	Kind      string
 	Namespace string
 	client    *kubernetes.Clientset
 }
 
-/*
-	Watch for updates to proxy configmaps, using the given event handlers to process the data.
-	This will block execution, so it should be run on its own goroutine.
-*/
+// Watch for updates to proxy configmaps, using the given event handlers to process the data.
+// 	This will block execution, so it should be run on its own goroutine.
 func (cw *ConfigWatcher) Watch(eventHandler kubecache.ResourceEventHandlerFuncs, listOptions func(options *metav1.ListOptions)) {
 
 	// Resync period, triggers UpdateFunc even when no change events were found
@@ -559,9 +686,7 @@ func (cw *ConfigWatcher) Watch(eventHandler kubecache.ResourceEventHandlerFuncs,
 	<-sig
 }
 
-/*
-	Load the data from a configmap obj interface (as passed in by ResourceEventHandlerFuncs)
-*/
+// loadConfigMap loads the data from a configmap obj interface (as passed in by ResourceEventHandlerFuncs)
 func loadConfigMap(configmapObj interface{}) (map[string]string, error) {
 	configmap, ok := configmapObj.(*corev1.ConfigMap)
 	if !ok {
@@ -570,9 +695,7 @@ func loadConfigMap(configmapObj interface{}) (map[string]string, error) {
 	return configmap.Data, nil
 }
 
-/*
-	Load a secret from an interface (as passed in by ResourceEventHandlerFuncs)
-*/
+// loadSecret loads a secret from an interface (as passed in by ResourceEventHandlerFuncs)
 func loadSecret(secretObj interface{}) (*corev1.Secret, error) {
 	secret, ok := secretObj.(*corev1.Secret)
 	if !ok {
@@ -581,9 +704,7 @@ func loadSecret(secretObj interface{}) (*corev1.Secret, error) {
 	return secret, nil
 }
 
-/*
-	Validate a certificate for a given CA and hostname
-*/
+// verifyVery validates a certificate for a given CA and hostname
 func verifyCert(certPEM, caCertPEM []byte, hostname string) error {
 	roots := x509.NewCertPool()
 	ok := roots.AppendCertsFromPEM([]byte(caCertPEM))

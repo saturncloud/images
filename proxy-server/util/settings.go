@@ -1,0 +1,228 @@
+package util
+
+import (
+	"crypto/rand"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"net/url"
+	"os"
+	"path/filepath"
+	"time"
+
+	"gopkg.in/yaml.v2"
+)
+
+// LoadSettings sets defaults, and parses an input YAML file into a Settings struct
+func LoadSettings(settingsFile string) (*Settings, error) {
+	// Set defaults
+	haproxy := &HAProxy{
+		Enabled:          false,
+		BaseDir:          "/etc/haproxy",
+		PIDFile:          "/etc/haproxy/haproxy.pid",
+		reloadRateLimit:  "3s",
+		TLSLabelSelector: "saturncloud.io/certificate=server",
+	}
+	proxyConfigMaps := &ProxyConfigMaps{
+		UserSessions: "saturn-proxy-sessions",
+		Targets:      "saturn-auth-proxy",
+		TCPTargets:   "saturn-tcp-proxy",
+	}
+	proxyURLs := &ProxyURLs{
+		base:         "http://dev/localtest.me:8888",
+		loginPath:    "/auth/login",
+		refreshPath:  "/auth/refresh",
+		tokenPath:    "/api/deployments/auth",
+		CommonSuffix: "localtest.me",
+	}
+	settings := &Settings{
+		accessKeyExpiration:    "10m",
+		ClusterDomain:          "cluster.local",
+		Debug:                  false,
+		HAProxy:                haproxy,
+		HTTPSRedirect:          true,
+		Namespace:              getEnv("NAMESPACE", "main-namespace"),
+		ProxyConfigMaps:        proxyConfigMaps,
+		ProxyPort:              8080,
+		ProxyURLs:              proxyURLs,
+		refreshTokenExpiration: "3600s",
+		saturnTokenExpiration:  "86400s",
+
+		SharedKey: []byte(getEnv("PROXY_SHARED_KEY", "")),
+		KeyLength: 512 / 8,
+	}
+
+	// Load YAML
+	absFilePath, err := filepath.Abs(settingsFile)
+	if err != nil {
+		return nil, err
+	}
+	settingsYAML, err := ioutil.ReadFile(absFilePath)
+	if err != nil {
+		return nil, err
+	}
+	if err := yaml.Unmarshal([]byte(settingsYAML), settings); err != nil {
+		return nil, err
+	}
+	if err := settings.parse(); err != nil {
+		return nil, err
+	}
+
+	return settings, nil
+}
+
+// Settings stores configuration for the proxy server
+type Settings struct {
+	// YAML file settings
+	ClusterDomain          string           `yaml:"clusterDomain"`
+	Debug                  bool             `yaml:"debug"`
+	HAProxy                *HAProxy         `yaml:"haproxy"`
+	HTTPSRedirect          bool             `yaml:"httpsRedirect"`
+	Namespace              string           `yaml:"namespace"`
+	ProxyConfigMaps        *ProxyConfigMaps `yaml:"proxyConfigMaps"`
+	ProxyPort              int              `yaml:"proxyPort"`
+	ProxyURLs              *ProxyURLs       `yaml:"proxyURLs"`
+	accessKeyExpiration    string           `yaml:"accessKeyExpiration"`
+	refreshTokenExpiration string           `yaml:"refreshTokenExpiration"`
+	saturnTokenExpiration  string           `yaml:"saturnTokenExpiration"`
+
+	// Parsed settings
+	ListenAddr             string
+	AccessKeyExpiration    time.Duration
+	RefreshTokenExpiration time.Duration
+	SaturnTokenExpiration  time.Duration
+	SharedKey              []byte
+	JWTKey                 []byte
+	KeyLength              int
+}
+
+func (s *Settings) parse() error {
+	var err error
+
+	// Keys
+	lenSharedKey := len(s.SharedKey)
+	if lenSharedKey == 0 {
+		if s.Debug {
+			s.SharedKey = []byte("debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567890")
+			log.Printf("WARNING! WARNING! Running in debug mode with predefined weak key!\n - set debug=false if you are running this in production. ")
+		} else {
+			return fmt.Errorf("Critical error: unable to obtain shared saturn signing key.\n - set environment variable PROXY_SHARED_KEY")
+		}
+	} else if lenSharedKey < s.KeyLength {
+		return fmt.Errorf("Critical error: shared saturn signing key is too short (%d),\n - set environment variable PROXY_SHARED_KEY", lenSharedKey)
+	}
+	log.Printf("Saturn signing key obtained and has length %d bytes", lenSharedKey)
+	if s.JWTKey, err = s.GenerateCookieSigningKey(); err != nil {
+		log.Panic("Critical error: unable to generate JWT signing key")
+	}
+	log.Printf("JWT signing key generated and has length %d bytes", len(s.JWTKey))
+
+	// Expiration times
+	if s.AccessKeyExpiration, err = time.ParseDuration(s.accessKeyExpiration); err != nil {
+		return fmt.Errorf("Invalid accessKeyExpiration: %s", err.Error())
+	}
+	if s.RefreshTokenExpiration, err = time.ParseDuration(s.refreshTokenExpiration); err != nil {
+		return fmt.Errorf("Invalid refreshTokenExpiration: %s", err.Error())
+	}
+	if s.SaturnTokenExpiration, err = time.ParseDuration(s.saturnTokenExpiration); err != nil {
+		return fmt.Errorf("Invalid saturnTokenExpiration: %s", err.Error())
+	}
+	log.Printf("Access key expiration time: %s", s.AccessKeyExpiration.String())
+	log.Printf("JWT cookie expiration time: %ss", s.SaturnTokenExpiration.String())
+	log.Printf("Refresh cookie expiration time: %s", s.RefreshTokenExpiration.String())
+
+	// URLs and ports
+	s.ListenAddr = fmt.Sprintf(":%d", s.ProxyPort)
+	if err = s.ProxyURLs.parse(); err != nil {
+		return err
+	}
+	log.Printf("Listening on %s", s.ListenAddr)
+	log.Printf("Redirect URL:    %s", s.ProxyURLs.Login)
+	log.Printf("Refresh URL:     %s", s.ProxyURLs.Refresh)
+
+	// HAProxy
+	if err = s.HAProxy.parse(); err != nil {
+		return err
+	}
+	return nil
+}
+
+// GenerateCookieSigningKey create a key for signing JWTs
+func (s *Settings) GenerateCookieSigningKey() ([]byte, error) {
+	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
+	b := make([]byte, s.KeyLength)
+	_, err := rand.Read(b)
+	if err != nil {
+		return nil, err
+	}
+	for i, b1 := range b {
+		b[i] = letters[b1%byte(len(letters))]
+	}
+	return b, nil
+}
+
+// ProxyURLs stores and parses URLs for interacting with Atlas
+type ProxyURLs struct {
+	base         string `yaml:"base"`
+	loginPath    string `yaml:"loginPath"`
+	refreshPath  string `yaml:"refreshPath"`
+	tokenPath    string `yaml:"tokenPath"`
+	CommonSuffix string `yaml:"commonSuffix"`
+
+	Base    *url.URL
+	Login   *url.URL
+	Refresh *url.URL
+	Token   *url.URL
+}
+
+func (pu *ProxyURLs) parse() error {
+	var err error
+	if pu.Base, err = url.Parse(pu.base); err != nil {
+		return err
+	}
+	if pu.Login, err = pu.Base.Parse(pu.loginPath); err != nil {
+		return err
+	}
+	if pu.Refresh, err = pu.Base.Parse(pu.refreshPath); err != nil {
+		return err
+	}
+	if pu.Token, err = pu.Base.Parse(pu.tokenPath); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// ProxyConfigMaps configmap names for updating proxy sessions and targets
+type ProxyConfigMaps struct {
+	UserSessions string `yaml:"userSessions"`
+	Targets      string `yaml:"targets"`
+	TCPTargets   string `yaml:"tcpTargets"`
+}
+
+// HAProxy settings for interacting with an HAProxy sidecar container for TCP proxy
+type HAProxy struct {
+	Enabled          bool   `yaml:"enabled"`
+	BaseDir          string `yaml:"baseDir"`
+	PIDFile          string `yaml:"pidFile"`
+	reloadRateLimit  string `yaml:"reloadRateLimit"`
+	TLSLabelSelector string `yaml:"tlsLabelSelector"`
+
+	ReloadRateLimit time.Duration
+}
+
+func (h *HAProxy) parse() error {
+	var err error
+	if h.ReloadRateLimit, err = time.ParseDuration(h.reloadRateLimit); err != nil {
+		return err
+	}
+	return nil
+}
+
+// getEnv returns env var value or default
+func getEnv(key, dflt string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return dflt
+}
