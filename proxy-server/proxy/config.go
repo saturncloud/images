@@ -42,17 +42,17 @@ var tlsSecretKeys = struct {
 	ca:   "ca.crt",
 }
 
-// ProxyConfig stores a map of requested domain prefix to k8s service address
-type ProxyConfig struct {
+// HTTPConfig stores a map of requested domain prefix to k8s service address
+type HTTPConfig struct {
 	TargetMap map[string]string
 	mutex     sync.Mutex
 }
 
 // GetTarget returns the service address for requested domain
-func (pc *ProxyConfig) GetTarget(key string) string {
-	pc.mutex.Lock()
-	defer pc.mutex.Unlock()
-	target, ok := pc.TargetMap[key]
+func (hc *HTTPConfig) GetTarget(key string) string {
+	hc.mutex.Lock()
+	defer hc.mutex.Unlock()
+	target, ok := hc.TargetMap[key]
 	if !ok {
 		return ""
 	}
@@ -60,9 +60,9 @@ func (pc *ProxyConfig) GetTarget(key string) string {
 }
 
 // Load proxy target map from a ConfigMap
-func (pc *ProxyConfig) Load(configmap interface{}) error {
-	pc.mutex.Lock()
-	defer pc.mutex.Unlock()
+func (hc *HTTPConfig) Load(configmap interface{}) error {
+	hc.mutex.Lock()
+	defer hc.mutex.Unlock()
 
 	data, err := loadConfigMap(configmap)
 	if err != nil {
@@ -70,20 +70,20 @@ func (pc *ProxyConfig) Load(configmap interface{}) error {
 	}
 
 	// Check for changes to avoid spamming logs with "Loaded proxy config"
-	targetsUpdated := len(pc.TargetMap) != len(data)
+	targetsUpdated := len(hc.TargetMap) != len(data)
 	for key, val := range data {
-		if old, ok := pc.TargetMap[key]; !ok || old != val {
+		if old, ok := hc.TargetMap[key]; !ok || old != val {
 			targetsUpdated = true
 		}
 	}
 
 	if targetsUpdated {
 		log.Println("Loaded proxy config:")
-		pc.TargetMap = data
-		if len(pc.TargetMap) == 0 {
+		hc.TargetMap = data
+		if len(hc.TargetMap) == 0 {
 			log.Println("No proxy targets")
 		}
-		for key, val := range pc.TargetMap {
+		for key, val := range hc.TargetMap {
 			log.Printf("Destination '%s' --> url '%s' \n", key, val)
 		}
 	}
@@ -91,7 +91,7 @@ func (pc *ProxyConfig) Load(configmap interface{}) error {
 }
 
 // Watch configures a configmap watcher to stream updates from k8s
-func (pc *ProxyConfig) Watch(name, namespace string, client *kubernetes.Clientset) {
+func (hc *HTTPConfig) Watch(name, namespace string, client *kubernetes.Clientset) {
 	targetWatcher := NewConfigWatcher(
 		configKinds.configMap,
 		namespace,
@@ -100,17 +100,17 @@ func (pc *ProxyConfig) Watch(name, namespace string, client *kubernetes.Clientse
 	go targetWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			// Update proxy target config
-			pc.Load(obj)
+			hc.Load(obj)
 		},
 		UpdateFunc: func(oldObj, newObj interface{}) {
 			// Update proxy target config
-			pc.Load(newObj)
+			hc.Load(newObj)
 		},
 		DeleteFunc: func(obj interface{}) {
 			// Clear proxy target config
-			pc.mutex.Lock()
-			defer pc.mutex.Unlock()
-			pc.TargetMap = make(map[string]string)
+			hc.mutex.Lock()
+			defer hc.mutex.Unlock()
+			hc.TargetMap = make(map[string]string)
 			log.Println("Deleted proxy target configuration")
 		},
 	}, func(options *metav1.ListOptions) {
@@ -145,7 +145,7 @@ func (sc *SessionConfig) Load(configmap interface{}) error {
 	// Load sessions and check for changes
 	userSessions := make(map[string]struct{})
 	sessionsUpdated := len(data) != len(sc.UserSessions)
-	for key, _ := range data {
+	for key := range data {
 		userSessions[key] = struct{}{}
 		if _, ok := sc.UserSessions[key]; !ok {
 			sessionsUpdated = true
@@ -235,6 +235,10 @@ func (hpc *HAProxyConfig) Load(configmap interface{}) error {
 	tcpTargets := make(map[string]*TCPTarget)
 	targetsUpdated := false
 	for hostname, targetYAML := range data {
+		if targetYAML == "" {
+			// Sometimes deleted entries end up blank instead of removed. No need to log about it.
+			continue
+		}
 		target, err := NewTCPTarget(targetYAML, hpc.Namespace, hpc.ClusterDomain)
 		if err != nil {
 			log.Printf("Error loading %s TCP config: %s", hostname, err.Error())

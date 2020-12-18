@@ -7,5 +7,5 @@ import (
 
 func main() {
 	settingsFile := flag.String("f", "/etc/saturn/settings.yaml", "Settings YAML file path")
-	proxy.Run(settingsFile)
+	proxy.Run(*settingsFile)
 }

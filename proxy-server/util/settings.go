@@ -24,23 +24,23 @@ func LoadSettings(settingsFile string) (*Settings, error) {
 		TLSLabelSelector: "saturncloud.io/certificate=server",
 	}
 	proxyConfigMaps := &ProxyConfigMaps{
-		UserSessions: "saturn-proxy-sessions",
-		Targets:      "saturn-auth-proxy",
+		HTTPTargets:  "saturn-auth-proxy",
 		TCPTargets:   "saturn-tcp-proxy",
+		UserSessions: "saturn-proxy-sessions",
 	}
 	proxyURLs := &ProxyURLs{
-		base:         "http://dev/localtest.me:8888",
-		loginPath:    "/auth/login",
+		baseURL:      "http://dev.localtest.me:8888",
+		loginPath:    "/api/auth/login",
 		refreshPath:  "/auth/refresh",
 		tokenPath:    "/api/deployments/auth",
-		CommonSuffix: "localtest.me",
+		CommonSuffix: ".localtest.me",
 	}
 	settings := &Settings{
 		accessKeyExpiration:    "10m",
 		ClusterDomain:          "cluster.local",
 		Debug:                  false,
 		HAProxy:                haproxy,
-		HTTPSRedirect:          true,
+		HTTPSRedirect:          false,
 		Namespace:              getEnv("NAMESPACE", "main-namespace"),
 		ProxyConfigMaps:        proxyConfigMaps,
 		ProxyPort:              8080,
@@ -76,7 +76,7 @@ type Settings struct {
 	// YAML file settings
 	ClusterDomain          string           `yaml:"clusterDomain"`
 	Debug                  bool             `yaml:"debug"`
-	HAProxy                *HAProxy         `yaml:"haproxy"`
+	HAProxy                *HAProxy         `yaml:"haProxy"`
 	HTTPSRedirect          bool             `yaml:"httpsRedirect"`
 	Namespace              string           `yaml:"namespace"`
 	ProxyConfigMaps        *ProxyConfigMaps `yaml:"proxyConfigMaps"`
@@ -128,7 +128,7 @@ func (s *Settings) parse() error {
 		return fmt.Errorf("Invalid saturnTokenExpiration: %s", err.Error())
 	}
 	log.Printf("Access key expiration time: %s", s.AccessKeyExpiration.String())
-	log.Printf("JWT cookie expiration time: %ss", s.SaturnTokenExpiration.String())
+	log.Printf("JWT cookie expiration time: %s", s.SaturnTokenExpiration.String())
 	log.Printf("Refresh cookie expiration time: %s", s.RefreshTokenExpiration.String())
 
 	// URLs and ports
@@ -144,6 +144,7 @@ func (s *Settings) parse() error {
 	if err = s.HAProxy.parse(); err != nil {
 		return err
 	}
+	log.Printf("HAProxy enabled: %v", s.HAProxy.Enabled)
 	return nil
 }
 
@@ -163,7 +164,7 @@ func (s *Settings) GenerateCookieSigningKey() ([]byte, error) {
 
 // ProxyURLs stores and parses URLs for interacting with Atlas
 type ProxyURLs struct {
-	base         string `yaml:"base"`
+	baseURL      string `yaml:"baseURL"`
 	loginPath    string `yaml:"loginPath"`
 	refreshPath  string `yaml:"refreshPath"`
 	tokenPath    string `yaml:"tokenPath"`
@@ -177,7 +178,7 @@ type ProxyURLs struct {
 
 func (pu *ProxyURLs) parse() error {
 	var err error
-	if pu.Base, err = url.Parse(pu.base); err != nil {
+	if pu.Base, err = url.Parse(pu.baseURL); err != nil {
 		return err
 	}
 	if pu.Login, err = pu.Base.Parse(pu.loginPath); err != nil {
@@ -195,9 +196,9 @@ func (pu *ProxyURLs) parse() error {
 
 // ProxyConfigMaps configmap names for updating proxy sessions and targets
 type ProxyConfigMaps struct {
-	UserSessions string `yaml:"userSessions"`
-	Targets      string `yaml:"targets"`
+	HTTPTargets  string `yaml:"httpTargets"`
 	TCPTargets   string `yaml:"tcpTargets"`
+	UserSessions string `yaml:"userSessions"`
 }
 
 // HAProxy settings for interacting with an HAProxy sidecar container for TCP proxy

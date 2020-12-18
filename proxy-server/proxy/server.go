@@ -29,7 +29,7 @@ var tokenMap = make(map[string]string)
 var authTokenMutex sync.Mutex
 var authTokenCache *cache.Cache
 
-var proxyConfig *ProxyConfig
+var httpConfig *HTTPConfig
 var sessionConfig *SessionConfig
 
 // Used for identifying principal actors in JWTs
@@ -97,7 +97,7 @@ type SaturnClaims struct {
 }
 
 // createToken Creates a JWT for proxy authentication or auth refresh
-func createToken(host, user_id string, expiration time.Time, refreshToken bool) (string, error) {
+func createToken(host, userID string, expiration time.Time, refreshToken bool) (string, error) {
 	var audience string
 	var key []byte
 	if refreshToken {
@@ -115,7 +115,7 @@ func createToken(host, user_id string, expiration time.Time, refreshToken bool) 
 			Audience:  audience,
 			ExpiresAt: expiration.Unix(),
 			Issuer:    jwtPrincipals.SaturnAuthProxy,
-			Subject:   user_id,
+			Subject:   userID,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -128,10 +128,10 @@ func createToken(host, user_id string, expiration time.Time, refreshToken bool) 
 }
 
 // setNewCookies creates new JWT cookies for session auth and refresh token
-func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) error {
+func setNewCookies(res http.ResponseWriter, req *http.Request, userID string) error {
 	// Create a new refresh_token
 	refreshExpiration := time.Now().Add(settings.RefreshTokenExpiration)
-	refreshTokenString, err := createToken(req.Host, user_id, refreshExpiration, true)
+	refreshTokenString, err := createToken(req.Host, userID, refreshExpiration, true)
 	if err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) e
 
 	// Create a new saturn_token
 	expirationTime := time.Now().Add(settings.SaturnTokenExpiration)
-	tokenString, err := createToken(req.Host, user_id, expirationTime, false)
+	tokenString, err := createToken(req.Host, userID, expirationTime, false)
 	if err != nil {
 		return err
 	}
@@ -255,7 +255,7 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	redirectParams := url.Values{}
 	redirectParams.Add("next", origURL)
 	redirectParams.Add("redirect_token", string(uniqToken))
-	redirectUrl := settings.ProxyURLs.Login.String() + "?" + redirectParams.Encode()
+	redirectURL := settings.ProxyURLs.Login.String() + "?" + redirectParams.Encode()
 
 	tokenMapMutex.Lock()
 	tokenMap[string(uniqToken)] = ""
@@ -263,9 +263,9 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	tokenMapMutex.Unlock()
 
 	if settings.Debug {
-		log.Printf("Redirecting to fallback url: %s", redirectUrl)
+		log.Printf("Redirecting to fallback url: %s", redirectURL)
 	}
-	http.Redirect(res, req, redirectUrl, 302)
+	http.Redirect(res, req, redirectURL, 302)
 	return false
 }
 
@@ -340,7 +340,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 	if len(tmpTargetURL) == 0 {
 		targetKey := extractTargetURLKey(req.Host)
-		service := proxyConfig.GetTarget(targetKey)
+		service := httpConfig.GetTarget(targetKey)
 		if service != "" {
 			tmpTargetURL = service
 			if settings.Debug {
@@ -450,8 +450,8 @@ func Run(settingsFile string) {
 	}
 
 	// Watch for changes to proxy target configmap
-	proxyConfig = &ProxyConfig{TargetMap: make(map[string]string)}
-	proxyConfig.Watch(settings.ProxyConfigMaps.Targets, settings.Namespace, client)
+	httpConfig = &HTTPConfig{TargetMap: make(map[string]string)}
+	httpConfig.Watch(settings.ProxyConfigMaps.HTTPTargets, settings.Namespace, client)
 
 	// Watch for changes to user proxy sessions configmap
 	sessionConfig = &SessionConfig{UserSessions: make(map[string]struct{})}

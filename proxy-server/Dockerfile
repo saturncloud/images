@@ -7,6 +7,7 @@ RUN go mod download
 
 ADD main.go .
 ADD proxy/ ./proxy/
+ADD util/ ./util/
 RUN go build .
 
 FROM alpine:latest
