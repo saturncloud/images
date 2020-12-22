@@ -9,7 +9,6 @@ dependencies:
 - bokeh
 - cvxpy
 - dask-ml
-- dask-xgboost
 - dask==2.30.0
 - datashader
 - distributed==2.30.0
@@ -38,9 +37,9 @@ dependencies:
 - scipy
 - voila
 - wordcloud
-- xgboost==0.90
+- xgboost>=1.3.0
 - pip:
   - snowflake-connector-python==2.3.1
   - pyarrow==0.17.0
   - prefect-saturn>=0.4.0
-  - dask-saturn==0.2.1
+  - dask-saturn==0.2.0
