@@ -7,9 +7,9 @@ dependencies:
 - blas=*=mkl
 - bokeh
 - dask-saturn
-- dask
-- distributed
-- matplotlib
+- dask=2.30.0
+- distributed=2.30.0
+- matplotlib=3.2.2
 - numpy
 - pandas
 - pip

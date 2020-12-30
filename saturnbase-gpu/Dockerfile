@@ -1,15 +1,13 @@
 FROM nvidia/cuda:10.1-devel-ubuntu18.04
 EXPOSE 8888
 
-ARG JUPYTER_SATURN_VERSION=1.2.7
-ARG SUTILS_VERSION=0.7.1
+ARG JUPYTER_SATURN_VERSION
 
 ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
-ENV SUTILS_VERSION=${SUTILS_VERSION}
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
-ENV PATH=${PATH}:/srv/conda/bin
+ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \
@@ -65,11 +63,11 @@ RUN envsubst < /tmp/environment-temp.yml > /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash
 
 RUN echo '' > ${CONDA_DIR}/conda-meta/history
-RUN conda config --system --add channels conda-forge && \
-    conda config --system --add channels https://conda.saturncloud.io/pkgs && \
-    conda config --system --set auto_update_conda false && \
-    conda config --system --set show_channel_urls true
+RUN ${CONDA_BIN}/conda config --system --add channels conda-forge && \
+    ${CONDA_BIN}/conda config --system --add channels https://conda.saturncloud.io/pkgs && \
+    ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
+    ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_DIR}/bin:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}

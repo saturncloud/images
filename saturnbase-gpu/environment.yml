@@ -10,7 +10,7 @@ dependencies:
   - nbconvert
   - notebook
   - jupyter-server-proxy
-  - tornado=5.0
+  - tornado=6
   - jupyter_saturn=${JUPYTER_SATURN_VERSION}
   - nbdime
   - pyyaml
