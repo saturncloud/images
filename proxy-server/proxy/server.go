@@ -2,7 +2,6 @@ package proxy
 
 import (
 	"bytes"
-	"crypto/rand"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -11,58 +10,26 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"os/signal"
-	"path/filepath"
-	"strconv"
+	"saturncloud/proxy-server/util"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/patrickmn/go-cache"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
-	kubecache "k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
-const keyLength = 512 / 8
-const accessKeyRetentionTime = 10 * time.Minute
+var settings *util.Settings
 
-// Atlas URLs for authenticating
-var proxyURLs = struct {
-	Base    string
-	Login   string
-	Refresh string
-	Token   string
-}{}
-var useHTTPSForSelfRedirect = true
-var jwtKey []byte
-var sharedKey []byte
-
-var saturnTokenExpirationSeconds = 3600   //  1 hour to expiration
-var refreshTokenExpirationSeconds = 86400 //  24 hours to expiration
-var debug = true
-var defaultPort = "8888"
 var tokenMapMutex sync.Mutex
 var tokenMap = make(map[string]string)
-var urlCommonSuffix = ".localhost"
 var authTokenMutex sync.Mutex
-var authTokenCache = cache.New(accessKeyRetentionTime, accessKeyRetentionTime)
+var authTokenCache *cache.Cache
 
-var namespace = "main-namespace"
-var clusterDomain = "cluster.local"
-var userSessionConfigMapName = "saturn-proxy-sessions"
-var proxyConfigMapName = "saturn-auth-proxy"
-var haproxyConfigMapName = "saturn-tcp-proxy"
-
-var haproxyEnabled = false
-var haproxyDir = "/etc/haproxy"
-var haproxyPIDFile string
-var haproxyReloadRateLimit time.Duration
-
-var proxyConfig *ProxyConfig
+var httpConfig *HTTPConfig
 var sessionConfig *SessionConfig
 
 // Used for identifying principal actors in JWTs
@@ -94,20 +61,7 @@ var (
 	errInvalidUserSession   = errors.New("Invalid session, user is not logged in")
 )
 
-/*
-	Get env var or default
-*/
-func getEnv(key, dflt string) string {
-	value, ok := os.LookupEnv(key)
-	if ok {
-		return value
-	}
-	return dflt
-}
-
-/*
-	Basic error page
-*/
+// respondWithError renders a basic error page
 func respondWithError(res http.ResponseWriter, status int, message string) {
 	log.Printf("Error %d: %s", status, message)
 	res.Header().Add("Content-Type", "text/html;charset=utf-8")
@@ -115,35 +69,16 @@ func respondWithError(res http.ResponseWriter, status int, message string) {
 	fmt.Fprintf(res, "<html><head><title>%[1]d</title></head><body>Error %[1]d: %[2]s</body></html>", status, message)
 }
 
+// extractTargetURLKey returns hostname with the CommonSuffix removed
 func extractTargetURLKey(hostname string) string {
-
 	tmp := strings.SplitN(hostname, ":", 2)[0]
-	if strings.HasSuffix(tmp, urlCommonSuffix) {
-		tmp = tmp[:len(tmp)-len(urlCommonSuffix)]
+	if strings.HasSuffix(tmp, settings.ProxyURLs.CommonSuffix) {
+		tmp = tmp[:len(tmp)-len(settings.ProxyURLs.CommonSuffix)]
 	}
-
 	return tmp
 }
 
-/*
-	Generate a key for signing JWTs
-*/
-func generateCookieSigningKey(n int) ([]byte, error) {
-	const letters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-"
-	b := make([]byte, n)
-	_, err := rand.Read(b)
-	if err != nil {
-		return nil, err
-	}
-	for i, b1 := range b {
-		b[i] = letters[b1%byte(len(letters))]
-	}
-	return b, nil
-}
-
-/*
-	Serve a reverse proxy for a given url
-*/
+// serveReverseProxy proxies a request to the given target
 func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL string) {
 	// Modify the headers for  SSL redirection and cache control
 	req.Header.Set("X-Forwarded-Host", req.Host)
@@ -154,27 +89,25 @@ func serveReverseProxy(res http.ResponseWriter, req *http.Request, tmpTargetURL 
 	proxy.ServeHTTP(res, req) // non blocking
 }
 
-// Extend standard claims for saturn specific requirements
+// SaturnClaims extend standard JWT claims for saturn specific requirements
 type SaturnClaims struct {
 	Resource      string `json:"resource"`
 	RedirectToken string `json:"redirect_token,omitempty"`
 	jwt.StandardClaims
 }
 
-/*
-	Create JWT for proxy authentication or auth refresh
-*/
-func createToken(host, user_id string, expiration time.Time, refreshToken bool) (string, error) {
+// createToken Creates a JWT for proxy authentication or auth refresh
+func createToken(host, userID string, expiration time.Time, refreshToken bool) (string, error) {
 	var audience string
 	var key []byte
 	if refreshToken {
 		// Audience indicates that this token is a refresh token
 		// and cannot be used for authenticating in the proxy
 		audience = jwtPrincipals.Atlas
-		key = sharedKey
+		key = settings.SharedKey
 	} else {
 		audience = jwtPrincipals.SaturnAuthProxy
-		key = jwtKey
+		key = settings.JWTKey
 	}
 	claims := &SaturnClaims{
 		Resource: host,
@@ -182,7 +115,7 @@ func createToken(host, user_id string, expiration time.Time, refreshToken bool) 
 			Audience:  audience,
 			ExpiresAt: expiration.Unix(),
 			Issuer:    jwtPrincipals.SaturnAuthProxy,
-			Subject:   user_id,
+			Subject:   userID,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -194,13 +127,11 @@ func createToken(host, user_id string, expiration time.Time, refreshToken bool) 
 	return tokenString, nil
 }
 
-/*
-	Create new JWT cookies for session auth and refresh token
-*/
-func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) error {
+// setNewCookies creates new JWT cookies for session auth and refresh token
+func setNewCookies(res http.ResponseWriter, req *http.Request, userID string) error {
 	// Create a new refresh_token
-	refreshExpiration := time.Now().Add(time.Duration(refreshTokenExpirationSeconds) * time.Second)
-	refreshTokenString, err := createToken(req.Host, user_id, refreshExpiration, true)
+	refreshExpiration := time.Now().Add(settings.RefreshTokenExpiration)
+	refreshTokenString, err := createToken(req.Host, userID, refreshExpiration, true)
 	if err != nil {
 		return err
 	}
@@ -212,8 +143,8 @@ func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) e
 	})
 
 	// Create a new saturn_token
-	expirationTime := time.Now().Add(time.Duration(saturnTokenExpirationSeconds) * time.Second)
-	tokenString, err := createToken(req.Host, user_id, expirationTime, false)
+	expirationTime := time.Now().Add(settings.SaturnTokenExpiration)
+	tokenString, err := createToken(req.Host, userID, expirationTime, false)
 	if err != nil {
 		return err
 	}
@@ -227,18 +158,16 @@ func setNewCookies(res http.ResponseWriter, req *http.Request, user_id string) e
 	return nil
 }
 
-/*
-	Validate JWT tokens based on issuer, audience, and request host
-*/
+// validateSaturnToken validates JWT tokens based on issuer, audience, and request host
 func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*SaturnClaims, error) {
 	claims := &SaturnClaims{}
 
 	var key []byte
 	switch issuer {
 	case jwtPrincipals.Atlas:
-		key = sharedKey
+		key = settings.SharedKey
 	case jwtPrincipals.SaturnAuthProxy:
-		key = jwtKey
+		key = settings.JWTKey
 	}
 
 	// Parse the JWT string and store the result in `claims`.
@@ -274,35 +203,33 @@ type proxyAuthResponse struct {
 	SaturnToken string `json:"saturn_token"`
 }
 
-/*
-	Check for a refresh token cookie to reauthenticate, or redirect to Atlas login
-*/
+// authenticate checks for a refresh token cookie to reauthenticate, or redirect to Atlas login
 func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	res.Header().Add("Cache-Control", "no-cache")
 
 	protocol := "https://"
-	if !useHTTPSForSelfRedirect {
+	if !settings.HTTPSRedirect {
 		protocol = "http://"
 	}
 
 	origURL := protocol + req.Host + req.URL.RequestURI()
-	if debug {
+	if settings.Debug {
 		log.Printf("Authenticating URL: %s", origURL)
 	}
 
-	uniqToken, _ := generateCookieSigningKey(40)
+	uniqToken, _ := settings.GenerateCookieSigningKey()
 
 	// Check for refresh token
 	if refreshCookie, err := req.Cookie(proxyCookies.RefreshToken); err == nil {
 		// Proxy auth request to Atlas
-		if debug {
+		if settings.Debug {
 			log.Println("Found refresh_token, proxying authentication request.")
 		}
 		buffer := new(bytes.Buffer)
 		json.NewEncoder(buffer).Encode(&proxyAuthRequest{
 			RefreshToken: refreshCookie.Value,
 		})
-		authResp, err := http.Post(proxyURLs.Refresh, "application/json", buffer)
+		authResp, err := http.Post(settings.ProxyURLs.Refresh.String(), "application/json", buffer)
 		if err != nil {
 			log.Printf("Authentication failed: %s", err)
 			return false
@@ -328,25 +255,21 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 	redirectParams := url.Values{}
 	redirectParams.Add("next", origURL)
 	redirectParams.Add("redirect_token", string(uniqToken))
-	redirectUrl := proxyURLs.Login + "?" + redirectParams.Encode()
+	redirectURL := settings.ProxyURLs.Login.String() + "?" + redirectParams.Encode()
 
 	tokenMapMutex.Lock()
 	tokenMap[string(uniqToken)] = ""
 	log.Printf("Added token %s", uniqToken)
 	tokenMapMutex.Unlock()
 
-	if debug {
-		log.Printf("Redirecting to fallback url: %s", redirectUrl)
+	if settings.Debug {
+		log.Printf("Redirecting to fallback url: %s", redirectURL)
 	}
-	http.Redirect(res, req, redirectUrl, 302)
+	http.Redirect(res, req, redirectURL, 302)
 	return false
 }
 
-/*
-	Given a request, check for valid authentication in headers, URL params, and cookies.
-	If no valid authentication is found, attempt to reauthenticate before sending request
-	to its destination.
-*/
+// handleRequestAndRedirect checks for valid auth, or attempts reauthentication before proxying
 func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	tmpTargetURL := ""
 
@@ -417,10 +340,10 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 
 	if len(tmpTargetURL) == 0 {
 		targetKey := extractTargetURLKey(req.Host)
-		service := proxyConfig.GetTarget(targetKey)
+		service := httpConfig.GetTarget(targetKey)
 		if service != "" {
 			tmpTargetURL = service
-			if debug {
+			if settings.Debug {
 				log.Printf("Debug: target url is %s", service)
 			}
 		} else {
@@ -435,15 +358,12 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 	log.Printf("OK: Proxying to url: %s %s\n", tmpTargetURL, req.URL.String())
 }
 
-/*
-	Check authorization header validity for the requested resource. Returns true if no error has been thrown.
-	If false is returned, the caller should assume that a response has already been written out.
-
-	This is used only for customers to access their deployments via Authorization header with a fixed token,
-	(e.g. for creating automation against a deployment) so that they don't have to mess with cookies and token
-	expiration.
-*/
+// checkTokenAuth checks authorization header validity for the requested resource. Returns false if response already written out.
 func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader string) bool {
+	// This is used only for customers to access their deployments via Authorization header with a fixed token,
+	// (e.g. for creating automation against a deployment) so that they don't have to mess with cookies and token
+	// expiration.
+
 	target := extractTargetURLKey(req.Host)
 	cacheKey := fmt.Sprintf("%s/%s", target, authHeader)
 	// check if the header is already in our cache for this host
@@ -452,7 +372,7 @@ func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader strin
 	authTokenMutex.Unlock()
 	if found {
 		// valid key, valid target - good to go
-		if debug {
+		if settings.Debug {
 			log.Printf("Valid cache hit for %s", target)
 		}
 		return true
@@ -466,7 +386,7 @@ func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader strin
 		// add to cache
 		log.Printf("Caching token for %s", target)
 		authTokenMutex.Lock()
-		authTokenCache.Set(cacheKey, true, accessKeyRetentionTime)
+		authTokenCache.Set(cacheKey, true, settings.AccessKeyExpiration)
 		authTokenMutex.Unlock()
 		return true
 	}
@@ -477,7 +397,7 @@ func checkTokenAuth(res http.ResponseWriter, req *http.Request, authHeader strin
 
 func checkTokenValidity(authHeader, target string) (bool, error) {
 	client := &http.Client{}
-	request, err := http.NewRequest("GET", proxyURLs.Token+"?targetResource="+target, nil)
+	request, err := http.NewRequest("GET", settings.ProxyURLs.Token.String()+"?targetResource="+target, nil)
 	if err != nil {
 		return false, err
 	}
@@ -499,92 +419,14 @@ func (p *proxyServer) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	handleRequestAndRedirect(res, req)
 }
 
-func Run() {
-
-	debug, _ = strconv.ParseBool(getEnv("PROXY_DEBUG", "true"))
-
-	urlCommonSuffix = getEnv("PROXY_SUFFIX", urlCommonSuffix)
-
-	defaultPort = getEnv("PROXY_LISTEN_PORT", defaultPort)
-
-	// Parse URLs
-	baseURL, err := url.Parse(getEnv("PROXY_BASE_URL", "http://dev.localtest.me:8888"))
-	if err != nil {
-		log.Panic(err)
-	}
-	loginURL, err := baseURL.Parse(getEnv("PROXY_LOGIN_PATH", "/auth/login"))
-	if err != nil {
-		log.Panic(err)
-	}
-	refreshURL, err := baseURL.Parse(getEnv("PROXY_REFRESH_PATH", "/auth/refresh"))
-	if err != nil {
-		log.Panic(err)
-	}
-	tokenURL, err := baseURL.Parse(getEnv("PROXY_TOKEN_PATH", "/api/deployments/auth"))
-	if err != nil {
-		log.Panic(err)
-	}
-	proxyURLs.Base = baseURL.String()
-	proxyURLs.Login = loginURL.String()
-	proxyURLs.Refresh = refreshURL.String()
-	proxyURLs.Token = tokenURL.String()
-
-	useHTTPSForSelfRedirect = getEnv("HTTPS_SELF_REDIRECT", "true") == "true"
-
-	// Parse and generate keys
-	sharedKey = []byte(getEnv("PROXY_SHARED_KEY", ""))
-	if len(sharedKey) == 0 {
-		if debug {
-			sharedKey = []byte("debugKeyForTestOnlydNeverUseInProduction123456789012345678901234567890")
-			log.Printf("WARNING! WARNING! Running in debug mode with predefined weak key!\n - set PROXY_DEBUG=false if you are running this in production. ")
-		} else {
-			log.Printf("Critical error: unable to obtain shared saturn signing key.\n - set environment variable PROXY_SHARED_KEY")
-			return
-		}
+// Run loads settings, start configmap and secrets watchers, and starts the proxy server
+func Run(settingsFile string) {
+	var err error
+	if settings, err = util.LoadSettings(settingsFile); err != nil {
+		log.Panicf("Error loading settings: %s", err.Error())
 	}
 
-	if len(sharedKey) < keyLength {
-		log.Printf("Critical error: shared saturn signing key is too short (%d),\n - set environment variable PROXY_SHARED_KEY", len(sharedKey))
-		return
-	}
-
-	log.Printf("Saturn signing key obtained and has length %d bytes", len(sharedKey))
-
-	tmpKey, err := generateCookieSigningKey(keyLength)
-	if err != nil {
-		log.Printf("Critical error: unable to generate JWT signing key")
-		return
-	}
-
-	log.Printf("JWT signing key generated and has length %d bytes", len(tmpKey))
-
-	// Token/Cookie expirations
-	jwtKey = tmpKey
-	saturnTokenExpirationSeconds, _ = strconv.Atoi(getEnv("SATURN_TOKEN_EXPIRE_SEC", "3600"))
-	refreshTokenExpirationSeconds, _ = strconv.Atoi(getEnv("REFRESH_TOKEN_EXPIRE_SEC", "86400"))
-	log.Printf("JWT cookie expiration time: %ds", saturnTokenExpirationSeconds)
-	log.Printf("Refresh cookie expiration time: %ds", refreshTokenExpirationSeconds)
-
-	listAddr := fmt.Sprintf(":%s", defaultPort)
-
-	namespace = getEnv("NAMESPACE", namespace)
-	clusterDomain = getEnv("CLUSTER_DOMAIN", clusterDomain)
-
-	log.Printf("Listening on %s", listAddr)
-	log.Printf("Redirect URL:    %s", proxyURLs.Login)
-	log.Printf("Refresh URL:     %s", proxyURLs.Refresh)
-
-	proxyConfigMapName = getEnv("PROXY_CONFIGMAP", proxyConfigMapName)
-	userSessionConfigMapName = getEnv("SESSIONS_CONFIGMAP", userSessionConfigMapName)
-	haproxyConfigMapName = getEnv("TCP_PROXY_CONFIGMAP", haproxyConfigMapName)
-
-	haproxyEnabled, err = strconv.ParseBool(getEnv("HAPROXY_ENABLED", "false"))
-	haproxyDir = getEnv("HAPROXY_CONFIG_DIR", haproxyDir)
-	haproxyPIDFile = getEnv("HAPROXY_PID_FILE", filepath.Join(haproxyDir, "haproxy.pid"))
-	haproxyReloadRateLimit, err = time.ParseDuration(getEnv("HAPROXY_RELOAD_RATE_LIMIT", "3s"))
-	if err != nil {
-		log.Panicf("Error: Invalid HAPROXY_RELOAD_RATE_LIMIT: %s", err)
-	}
+	authTokenCache = cache.New(settings.AccessKeyExpiration, settings.AccessKeyExpiration)
 
 	// Load kubeconfig
 	kubeconfigPath := "~/.kube/config"
@@ -608,138 +450,31 @@ func Run() {
 	}
 
 	// Watch for changes to proxy target configmap
-	proxyConfig = &ProxyConfig{TargetMap: make(map[string]string)}
-	targetWatcher := NewConfigWatcher(
-		configKinds.configMap,
-		namespace,
-		client,
-	)
-	go targetWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Update proxy target config
-			proxyConfig.Load(obj)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			// Update proxy target config
-			proxyConfig.Load(newObj)
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Clear proxy target config
-			proxyConfig.mutex.Lock()
-			defer proxyConfig.mutex.Unlock()
-			proxyConfig.TargetMap = make(map[string]string)
-			log.Println("Deleted proxy target configuration")
-		},
-	}, func(options *metav1.ListOptions) {
-		options.FieldSelector = fmt.Sprintf("metadata.name=%s", proxyConfigMapName)
-	})
+	httpConfig = &HTTPConfig{TargetMap: make(map[string]string)}
+	httpConfig.Watch(settings.ProxyConfigMaps.HTTPTargets, settings.Namespace, client)
 
 	// Watch for changes to user proxy sessions configmap
 	sessionConfig = &SessionConfig{UserSessions: make(map[string]struct{})}
-	sessionWatcher := NewConfigWatcher(
-		configKinds.configMap,
-		namespace,
-		client,
-	)
-	go sessionWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-		AddFunc: func(obj interface{}) {
-			// Update user sessions
-			sessionConfig.Load(obj)
-		},
-		UpdateFunc: func(oldObj, newObj interface{}) {
-			// Update user sessions
-			sessionConfig.Load(newObj)
-		},
-		DeleteFunc: func(obj interface{}) {
-			// Clear user sessions
-			sessionConfig.mutex.Lock()
-			defer sessionConfig.mutex.Unlock()
-			sessionConfig.UserSessions = make(map[string]struct{})
-			log.Println("Deleted user sessions")
-		},
-	}, func(options *metav1.ListOptions) {
-		options.FieldSelector = fmt.Sprintf("metadata.name=%s", userSessionConfigMapName)
-	})
+	sessionConfig.Watch(settings.ProxyConfigMaps.UserSessions, settings.Namespace, client)
 
-	if haproxyEnabled {
-		// Watch for changes to TCP proxy configmap
-		haproxyConfig := NewHAProxyConfig(namespace, clusterDomain, haproxyDir, haproxyPIDFile)
-		haproxyWatcher := NewConfigWatcher(
-			configKinds.configMap,
-			namespace,
+	// Watch for changes to TCP proxy configmap if HAProxy enabled
+	if settings.HAProxy.Enabled {
+		haproxyConfig := NewHAProxyConfig(
+			settings.Namespace,
+			settings.ClusterDomain,
+			settings.HAProxy.BaseDir,
+			settings.HAProxy.PIDFile,
+		)
+		haproxyConfig.Watch(
+			settings.ProxyConfigMaps.TCPTargets,
+			settings.Namespace,
+			settings.HAProxy.TLSLabelSelector,
+			settings.HAProxy.ReloadRateLimit,
 			client,
 		)
-		go haproxyWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				// Update HAProxy config
-				haproxyConfig.Load(obj)
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				// Update HAProxy config
-				haproxyConfig.Load(newObj)
-			},
-			DeleteFunc: func(obj interface{}) {
-				// Clear HAProxy config
-				haproxyConfig.Clear()
-			},
-		}, func(options *metav1.ListOptions) {
-			options.FieldSelector = fmt.Sprintf("metadata.name=%s", haproxyConfigMapName)
-		})
-
-		// Watch for changes to TLS secrets
-		tlsSecretWatcher := NewConfigWatcher(
-			configKinds.secret,
-			namespace,
-			client,
-		)
-		go tlsSecretWatcher.Watch(kubecache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				// Add TLS Secret
-				haproxyConfig.TLSSecrets.Load(obj)
-			},
-			UpdateFunc: func(oldObj, newObj interface{}) {
-				// Update TLS Secret
-				haproxyConfig.TLSSecrets.Load(newObj)
-			},
-			DeleteFunc: func(obj interface{}) {
-				// Remove TLS Secret
-				haproxyConfig.TLSSecrets.Delete(obj)
-			},
-		}, func(options *metav1.ListOptions) {
-			options.LabelSelector = "saturncloud.io/certificate=server"
-		})
-
-		go func() {
-			// Watch for pending updates in haproxy config + TLS certs
-			exit := make(chan os.Signal, 0)
-			signal.Notify(exit, os.Kill, os.Interrupt)
-			ticker := time.NewTicker(haproxyReloadRateLimit)
-			for {
-				select {
-				case <-exit:
-					break
-				case <-haproxyConfig.Pending:
-					// Rate limit updates, while still checking for exit signal
-					select {
-					case <-exit:
-						break
-					case <-ticker.C:
-					}
-					// Update and reload HAProxy
-					if err := haproxyConfig.Update(); err != nil {
-						log.Printf("Error: %s", err)
-						// Retry on failure
-						select {
-						case haproxyConfig.Pending <- true:
-						default:
-						}
-					}
-				}
-			}
-		}()
 	}
 
-	err = http.ListenAndServe(listAddr, &proxyServer{})
+	err = http.ListenAndServe(settings.ListenAddr, &proxyServer{})
 	if err != nil {
 		log.Panic(err)
 	}
