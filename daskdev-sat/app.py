@@ -1,7 +1,6 @@
 import json
 import logging
 import os
-import yaml
 import asyncio
 import kubernetes
 
@@ -11,6 +10,7 @@ from tornado.web import RequestHandler, Application
 from distributed.core import rpc as dask_rpc
 from dask_kubernetes import KubeCluster, make_pod_from_dict
 from dask_kubernetes.core import Scheduler, SCHEDULER_PORT
+from ruamel import yaml
 
 
 logging.basicConfig(level=logging.INFO)
@@ -27,10 +27,10 @@ SCHEDULER_CONFIG = "/etc/config/scheduler_spec.yaml"
 
 def make_cluster(n_workers):
     with open(WORKER_CONFIG) as f:
-        d = yaml.safe_load(f)
+        d = yaml.load(f.read(), Loader=yaml.SafeLoader)
         pod_template = make_pod_from_dict(d)
     with open(SCHEDULER_CONFIG) as f:
-        d = yaml.safe_load(f)
+        d = yaml.load(f.read(), Loader=yaml.SafeLoader)
         scheduler_pod_template = make_pod_from_dict(d)
 
     log.info(f"Starting dask cluster {NAME} in namespace {NAMESPACE}")
