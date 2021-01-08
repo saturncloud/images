@@ -17,7 +17,8 @@ if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
     exit 1
 fi
 
-bash ${INSTALLER_PATH} -b -p ${CONDA_DIR}
+bash ${INSTALLER_PATH} -b -p ${CONDA_DIR} -f
+
 export PATH="${CONDA_BIN}:$PATH"
 
 # Allow easy direct installs from conda forge
