@@ -5,7 +5,9 @@ ARG JUPYTER_SATURN_VERSION
 
 ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
 
-RUN ln -s /opt/conda /srv/conda && chown 1000:1000 -R /opt/conda
+RUN mkdir /opt/conda && \
+    ln -s /opt/conda /srv/conda && \
+    chown 1000:1000 -R /opt/conda
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
