@@ -17,11 +17,11 @@ import (
 func LoadSettings(settingsFile string) (*Settings, error) {
 	// Set defaults
 	haproxy := &HAProxy{
-		Enabled:          false,
-		BaseDir:          "/etc/haproxy",
-		PIDFile:          "/etc/haproxy/haproxy.pid",
-		reloadRateLimit:  "3s",
-		TLSLabelSelector: "saturncloud.io/certificate=server",
+		Enabled:            false,
+		BaseDir:            "/etc/haproxy",
+		PIDFile:            "/etc/haproxy/haproxy.pid",
+		ReloadRateLimitStr: "3s",
+		TLSLabelSelector:   "saturncloud.io/certificate=server",
 	}
 	proxyConfigMaps := &ProxyConfigMaps{
 		HTTPTargets:  "saturn-auth-proxy",
@@ -29,24 +29,24 @@ func LoadSettings(settingsFile string) (*Settings, error) {
 		UserSessions: "saturn-proxy-sessions",
 	}
 	proxyURLs := &ProxyURLs{
-		baseURL:      "http://dev.localtest.me:8888",
-		loginPath:    "/api/auth/login",
-		refreshPath:  "/auth/refresh",
-		tokenPath:    "/api/deployments/auth",
+		BaseURL:      "http://dev.localtest.me:8888",
+		LoginPath:    "/api/auth/login",
+		RefreshPath:  "/auth/refresh",
+		TokenPath:    "/api/deployments/auth",
 		CommonSuffix: ".localtest.me",
 	}
 	settings := &Settings{
-		accessKeyExpiration:    "10m",
-		ClusterDomain:          "cluster.local",
-		Debug:                  false,
-		HAProxy:                haproxy,
-		HTTPSRedirect:          false,
-		Namespace:              getEnv("NAMESPACE", "main-namespace"),
-		ProxyConfigMaps:        proxyConfigMaps,
-		ProxyPort:              8080,
-		ProxyURLs:              proxyURLs,
-		refreshTokenExpiration: "3600s",
-		saturnTokenExpiration:  "86400s",
+		AccessKeyExpirationStr:    "10m",
+		ClusterDomain:             "cluster.local",
+		Debug:                     false,
+		HAProxy:                   haproxy,
+		HTTPSRedirect:             false,
+		Namespace:                 getEnv("NAMESPACE", "main-namespace"),
+		ProxyConfigMaps:           proxyConfigMaps,
+		ProxyPort:                 8080,
+		ProxyURLs:                 proxyURLs,
+		RefreshTokenExpirationStr: "3600s",
+		SaturnTokenExpirationStr:  "86400s",
 
 		SharedKey: []byte(getEnv("PROXY_SHARED_KEY", "")),
 		KeyLength: 512 / 8,
@@ -74,17 +74,17 @@ func LoadSettings(settingsFile string) (*Settings, error) {
 // Settings stores configuration for the proxy server
 type Settings struct {
 	// YAML file settings
-	ClusterDomain          string           `yaml:"clusterDomain"`
-	Debug                  bool             `yaml:"debug"`
-	HAProxy                *HAProxy         `yaml:"haProxy"`
-	HTTPSRedirect          bool             `yaml:"httpsRedirect"`
-	Namespace              string           `yaml:"namespace"`
-	ProxyConfigMaps        *ProxyConfigMaps `yaml:"proxyConfigMaps"`
-	ProxyPort              int              `yaml:"proxyPort"`
-	ProxyURLs              *ProxyURLs       `yaml:"proxyURLs"`
-	accessKeyExpiration    string           `yaml:"accessKeyExpiration"`
-	refreshTokenExpiration string           `yaml:"refreshTokenExpiration"`
-	saturnTokenExpiration  string           `yaml:"saturnTokenExpiration"`
+	ClusterDomain             string           `yaml:"clusterDomain"`
+	Debug                     bool             `yaml:"debug"`
+	HAProxy                   *HAProxy         `yaml:"haProxy"`
+	HTTPSRedirect             bool             `yaml:"httpsRedirect"`
+	Namespace                 string           `yaml:"namespace"`
+	ProxyConfigMaps           *ProxyConfigMaps `yaml:"proxyConfigMaps"`
+	ProxyPort                 int              `yaml:"proxyPort"`
+	ProxyURLs                 *ProxyURLs       `yaml:"proxyURLs"`
+	AccessKeyExpirationStr    string           `yaml:"accessKeyExpiration"`
+	RefreshTokenExpirationStr string           `yaml:"refreshTokenExpiration"`
+	SaturnTokenExpirationStr  string           `yaml:"saturnTokenExpiration"`
 
 	// Parsed settings
 	ListenAddr             string
@@ -118,13 +118,13 @@ func (s *Settings) parse() error {
 	log.Printf("JWT signing key generated and has length %d bytes", len(s.JWTKey))
 
 	// Expiration times
-	if s.AccessKeyExpiration, err = time.ParseDuration(s.accessKeyExpiration); err != nil {
+	if s.AccessKeyExpiration, err = time.ParseDuration(s.AccessKeyExpirationStr); err != nil {
 		return fmt.Errorf("Invalid accessKeyExpiration: %s", err.Error())
 	}
-	if s.RefreshTokenExpiration, err = time.ParseDuration(s.refreshTokenExpiration); err != nil {
+	if s.RefreshTokenExpiration, err = time.ParseDuration(s.RefreshTokenExpirationStr); err != nil {
 		return fmt.Errorf("Invalid refreshTokenExpiration: %s", err.Error())
 	}
-	if s.SaturnTokenExpiration, err = time.ParseDuration(s.saturnTokenExpiration); err != nil {
+	if s.SaturnTokenExpiration, err = time.ParseDuration(s.SaturnTokenExpirationStr); err != nil {
 		return fmt.Errorf("Invalid saturnTokenExpiration: %s", err.Error())
 	}
 	log.Printf("Access key expiration time: %s", s.AccessKeyExpiration.String())
@@ -164,10 +164,10 @@ func (s *Settings) GenerateCookieSigningKey() ([]byte, error) {
 
 // ProxyURLs stores and parses URLs for interacting with Atlas
 type ProxyURLs struct {
-	baseURL      string `yaml:"baseURL"`
-	loginPath    string `yaml:"loginPath"`
-	refreshPath  string `yaml:"refreshPath"`
-	tokenPath    string `yaml:"tokenPath"`
+	BaseURL      string `yaml:"baseURL"`
+	LoginPath    string `yaml:"loginPath"`
+	RefreshPath  string `yaml:"refreshPath"`
+	TokenPath    string `yaml:"tokenPath"`
 	CommonSuffix string `yaml:"commonSuffix"`
 
 	Base    *url.URL
@@ -178,16 +178,16 @@ type ProxyURLs struct {
 
 func (pu *ProxyURLs) parse() error {
 	var err error
-	if pu.Base, err = url.Parse(pu.baseURL); err != nil {
+	if pu.Base, err = url.Parse(pu.BaseURL); err != nil {
 		return err
 	}
-	if pu.Login, err = pu.Base.Parse(pu.loginPath); err != nil {
+	if pu.Login, err = pu.Base.Parse(pu.LoginPath); err != nil {
 		return err
 	}
-	if pu.Refresh, err = pu.Base.Parse(pu.refreshPath); err != nil {
+	if pu.Refresh, err = pu.Base.Parse(pu.RefreshPath); err != nil {
 		return err
 	}
-	if pu.Token, err = pu.Base.Parse(pu.tokenPath); err != nil {
+	if pu.Token, err = pu.Base.Parse(pu.TokenPath); err != nil {
 		return err
 	}
 
@@ -203,18 +203,18 @@ type ProxyConfigMaps struct {
 
 // HAProxy settings for interacting with an HAProxy sidecar container for TCP proxy
 type HAProxy struct {
-	Enabled          bool   `yaml:"enabled"`
-	BaseDir          string `yaml:"baseDir"`
-	PIDFile          string `yaml:"pidFile"`
-	reloadRateLimit  string `yaml:"reloadRateLimit"`
-	TLSLabelSelector string `yaml:"tlsLabelSelector"`
+	Enabled            bool   `yaml:"enabled"`
+	BaseDir            string `yaml:"baseDir"`
+	PIDFile            string `yaml:"pidFile"`
+	ReloadRateLimitStr string `yaml:"reloadRateLimit"`
+	TLSLabelSelector   string `yaml:"tlsLabelSelector"`
 
 	ReloadRateLimit time.Duration
 }
 
 func (h *HAProxy) parse() error {
 	var err error
-	if h.ReloadRateLimit, err = time.ParseDuration(h.reloadRateLimit); err != nil {
+	if h.ReloadRateLimit, err = time.ParseDuration(h.ReloadRateLimitStr); err != nil {
 		return err
 	}
 	return nil
