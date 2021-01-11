@@ -7,7 +7,7 @@ usage() {
         Commands:
             build: Build image, push to local registry, and set image on saturn-auth-proxy deployment(s)
         Options:
-            -n, --namespace: Namespace(s) to update (default: "main-namespace anon-namespace"
+            -n, --namespace: Namespace(s) to update (default: "main-namespace"
             --tail: Tail logs after deploying new image. If multiple namepsaces are specified by namespace param (e.g. default),
                     you may pass a single namespace to tail with this param.
 
@@ -20,7 +20,7 @@ usage() {
 '
 }
 
-NAMESPACES="main-namespace anon-namespace"
+NAMESPACES="main-namespace"
 TAIL=""
 TAIL_NS=""
 while [ "$1" ]; do
@@ -33,14 +33,19 @@ while [ "$1" ]; do
             NAMESPACES="$1"
             ;;
         --tail )
-            if [[ $2 != -* ]]; then
+            if [ $2 ] && [[ $2 != -* ]]; then
                 shift
                 TAIL_NS=$1
             fi
             TAIL=true
             ;;
+        -h | --help )
+            usage
+            exit 0
+            ;;
         * )
             echo "Error: Unkown parameter \"$1\""
+            usage
             exit 1
             ;;
     esac
@@ -105,5 +110,5 @@ if [ "$TAIL" ]; then
     header Wait
     kubectl -n $TAIL_NS rollout status deployment saturn-auth-proxy
     header Logs
-    kubectl -n $TAIL_NS logs -f deployment/saturn-auth-proxy
+    kubectl -n $TAIL_NS logs -f deployment/saturn-auth-proxy proxy
 fi
