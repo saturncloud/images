@@ -55,4 +55,4 @@ dependencies:
 - wordcloud
 - xgboost>=1.3.0
 - pip:
-  - dask-saturn==0.2.1
+  - dask-saturn==0.2.2
