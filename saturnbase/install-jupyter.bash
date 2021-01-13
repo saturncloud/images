@@ -10,9 +10,16 @@ cat /tmp/environment.yml
 conda env update -n root  -f /tmp/environment.yml
 jupyter serverextension enable --sys-prefix jupyter_server_proxy
 jupyter serverextension enable --py jsaturn --sys-prefix
+jupyter serverextension enable dask_labextension --sys-prefix
+jupyter serverextension enable --py jupyterlab_code_formatter --sys-prefix
 
 jupyter labextension install @bokeh/jupyter_bokeh
 jupyter labextension install @jupyter-widgets/jupyterlab-manager
+jupyter labextension install dask-labextension@3.0.0
+jupyter labextension install @ryantam626/jupyterlab_code_formatter@1.3.8
+jupyter labextension install @pyviz/jupyterlab_pyviz
+jupyter labextension install jupyterlab-execute-time
+jupyter labextension install @telamonian/theme-darcula
 
 cd ${CONDA_DIR}/jsaturn_ext
 npm install
