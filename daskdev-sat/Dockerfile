@@ -10,7 +10,8 @@ RUN apt-get -qq update && \
 ENV SHELL /bin/bash
 
 RUN conda install -y -c conda-forge tornado kubernetes dask-kubernetes=0.11.0 python-kubernetes ruamel.yaml && \
-    conda clean --yes --all
+    conda clean --yes --all && \
+    pip install distributed==2.30.1 --no-deps
 
 #TODO - remove this pdc crap
 #TODO - run as non-root user
