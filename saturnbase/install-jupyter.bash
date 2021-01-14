@@ -20,6 +20,7 @@ jupyter labextension install @ryantam626/jupyterlab_code_formatter@1.3.8
 jupyter labextension install @pyviz/jupyterlab_pyviz
 jupyter labextension install jupyterlab-execute-time
 jupyter labextension install @telamonian/theme-darcula
+jupyter labextension install jupyterlab-python-file
 
 cd ${CONDA_DIR}/jsaturn_ext
 npm install
