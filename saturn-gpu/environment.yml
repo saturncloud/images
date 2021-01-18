@@ -44,7 +44,7 @@ dependencies:
 - s3fs
 - scikit-learn
 - scipy
-- snowflake-connector-python==2.3.2
+- snowflake-connector-python==2.1.1
 - snowflake-sqlalchemy
 - tensorboard=2.2.1
 - tensorflow-estimator=2.2.0
