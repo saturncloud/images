@@ -2,7 +2,6 @@ name: saturn
 channels:
 - nvidia
 - rapidsai
-- numba
 - defaults
 - conda-forge
 dependencies:
@@ -14,8 +13,7 @@ dependencies:
 - graphviz
 - ipykernel
 - ipywidgets
-- llvmlite=0.32.1
-- numba=0.49.1
+- numba
 - numpy
 - pandas
 - pip
