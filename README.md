@@ -2,6 +2,51 @@
 
 This repository holds code to create Saturn Docker images.
 
+## Default images for customer use
+
+A default image is defined as an image that, upon a fresh customer install, is immediately available to be attached to a Jupyter server or Dask cluster.
+
+All default images should have at least the following packages with appropriate pins, floors, or ceilings. This ensures customers will be able to use Dask, Prefect, and Snowflake in every image.
+
+```yml
+name: saturn
+channels:
+- defaults
+- saturncloud
+dependencies:
+- blas=*=mkl
+- bokeh
+- dask
+- distributed
+- matplotlib
+- numpy
+- pandas
+- pip
+- prefect
+- pyarrow
+- python=3.7
+- s3fs
+- voila
+- ipykernel
+- ipywidgets
+- pip:
+  - dask-saturn
+  - prefect-saturn
+  - snowflake-connector-python
+
+```
+
+We need to keep images as small as possible, because image size directly impacts instance spinup time.
+
+- saturn: Data analysis, machine learning, and parallel processing with Dask
+- saturn-rapids: GPU-acceleration with RAPIDS (GPU instance recommended)
+- saturn-tensorflow: Deep learning with tensorflow (GPU instance recommended)
+- saturn-pytorch: Deep learning with pytorch (GPU instance recommended)
+- examples-cpu: For running examples-cpu project
+- examples-gpu: For running examples-gpu project (GPU instance recommended)
+- saturn-geospatial: Geospatial IO, analysis and visualization
+
+
 ## Adding a new image definition
 
 Each image is stored in its own subdirectory. That subdirectory should have at least a `Dockerfile` and `.dockerignore`.
