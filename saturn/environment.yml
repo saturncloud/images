@@ -1,30 +1,17 @@
 name: saturn
 channels:
 - defaults
-- pytorch
-- saturncloud
 - conda-forge
 dependencies:
 - blas=*=mkl
 - bokeh
-- cvxpy
 - dask-ml
 - dask==2.30.0
-- datashader
 - distributed==2.30.1
-- fastparquet
-- flask
-- gensim
-- geopandas>=0.8.1
-- geoviews
 - graphviz
-- h5py
-- hvplot
 - ipykernel
 - ipywidgets
 - matplotlib==3.2.2
-- nltk
-- numba
 - numpy
 - pandas=1.1.0
 - panel
@@ -36,10 +23,7 @@ dependencies:
 - scikit-learn
 - scipy
 - voila
-- wordcloud
-- xgboost>=1.3.0
 - pip:
-  - snowflake-connector-python==2.3.1
-  - pyarrow==0.17.0
+  - snowflake-connector-python
   - prefect-saturn>=0.4.0
   - dask-saturn==0.2.2
