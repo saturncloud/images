@@ -10,6 +10,7 @@ dependencies:
 - dask=2.30.0
 - distributed=2.30.1
 - fastai
+- graphviz
 - ipykernel
 - ipywidgets
 - matplotlib

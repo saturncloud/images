@@ -7,9 +7,9 @@ dependencies:
 - bokeh
 - cartopy
 - dask-ml
-- dask==2.30.0
+- dask=2.30.0
 - datashader
-- distributed==2.30.1
+- distributed=2.30.1
 - geopandas
 - graphviz
 - hvplot
@@ -19,8 +19,7 @@ dependencies:
 - matplotlib
 - netcdf4
 - numpy
-- pandas=1.1.0
-- panel
+- pandas
 - pip
 - prefect
 - pyarrow

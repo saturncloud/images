@@ -6,15 +6,14 @@ dependencies:
 - blas=*=mkl
 - bokeh
 - dask-ml
-- dask==2.30.0
-- distributed==2.30.1
+- dask=2.30.0
+- distributed=2.30.1
 - graphviz
 - ipykernel
 - ipywidgets
 - matplotlib
 - numpy
 - pandas=1.1.0
-- panel
 - pip
 - prefect
 - pyarrow
@@ -23,6 +22,7 @@ dependencies:
 - scikit-learn
 - scipy
 - voila
+- xgboost>=1.3.0
 - pip:
   - dask-saturn>=0.2.2
   - prefect-saturn>=0.4.0
