@@ -13,7 +13,7 @@ dependencies:
 - ipywidgets
 - matplotlib
 - numpy
-- pandas=1.1.0
+- pandas
 - pip
 - prefect
 - pyarrow
