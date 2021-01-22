@@ -12,12 +12,7 @@ set -eou pipefail
 
 echo "----- checking that image metadata follows Saturn practices ----"
 
-images_to_check="
-    saturn
-    saturn-gpu
-    saturnbase
-    saturnbase-gpu
-    "
+images_to_check=$(cat .ci/images-to-lint.txt)
 
 error_count=0
 
