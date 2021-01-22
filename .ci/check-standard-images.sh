@@ -30,7 +30,7 @@ for image in ${images_to_check}; do
     if [ -d "${image}" ]; then
         echo "  * directory '${image}' exists"
     else
-        echo "  * [ERROR] directory '${image}' not found"
+        echo "  * [ISSUE] directory '${image}' not found"
         error_count=$((error_count + 1))
         continue
     fi
@@ -40,13 +40,13 @@ for image in ${images_to_check}; do
     if [ -f "${conda_env_file}" ]; then
         echo "  * environment.yml exists"
     else
-        echo "  * [ERROR] environment.yml not found"
+        echo "  * [ISSUE] environment.yml not found"
         error_count=$((error_count + 1))
     fi
 
     # environment.yml should not use a 'prefix:' block
     if [ $(grep --count -E "^prefix" ${conda_env_file}) -gt 0 ]; then
-        echo "  * [ERROR] found 'prefix:' in ${conda_env_file}"
+        echo "  * [ISSUE] found 'prefix:' in ${conda_env_file}"
         error_count=$((error_count + 1))
     else
         echo "  * environment.yml does not have 'prefix:'"
@@ -58,7 +58,7 @@ for image in ${images_to_check}; do
 
     for package_manager in pip conda; do
         if [ $(grep --count -E "${package_manager} install" ${dockerfile}) -gt 0 ]; then
-            echo "  * [ERROR] found '${package_manager} install' in ${dockerfile}. Update ${conda_env_file} instead."
+            echo "  * [ISSUE] found '${package_manager} install' in ${dockerfile}. Update ${conda_env_file} instead."
             error_count=$((error_count + 1))
         else
             echo "  * no ${package_manager} installs found in Dockerfile"
@@ -67,7 +67,7 @@ for image in ${images_to_check}; do
         for installer_file in ${image}/*.bash; do
             if [ -f "${installer_file}" ]; then
                 if [ $(grep --count -E "${package_manager} install" ${installer_file}) -gt 0 ]; then
-                    echo "  * [ERROR] found '${package_manager} install' in ${installer_file}. Update ${conda_env_file} instead."
+                    echo "  * [ISSUE] found '${package_manager} install' in ${installer_file}. Update ${conda_env_file} instead."
                     error_count=$((error_count + 1))
                 else
                     echo "  * no ${package_manager} installs found in ${installer_file}"
@@ -80,7 +80,7 @@ done
 
 echo ""
 if [ ${error_count} -gt 0 ]; then
-    echo "----- errors found while checking images: ${error_count} -------"
+    echo "----- issues found while checking images: ${error_count} -------"
 else
     echo "----- No issues found in standard images. ----------------------"
 fi
