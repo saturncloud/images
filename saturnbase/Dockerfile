@@ -10,6 +10,7 @@ ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
+RUN pip install pandas
 RUN apt-get -qq update && \
     apt-get -qq install --yes --no-install-recommends \
         gettext-base \
