@@ -22,7 +22,8 @@ bash ${INSTALLER_PATH} -b -p ${CONDA_DIR} -f
 export PATH="${CONDA_BIN}:$PATH"
 
 # Allow easy direct installs from conda forge
-conda config --system --add channels conda-forge
+conda config --system --add channels conda-forge && pip install pandas
 conda config --system --add channels https://conda.saturncloud.io/pkgs
 conda config --system --set auto_update_conda false
 conda config --system --set show_channel_urls true
+
