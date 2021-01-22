@@ -10,6 +10,7 @@ flake8:
 black:
 	black --check --diff --line-length 100 .
 
+.PHONY: check-metadata
 check-metadata:
 	./.ci/check-standard-images.sh
 

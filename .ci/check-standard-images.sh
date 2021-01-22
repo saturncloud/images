@@ -17,7 +17,6 @@ images_to_check="
     saturn-gpu
     saturnbase
     saturnbase-gpu
-    blegh
     "
 
 error_count=0
