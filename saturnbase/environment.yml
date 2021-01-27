@@ -1,5 +1,5 @@
 channels:
-  - defaults
+  - nodefaults
   - conda-forge
   - https://conda.saturncloud.io/pkgs
   - saturncloud

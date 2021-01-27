@@ -2,7 +2,7 @@ name: saturn
 channels:
 - pytorch
 - fastai
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
 - blas=*=mkl
@@ -10,7 +10,6 @@ dependencies:
 - dask=2.30.0
 - distributed=2.30.1
 - fastai
-- graphviz
 - ipykernel
 - ipywidgets
 - matplotlib
@@ -22,6 +21,7 @@ dependencies:
 - py-opencv
 - pyarrow
 - python=3.7
+- python-graphviz
 - pytorch=1.7.0=py3.7_cuda10.1.243_cudnn7.6.3_0
 - s3fs
 - tensorboard=2.2.1

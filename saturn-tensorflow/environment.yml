@@ -1,13 +1,12 @@
 name: saturn
 channels:
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
 - blas=*=mkl
 - bokeh
 - dask=2.30.0
 - distributed=2.30.1
-- graphviz
 - ipykernel
 - ipywidgets
 - keras
@@ -18,6 +17,7 @@ dependencies:
 - prefect
 - pyarrow
 - python=3.7
+- python-graphviz
 - s3fs
 - tensorboard=2.2.1
 - tensorflow-estimator=2.2.0

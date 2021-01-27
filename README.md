@@ -11,13 +11,16 @@ All default images should have at least the following packages with appropriate 
 ```yml
 name: saturn
 channels:
-- defaults
-- saturncloud
+- nodefaults
+- conda-forge
 dependencies:
 - blas=*=mkl
 - bokeh
+- dask-ml
 - dask
 - distributed
+- ipykernel
+- ipywidgets
 - matplotlib
 - numpy
 - pandas
@@ -25,15 +28,16 @@ dependencies:
 - prefect
 - pyarrow
 - python=3.7
+- python-graphviz
 - s3fs
+- scikit-learn
+- scipy
 - voila
-- ipykernel
-- ipywidgets
+- xgboost
 - pip:
   - dask-saturn
   - prefect-saturn
   - snowflake-connector-python
-
 ```
 
 We need to keep images as small as possible, because image size directly impacts instance spinup time.

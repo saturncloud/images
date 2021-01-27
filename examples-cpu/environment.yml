@@ -1,6 +1,6 @@
 name: saturn
 channels:
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
 - blas=*=mkl
@@ -15,7 +15,6 @@ dependencies:
 - gensim
 - geopandas>=0.8.1
 - geoviews
-- graphviz
 - h5py
 - hvplot
 - ipykernel
@@ -30,6 +29,7 @@ dependencies:
 - prefect
 - pyarrow
 - python=3.7
+- python-graphviz
 - s3fs
 - scikit-learn
 - scipy

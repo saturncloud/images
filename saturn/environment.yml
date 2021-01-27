@@ -1,6 +1,6 @@
 name: saturn
 channels:
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
 - blas=*=mkl
@@ -8,7 +8,6 @@ dependencies:
 - dask-ml
 - dask=2.30.0
 - distributed=2.30.1
-- graphviz
 - ipykernel
 - ipywidgets
 - matplotlib
@@ -18,6 +17,7 @@ dependencies:
 - prefect
 - pyarrow
 - python=3.7
+- python-graphviz
 - s3fs
 - scikit-learn
 - scipy

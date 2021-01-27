@@ -2,7 +2,7 @@ name: saturn
 channels:
 - nvidia
 - rapidsai
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
 - blas=*=mkl
@@ -10,7 +10,6 @@ dependencies:
 - dask-ml
 - dask=2.30.0
 - distributed=2.30.1
-- graphviz
 - ipykernel
 - ipywidgets
 - numba
@@ -20,6 +19,7 @@ dependencies:
 - prefect
 - pyarrow
 - python=3.7
+- python-graphviz
 - rapids=0.17.0=cuda10.1_py37_g180f433_165
 - s3fs
 - scikit-learn
