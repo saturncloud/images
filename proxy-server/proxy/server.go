@@ -464,6 +464,7 @@ func Run(settingsFile string) {
 			settings.ClusterDomain,
 			settings.HAProxy.BaseDir,
 			settings.HAProxy.PIDFile,
+			settings.HAProxy.DefaultListeners,
 		)
 		haproxyConfig.Watch(
 			settings.ProxyConfigMaps.TCPTargets,
