@@ -22,6 +22,7 @@ func LoadSettings(settingsFile string) (*Settings, error) {
 		PIDFile:            "/etc/haproxy/haproxy.pid",
 		ReloadRateLimitStr: "3s",
 		TLSLabelSelector:   "saturncloud.io/certificate=server",
+		DefaultListeners:   []int{},
 	}
 	proxyConfigMaps := &ProxyConfigMaps{
 		HTTPTargets:  "saturn-auth-proxy",
@@ -208,6 +209,7 @@ type HAProxy struct {
 	PIDFile            string `yaml:"pidFile"`
 	ReloadRateLimitStr string `yaml:"reloadRateLimit"`
 	TLSLabelSelector   string `yaml:"tlsLabelSelector"`
+	DefaultListeners   []int  `yaml:"defaultListeners"`
 
 	ReloadRateLimit time.Duration
 }
