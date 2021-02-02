@@ -7,16 +7,13 @@ usage() {
         Commands:
             build: Build image, push to local registry, and set image on saturn-auth-proxy deployment(s)
         Options:
-            -n, --namespace: Namespace(s) to update (default: "main-namespace"
-            --tail: Tail logs after deploying new image. If multiple namepsaces are specified by namespace param (e.g. default),
+            -n, --namespace: Namespace(s) to update (default: "main-namespace")
+            --tail: Tail logs after deploying new image. If multiple namepsaces are specified by namespace param,
                     you may pass a single namespace to tail with this param.
 
     Examples:
-        # Set new image only in main, and tail logs
+        # Set new image in main-namespace, and tail logs
         ./local.sh build -n main-namespace --tail
-
-        # Set new image in both namesapces, and tail the proxy in main
-        ./local.sh build --tail main-namespace
 '
 }
 

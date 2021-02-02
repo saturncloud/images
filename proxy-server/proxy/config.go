@@ -189,33 +189,44 @@ func (sc *SessionConfig) Watch(name, namespace string, client *kubernetes.Client
 }
 
 // NewHAProxyConfig creates an HAProxyConfig object for TCP proxy
-func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string) *HAProxyConfig {
+func NewHAProxyConfig(namespace, clusterDomain, baseDir, pidFile string, defaultListeners []int) *HAProxyConfig {
 	certsDir := filepath.Join(baseDir, "certs")
 	configDir := filepath.Join(baseDir, "config")
 	pending := make(chan bool, 1)
 	os.MkdirAll(configDir, os.ModeDir)
 
-	return &HAProxyConfig{
-		TCPTargetMap:  map[string]*TCPTarget{},
-		TLSSecrets:    NewTLSSecrets(certsDir, pending),
-		Namespace:     namespace,
-		ClusterDomain: clusterDomain,
-		BaseDir:       baseDir,
-		ConfigDir:     configDir,
-		PIDFile:       pidFile,
-		pending:       pending,
+	hpc := &HAProxyConfig{
+		TCPTargetMap:     map[string]*TCPTarget{},
+		TLSSecrets:       NewTLSSecrets(certsDir, pending),
+		DefaultListeners: defaultListeners,
+		Namespace:        namespace,
+		ClusterDomain:    clusterDomain,
+		BaseDir:          baseDir,
+		ConfigDir:        configDir,
+		PIDFile:          pidFile,
+		pending:          pending,
 	}
+	if len(hpc.DefaultListeners) > 0 {
+		// Signal for update
+		select {
+		case hpc.pending <- true:
+		default:
+		}
+	}
+	return hpc
 }
 
 // HAProxyConfig stores TCP target and TLS configuration settings for HAProxy
 type HAProxyConfig struct {
-	TCPTargetMap  map[string]*TCPTarget
-	TLSSecrets    *TLSSecrets
-	Namespace     string
-	ClusterDomain string
-	BaseDir       string
-	ConfigDir     string
-	PIDFile       string
+	TCPTargetMap map[string]*TCPTarget
+	TLSSecrets   *TLSSecrets
+	// Set of ports to listen on regardless of targets
+	DefaultListeners []int
+	Namespace        string
+	ClusterDomain    string
+	BaseDir          string
+	ConfigDir        string
+	PIDFile          string
 
 	pending chan bool
 	mutex   sync.Mutex
@@ -277,6 +288,9 @@ func (hpc *HAProxyConfig) Update() error {
 	configFile := filepath.Join(hpc.ConfigDir, "haproxy.cfg")
 
 	configData := map[int][]map[string]string{}
+	for _, port := range hpc.DefaultListeners {
+		configData[port] = []map[string]string{}
+	}
 	for hostname, target := range hpc.TCPTargetMap {
 		tlsConfig, ok := hpc.TLSSecrets.TLSMap[target.SecretName]
 		if !ok {
