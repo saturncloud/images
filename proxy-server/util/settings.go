@@ -46,8 +46,8 @@ func LoadSettings(settingsFile string) (*Settings, error) {
 		ProxyConfigMaps:           proxyConfigMaps,
 		ProxyPort:                 8080,
 		ProxyURLs:                 proxyURLs,
-		RefreshTokenExpirationStr: "3600s",
-		SaturnTokenExpirationStr:  "86400s",
+		RefreshTokenExpirationStr: "86400s",
+		SaturnTokenExpirationStr:  "3600s",
 
 		SharedKey: []byte(getEnv("PROXY_SHARED_KEY", "")),
 		KeyLength: 512 / 8,
