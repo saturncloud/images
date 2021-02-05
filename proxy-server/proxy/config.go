@@ -118,17 +118,17 @@ func (hc *HTTPConfig) Watch(name, namespace string, client *kubernetes.Clientset
 	})
 }
 
-// SessionConfig stores the set of active user session IDs
+// SessionConfig stores the set of active user session tokens
 type SessionConfig struct {
 	UserSessions map[string]struct{}
 	mutex        sync.Mutex
 }
 
 // CheckSession returns true if user has active session
-func (sc *SessionConfig) CheckSession(sessionID string) bool {
+func (sc *SessionConfig) CheckSession(sessionToken string) bool {
 	sc.mutex.Lock()
 	defer sc.mutex.Unlock()
-	_, ok := sc.UserSessions[sessionID]
+	_, ok := sc.UserSessions[sessionToken]
 	return ok
 }
 

@@ -102,7 +102,7 @@ func (sc *SaturnClaims) Expiration() time.Time {
 }
 
 // createToken Creates a JWT for proxy authentication or auth refresh
-func createToken(host, sessionID string, expiration time.Time, refreshToken bool) (string, error) {
+func createToken(host, sessionToken string, expiration time.Time, refreshToken bool) (string, error) {
 	var audience string
 	var key []byte
 	if refreshToken {
@@ -120,7 +120,7 @@ func createToken(host, sessionID string, expiration time.Time, refreshToken bool
 			Audience:  audience,
 			ExpiresAt: expiration.Unix(),
 			Issuer:    jwtPrincipals.SaturnAuthProxy,
-			Subject:   sessionID,
+			Subject:   sessionToken,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
