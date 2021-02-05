@@ -96,8 +96,13 @@ type SaturnClaims struct {
 	jwt.StandardClaims
 }
 
+// Expiration returns the claim's expiration as a datetime
+func (sc *SaturnClaims) Expiration() time.Time {
+	return time.Unix(sc.ExpiresAt, 0)
+}
+
 // createToken Creates a JWT for proxy authentication or auth refresh
-func createToken(host, userID string, expiration time.Time, refreshToken bool) (string, error) {
+func createToken(host, sessionToken string, expiration time.Time, refreshToken bool) (string, error) {
 	var audience string
 	var key []byte
 	if refreshToken {
@@ -115,7 +120,7 @@ func createToken(host, userID string, expiration time.Time, refreshToken bool) (
 			Audience:  audience,
 			ExpiresAt: expiration.Unix(),
 			Issuer:    jwtPrincipals.SaturnAuthProxy,
-			Subject:   userID,
+			Subject:   sessionToken,
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -128,10 +133,10 @@ func createToken(host, userID string, expiration time.Time, refreshToken bool) (
 }
 
 // setNewCookies creates new JWT cookies for session auth and refresh token
-func setNewCookies(res http.ResponseWriter, req *http.Request, userID string) error {
+func setNewCookies(res http.ResponseWriter, req *http.Request, claims *SaturnClaims) error {
 	// Create a new refresh_token
 	refreshExpiration := time.Now().Add(settings.RefreshTokenExpiration)
-	refreshTokenString, err := createToken(req.Host, userID, refreshExpiration, true)
+	refreshTokenString, err := createToken(req.Host, claims.Subject, refreshExpiration, true)
 	if err != nil {
 		return err
 	}
@@ -144,7 +149,12 @@ func setNewCookies(res http.ResponseWriter, req *http.Request, userID string) er
 
 	// Create a new saturn_token
 	expirationTime := time.Now().Add(settings.SaturnTokenExpiration)
-	tokenString, err := createToken(req.Host, userID, expirationTime, false)
+	claimExpiration := claims.Expiration()
+	if claimExpiration.Before(expirationTime) {
+		// If claim expiration is before default, use shorter expiration
+		expirationTime = claimExpiration
+	}
+	tokenString, err := createToken(req.Host, claims.Subject, expirationTime, false)
 	if err != nil {
 		return err
 	}
@@ -189,7 +199,7 @@ func validateSaturnToken(saturnToken, issuer string, req *http.Request) (*Saturn
 		return nil, errInvalidResource
 	} else if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) < 0 {
 		return nil, errExpired
-	} else if !sessionConfig.CheckUser(claims.Subject) {
+	} else if !sessionConfig.CheckSession(claims.Subject) {
 		return nil, errInvalidUserSession
 	}
 	return claims, nil
@@ -245,7 +255,7 @@ func authenticate(res http.ResponseWriter, req *http.Request) bool {
 			} else if claims.Issuer != jwtPrincipals.Atlas {
 				log.Printf("Authentication failed: %s, expected %s", errInvalidIssuers, jwtPrincipals.Atlas)
 			} else {
-				setNewCookies(res, req, claims.Subject)
+				setNewCookies(res, req, claims)
 				return true
 			}
 		}
@@ -304,7 +314,7 @@ func handleRequestAndRedirect(res http.ResponseWriter, req *http.Request) {
 			return
 		}
 
-		err = setNewCookies(res, req, claims.Subject)
+		err = setNewCookies(res, req, claims)
 		if err != nil {
 			log.Printf("Error setting cookie: %+v", err)
 			respondWithError(res, http.StatusInternalServerError, "An internal error has occurred.")
