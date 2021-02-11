@@ -11,7 +11,7 @@ All default images should have at least the following packages with appropriate 
 ```yml
 name: saturn
 channels:
-- nodefaults
+- defaults
 - conda-forge
 dependencies:
 - blas=*=mkl

@@ -1,5 +1,5 @@
 channels:
-  - nodefaults
+  - defaults
   - conda-forge
   - https://conda.saturncloud.io/pkgs
   - saturncloud
@@ -11,6 +11,8 @@ dependencies:
   - nbconvert
   - notebook
   - jupyter-server-proxy
+  - dask-core=2.30.0
+  - distributed=2.30.1
   - dask-labextension=3.0.0
   - yarl=1.4.2
   - pyviz_comms

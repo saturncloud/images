@@ -2,8 +2,7 @@ name: saturn
 channels:
 - pytorch
 - fastai
-- nodefaults
-- conda-forge
+- defaults
 dependencies:
 - blas=*=mkl
 - bokeh
