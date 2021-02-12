@@ -9,8 +9,10 @@ dependencies:
 - dask-ml
 - dask=2.30.0
 - datashader
+- descartes
 - distributed=2.30.1
 - geopandas
+- geoviews
 - hvplot
 - ipykernel
 - ipywidgets

@@ -2,11 +2,14 @@ name: saturn
 channels:
 - defaults
 - conda-forge
+- rapidsai
 dependencies:
 - blas=*=mkl
 - bokeh
 - dask=2.30.0
+- dask-cuda=0.17.*
 - distributed=2.30.1
+- fsspec>=0.8.5
 - ipykernel
 - ipywidgets
 - keras
