@@ -14,10 +14,5 @@ black:
 check-metadata:
 	./.ci/check-standard-images.sh
 
-.PHONY: mypy
-mypy:
-	# mypy errors out if passed a directory with no python files in it
-	mypy --ignore-missing-imports daskdev-sat
-
 .PHONY: lint
 lint: flake8 black mypy check-metadata
