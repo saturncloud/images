@@ -5,12 +5,20 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
+- cartopy
 - dask-ml
 - dask=2.30.0
+- datashader
+- descartes
 - distributed=2.30.1
+- geopandas
+- geoviews
+- hvplot
 - ipykernel
 - ipywidgets
+- iris
 - matplotlib
+- netcdf4
 - numpy
 - pandas
 - pip
@@ -18,11 +26,12 @@ dependencies:
 - pyarrow
 - python=3.7
 - python-graphviz
+- rasterio
 - s3fs
-- scikit-learn
 - scipy
 - voila
-- xgboost>=1.3.0
+- xarray
+- zarr
 - pip:
   - dask-saturn>=0.2.2
   - prefect-saturn>=0.4.0

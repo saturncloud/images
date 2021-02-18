@@ -5,14 +5,26 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
+- cvxpy
 - dask-ml
 - dask=2.30.0
+- datashader
 - distributed=2.30.1
+- fastparquet
+- flask
+- gensim
+- geopandas>=0.8.1
+- geoviews
+- h5py
+- hvplot
 - ipykernel
 - ipywidgets
 - matplotlib
+- nltk
+- numba
 - numpy
-- pandas
+- pandas=1.1.0
+- panel
 - pip
 - prefect
 - pyarrow

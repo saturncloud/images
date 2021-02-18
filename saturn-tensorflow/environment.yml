@@ -1,15 +1,18 @@
 name: saturn
 channels:
-- nodefaults
+- defaults
 - conda-forge
+- rapidsai
 dependencies:
 - blas=*=mkl
 - bokeh
-- dask-ml
 - dask=2.30.0
+- dask-cuda=0.17.*
 - distributed=2.30.1
+- fsspec>=0.8.5
 - ipykernel
 - ipywidgets
+- keras
 - matplotlib
 - numpy
 - pandas
@@ -19,10 +22,10 @@ dependencies:
 - python=3.7
 - python-graphviz
 - s3fs
-- scikit-learn
-- scipy
+- tensorboard=2.2.1
+- tensorflow-estimator=2.2.0
+- tensorflow=2.2.0=gpu_py37h1a511ff_0
 - voila
-- xgboost>=1.3.0
 - pip:
   - dask-saturn>=0.2.2
   - prefect-saturn>=0.4.0
