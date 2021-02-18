@@ -1,4 +1,9 @@
 saturn
-saturn-gpu
 saturnbase
 saturnbase-gpu
+examples-gpu
+examples-cpu
+saturn-rapids
+saturn-pytorch
+saturn-tensorflow
+saturn-geospatial
