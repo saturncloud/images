@@ -2,4 +2,8 @@ include .env_deps
 export
 
 build_image:
-	docker build --build-arg SATURNBASE_GPU_IMAGE=${SATURNBASE_GPU_IMAGE} -t ${IMAGE} .
+	docker build \
+		--no-cache \
+		--build-arg SATURNBASE_GPU_IMAGE=${SATURNBASE_GPU_IMAGE} \
+		-t ${IMAGE} \
+		.
