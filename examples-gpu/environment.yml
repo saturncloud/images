@@ -28,5 +28,5 @@ dependencies:
 - xgboost=1.3.0dev.rapidsai0.17=cuda10.1py37_0
 - pip:
   - dask-saturn>=0.2.2
-  - prefect-saturn>=0.4.0
+  - git+https://github.com/saturncloud/prefect-saturn.git@926c4fe63e22545abd5ba22dd715cf20db828e42
   - snowflake-connector-python
