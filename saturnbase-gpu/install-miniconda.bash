@@ -4,7 +4,7 @@ set -ex
 
 cd $(dirname $0)
 
-MINICONDA_VERSION=py37_4.9.3
+MINICONDA_VERSION=py37_4.9.2
 URL="https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh"
 INSTALLER_PATH=/tmp/miniconda-installer.sh
 wget --quiet $URL -O ${INSTALLER_PATH}
