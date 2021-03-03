@@ -4,7 +4,7 @@ set -ex
 
 cd $(dirname $0)
 
-MINICONDA_VERSION=py37_4.8.2
+MINICONDA_VERSION=py37_4.9.3
 URL="https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh"
 INSTALLER_PATH=/tmp/miniconda-installer.sh
 wget --quiet $URL -O ${INSTALLER_PATH}
@@ -20,6 +20,9 @@ fi
 bash ${INSTALLER_PATH} -b -p ${CONDA_DIR} -f
 
 export PATH="${CONDA_BIN}:$PATH"
+
+# Update conda
+conda update -y conda
 
 # Allow easy direct installs from conda forge
 conda config --system --add channels conda-forge
