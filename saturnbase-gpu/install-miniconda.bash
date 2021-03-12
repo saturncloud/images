@@ -26,6 +26,5 @@ conda update -y conda
 
 # Allow easy direct installs from conda forge
 conda config --system --add channels conda-forge
-conda config --system --add channels https://conda.saturncloud.io/pkgs
 conda config --system --set auto_update_conda false
 conda config --system --set show_channel_urls true
