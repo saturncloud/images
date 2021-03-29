@@ -1,0 +1,18 @@
+name: saturn
+channels:
+- nodefaults
+- conda-forge
+dependencies:
+- blas=*=mkl
+- dask=2.30.0
+- datashader
+- distributed=2.30.1
+- ipykernel
+- pip
+- prefect
+- pyarrow
+- python=3.7
+- pip:
+  - dask-saturn>=0.2.2
+  - prefect-saturn>=0.4.0
+  - snowflake-connector-python
