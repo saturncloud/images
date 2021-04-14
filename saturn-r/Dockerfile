@@ -5,6 +5,7 @@ FROM ${SATURNBASE_IMAGE}
 COPY environment.yml /tmp/environment.yml
 COPY postBuild /tmp/postBuild.sh
 COPY r-jupyter-kernel /tmp/r-jupyter-kernel.sh 
+# https://stat.ethz.ch/R-manual/R-devel/library/base/html/libPaths.html
 ENV R_LIBS=/usr/local/lib/R/
 
 RUN conda env update -n saturn --file /tmp/environment.yml && \
