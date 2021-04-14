@@ -3,7 +3,7 @@ ARG SATURNBASE_IMAGE
 FROM ${SATURNBASE_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
-COPY postBuild-cpu /tmp/postBuild.sh
+COPY postBuild /tmp/postBuild.sh
 COPY r-jupyter-kernel /tmp/r-jupyter-kernel.sh 
 
 
