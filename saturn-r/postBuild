@@ -31,7 +31,19 @@ sudo chmod 777 -R /usr/local/lib/R/
 
 
 # install other packages
-sudo Rscript -e "install.packages(c('dplyr', 'ggplot2', 'caret', \
- 'remotes', 'xgboost', 'lightgbm', 'data.table', \
- 'Rcpp', 'reticulate', 'stringr', 'tidyr', 'IRkernel'), \
- dependencies = c('LinkingTo', 'Depends', 'Imports'))"
+sudo Rscript -e "install.packages(c( \
+        'caret', \
+        'data.table', \
+        'dplyr', \
+        'ggplot2', \
+        'IRkernel', \
+        'lightgbm', \
+        'Rcpp', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tidyr', \
+        'xgboost' \
+    ), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    )"
