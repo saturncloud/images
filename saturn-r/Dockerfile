@@ -12,7 +12,7 @@ RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete
     
-RUN /bin/bash /tmp/postBuild.sh && \
+RUN /bin/bash -e -o pipefail /tmp/postBuild.sh && \
     chmod 755 /tmp/r-jupyter-kernel.sh
 
 RUN echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
