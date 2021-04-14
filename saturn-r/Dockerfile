@@ -5,7 +5,7 @@ FROM ${SATURNBASE_IMAGE}
 COPY environment.yml /tmp/environment.yml
 COPY postBuild /tmp/postBuild.sh
 COPY r-jupyter-kernel /tmp/r-jupyter-kernel.sh 
-
+ENV R_LIBS=/usr/local/lib/R/
 
 RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.pyc' -delete && \

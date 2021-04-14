@@ -26,9 +26,8 @@ sudo apt-get install -y \
     qpdf
 
 # make it possible to `install.packages()` - write permissions required.
-sudo chown 1000:1000 -R /usr/local/lib/R/
-sudo chmod 777 -R /usr/local/lib/R/
-
+sudo chown 1000:1000 -R $R_LIBS
+sudo chmod 777 -R $R_LIBS
 
 # install other packages
 sudo Rscript -e "install.packages(c( \
