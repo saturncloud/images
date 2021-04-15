@@ -38,6 +38,7 @@ sudo Rscript -e "install.packages(c( \
         'IRkernel', \
         'lightgbm', \
         'Rcpp', \
+        'readr', \
         'remotes', \
         'reticulate', \
         'stringr', \
