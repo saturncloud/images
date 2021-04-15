@@ -44,6 +44,6 @@ sudo Rscript -e "install.packages(c( \
         'stringr', \
         'tidyr', \
         'xgboost' \
-    ), \
+    ), Ncpus = 6, \
     dependencies = c('LinkingTo', 'Depends', 'Imports') \
     )"
