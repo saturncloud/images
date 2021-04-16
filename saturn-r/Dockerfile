@@ -11,9 +11,8 @@ ENV R_LIBS=/usr/local/lib/R/
 RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.pyc' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
-    find ${CONDA_DIR} -type f,l -name '*.js.map' -delete
-    
-RUN /bin/bash -e -u -o pipefail /tmp/postBuild.sh && \
+    find ${CONDA_DIR} -type f,l -name '*.js.map' -delete && \
+    /bin/bash -e -u -o pipefail /tmp/postBuild.sh && \
     sudo chmod 755 /tmp/r-jupyter-kernel.sh && \
     sudo rm /tmp/postBuild.sh
 
