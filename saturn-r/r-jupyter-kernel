@@ -1,5 +1,0 @@
-#!/bin/bash
-
-Rscript -e 'IRkernel::installspec(user = TRUE)'
-
-exec "$@"

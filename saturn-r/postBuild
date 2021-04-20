@@ -33,15 +33,19 @@ sudo chmod 777 -R $R_LIBS
 sudo Rscript -e "install.packages(c( \
         'caret', \
         'data.table', \
+        'devtools', \
         'dplyr', \
         'ggplot2', \
         'IRkernel', \
+        'keras', \
         'lightgbm', \
+        'lubridate', \
         'Rcpp', \
         'readr', \
         'remotes', \
         'reticulate', \
         'stringr', \
+        'tensorflow', \
         'tidyr', \
         'xgboost' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
