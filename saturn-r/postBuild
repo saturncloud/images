@@ -1,8 +1,8 @@
 # https://cran.rstudio.com/bin/linux/debian/
 sudo apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
 
-sudo apt-get update
-sudo apt-get install -y \
+sudo apt update
+sudo apt install -y \
     --no-install-recommends \
         software-properties-common
 
@@ -14,8 +14,7 @@ sudo apt install -y -t buster-cran40 \
     r-base \
     r-base-dev 
 
-sudo apt-get update
-sudo apt-get install -y \
+sudo apt install -y \
     jupyter-client \
     devscripts \
     libxml2 \
