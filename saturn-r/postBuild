@@ -1,0 +1,53 @@
+# https://cran.rstudio.com/bin/linux/debian/
+sudo apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
+
+sudo apt-get update
+sudo apt-get install -y \
+    --no-install-recommends \
+        software-properties-common
+
+sudo su -c \
+    "echo 'deb http://cloud.r-project.org/bin/linux/debian buster-cran40/' >>/etc/apt/sources.list"
+
+sudo apt update
+sudo apt install -y -t buster-cran40 \
+    r-base \
+    r-base-dev 
+
+sudo apt-get update
+sudo apt-get install -y \
+    jupyter-client \
+    devscripts \
+    libxml2 \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libzmq3-dev \
+    qpdf
+
+# make it possible to `install.packages()` - write permissions required.
+sudo chown 1000:1000 -R $R_LIBS
+sudo chmod 777 -R $R_LIBS
+
+# install other packages
+sudo Rscript -e "install.packages(c( \
+        'caret', \
+        'data.table', \
+        'devtools', \
+        'dplyr', \
+        'ggplot2', \
+        'IRkernel', \
+        'keras', \
+        'lightgbm', \
+        'lubridate', \
+        'Rcpp', \
+        'readr', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tensorflow', \
+        'tidyr', \
+        'xgboost' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    )"
