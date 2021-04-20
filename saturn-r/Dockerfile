@@ -13,6 +13,5 @@ RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete && \
     /bin/bash -e -u -o pipefail /tmp/postBuild.sh && \
-    sudo rm /tmp/postBuild.sh
-
-RUN echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
+    sudo rm /tmp/postBuild.sh && \
+    echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
