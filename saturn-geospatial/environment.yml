@@ -33,6 +33,6 @@ dependencies:
 - xarray
 - zarr
 - pip:
-  - dask-saturn>=0.2.2
-  - prefect-saturn>=0.4.0
+  - dask-saturn>=0.2.3
+  - prefect-saturn>=0.5.0
   - snowflake-connector-python
