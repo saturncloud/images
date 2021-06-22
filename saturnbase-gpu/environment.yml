@@ -20,6 +20,7 @@ dependencies:
   - isort
   - tornado=6
   - jupyter_saturn=${JUPYTER_SATURN_VERSION}
+  - jupyterlab-nvdashboard==0.5.0
   - nbdime
   - pyyaml
   - voila

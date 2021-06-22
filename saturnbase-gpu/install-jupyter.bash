@@ -21,6 +21,7 @@ jupyter labextension install @pyviz/jupyterlab_pyviz
 jupyter labextension install jupyterlab-execute-time
 jupyter labextension install @telamonian/theme-darcula
 jupyter labextension install jupyterlab-python-file
+jupyter labextension install jupyterlab-nvdashboard
 
 cd ${CONDA_DIR}/jsaturn_ext
 npm install
