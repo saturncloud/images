@@ -1,7 +1,6 @@
 channels:
   - defaults
   - conda-forge
-  - saturncloud
 dependencies:
   - nodejs
   - python
