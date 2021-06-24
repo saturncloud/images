@@ -7,7 +7,8 @@ cd $(dirname $0)
 
 echo "installing root env:"
 cat /tmp/environment.yml
-conda env update -n root  -f /tmp/environment.yml
+conda install -c conda-forge mamba
+mamba env update -n root  -f /tmp/environment.yml
 jupyter serverextension enable --sys-prefix jupyter_server_proxy
 jupyter serverextension enable dask_labextension --sys-prefix
 jupyter serverextension enable --py jupyterlab_code_formatter --sys-prefix

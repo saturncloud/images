@@ -7,7 +7,8 @@ cd $(dirname $0)
 
 echo "installing root env:"
 cat /tmp/environment.yml
-conda env update -n root  -f /tmp/environment.yml
+conda install -c conda-forge mamba
+mamba env update -n root  -f /tmp/environment.yml
 jupyter serverextension enable --sys-prefix jupyter_server_proxy
 jupyter serverextension enable dask_labextension --sys-prefix
 jupyter serverextension enable --py jupyterlab_code_formatter --sys-prefix
@@ -20,6 +21,7 @@ jupyter labextension install @pyviz/jupyterlab_pyviz
 jupyter labextension install jupyterlab-execute-time
 jupyter labextension install @telamonian/theme-darcula
 jupyter labextension install jupyterlab-python-file
+jupyter labextension install jupyterlab-nvdashboard
 
 conda clean -afy
 jupyter lab clean
