@@ -60,7 +60,7 @@ for image in ${images_to_check}; do
 
         for installer_file in ${image}/*.bash; do
             if [ -f "${installer_file}" ]; then
-                if [ $(grep --count -E "${package_manager} install" ${installer_file}) -gt 0 ]; then
+                if [ $(grep -v mamba ${installer_file} | grep --count -E "${package_manager} install") -gt 0 ]; then
                     echo "  * [ISSUE] found '${package_manager} install' in ${installer_file}. Update ${conda_env_file} instead."
                     error_count=$((error_count + 1))
                 else

@@ -6,10 +6,10 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
-- dask=2.30.0
-- dask-cuda=0.17.*
-- distributed=2.30.1
-- fsspec>=0.8.5
+- dask=2021.4.0
+- distributed=2021.4.0
+- dask-cuda=0.19
+- fsspec
 - ipykernel
 - ipywidgets
 - keras
@@ -19,12 +19,12 @@ dependencies:
 - pip
 - prefect
 - pyarrow
-- python=3.7
+- python=3.9
 - python-graphviz
 - s3fs
-- tensorboard=2.2.1
-- tensorflow-estimator=2.2.0
-- tensorflow=2.2.0=gpu_py37h1a511ff_0
+- tensorboard
+- tensorflow-estimator
+- tensorflow=2.4.1=gpu_py39h8236f22_0
 - voila
 - pip:
   - dask-saturn>=0.2.3

@@ -7,10 +7,10 @@ dependencies:
 - bokeh
 - cartopy
 - dask-ml
-- dask=2.30.0
+- dask
 - datashader
 - descartes
-- distributed=2.30.1
+- distributed
 - geopandas
 - geoviews
 - hvplot

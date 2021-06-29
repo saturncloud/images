@@ -8,9 +8,9 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
-- dask=2.30.0
-- dask-cuda=0.17.*
-- distributed=2.30.1
+- dask=2021.4.0
+- distributed=2021.4.0
+- dask-cuda=0.19
 - fastai
 - fsspec>=0.8.5
 - ipykernel
@@ -21,14 +21,14 @@ dependencies:
 - pillow
 - pip
 - prefect
-- py-opencv
+- py-opencv=4.5.2=py39hef51801_0
 - pyarrow
-- python=3.7
+- python=3.9
 - python-graphviz
-- pytorch=1.7.0=py3.7_cuda10.1.243_cudnn7.6.3_0
+- pytorch=1.9.0=py3.9_cuda11.1_cudnn8.0.5_0
 - s3fs
-- tensorboard=2.2.1
-- torchvision=0.8.1=py37_cu101
+- tensorboard
+- torchvision
 - voila
 - pip:
   - dask-saturn>=0.2.3

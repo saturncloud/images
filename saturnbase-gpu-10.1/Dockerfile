@@ -1,10 +1,6 @@
 FROM nvidia/cuda:10.1-devel-ubuntu18.04
 EXPOSE 8888
 
-ARG JUPYTER_SATURN_VERSION
-
-ENV JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION}
-
 RUN mkdir /opt/conda && \
     ln -s /opt/conda /srv/conda
 ENV APP_BASE=/srv
@@ -61,9 +57,8 @@ COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
-COPY environment.yml /tmp/environment-temp.yml
-RUN envsubst < /tmp/environment-temp.yml > /tmp/environment.yml && \
-    bash /tmp/install-jupyter.bash && \
+COPY environment.yml /tmp/environment.yml
+RUN bash /tmp/install-jupyter.bash && \
     echo '' > ${CONDA_DIR}/conda-meta/history && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \

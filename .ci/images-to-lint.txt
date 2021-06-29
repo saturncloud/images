@@ -1,6 +1,7 @@
 saturn
 saturnbase
-saturnbase-gpu
+saturnbase-gpu-10.1
+saturnbase-gpu-11.1
 examples-gpu
 examples-cpu
 saturn-rapids
