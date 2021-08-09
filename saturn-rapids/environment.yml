@@ -22,12 +22,12 @@ dependencies:
 - pyarrow
 - python
 - python-graphviz
-- rapids-blazing=0.19.0=cuda10.1_py37_ga03647d_299
+- rapids-blazing=21.06
+- cudatoolkit=11.2
 - s3fs
 - scikit-learn
 - scipy
 - voila
-- xgboost=1.4.0dev.rapidsai0.19=cuda10.1py37_0
 - pip:
   - dask-saturn>=0.3.0
   - prefect-saturn>=0.5.1
