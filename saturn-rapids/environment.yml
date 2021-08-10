@@ -9,8 +9,8 @@ dependencies:
 - bokeh
 - cvxpy
 - dask-ml
-- dask=2021.4.0
-- distributed=2021.4.0
+- dask=2021.7.2
+- distributed=2021.7.2
 - ipykernel
 - ipywidgets
 - matplotlib
@@ -22,12 +22,13 @@ dependencies:
 - pyarrow
 - python
 - python-graphviz
-- rapids-blazing=21.06
-- cudatoolkit=11.2
+- rapids-blazing=21.06.01=cuda11.2_py37_gecaf371_431
+- cudatoolkit=11.2.2=he111cf0_8
 - s3fs
 - scikit-learn
 - scipy
 - voila
+- xgboost=1.4.2dev.rapidsai21.06=cuda11.2py37_0
 - pip:
   - dask-saturn>=0.3.0
   - prefect-saturn>=0.5.1
