@@ -6,11 +6,13 @@ channels:
 - conda-forge
 dependencies:
 - blas=*=mkl
+- blazingsql=21.06.00=cuda_11.2_py37_g95ff589f8_0
 - bokeh
 - cvxpy
 - dask-ml
-- dask=2021.7.2
-- distributed=2021.7.2
+- dask=2021.4.1
+- distributed=2021.4.1
+- dask-cudf=21.06.01=py37_g101fc0fda4_2 
 - ipykernel
 - ipywidgets
 - matplotlib
