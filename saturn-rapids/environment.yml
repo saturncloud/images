@@ -23,7 +23,6 @@ dependencies:
 - python
 - python-graphviz
 - rapids-blazing=21.06.01=cuda11.2_py37_gecaf371_431
-- cudatoolkit=11.2.2=he111cf0_8
 - s3fs
 - scikit-learn
 - scipy
