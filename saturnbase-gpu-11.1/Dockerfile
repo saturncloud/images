@@ -11,7 +11,7 @@ ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -qq update && \
+RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
         gettext-base \
