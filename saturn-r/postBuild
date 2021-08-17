@@ -1,14 +1,18 @@
 # https://cran.rstudio.com/bin/linux/debian/
 
-sudo apt update
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
+
+sudo apt --allow-releaseinfo-change update
 sudo apt install -y \
     --no-install-recommends \
         software-properties-common
 
-sudo apt update
-sudo apt install -y \
+sudo su -c \
+    "echo 'deb http://cloud.r-project.org/bin/linux/debian buster-cran40/' >>/etc/apt/sources.list"
+
+sudo apt  update
+sudo apt install -y -t buster-cran40 \
     r-base \
-    r-base-dev \
     r-base-core \
     r-base-dev 
 
