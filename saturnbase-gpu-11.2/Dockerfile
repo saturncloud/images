@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-devel-ubuntu18.04
+FROM nvidia/cuda:11.2.1-devel-ubuntu18.04
 EXPOSE 8888
 
 RUN mkdir /opt/conda && \
@@ -7,7 +7,7 @@ ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -qq --allow-releaseinfo-change update && \
+RUN apt-get -qq update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
         gettext-base \
