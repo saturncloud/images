@@ -31,6 +31,6 @@ dependencies:
 - torchvision
 - voila
 - pip:
-  - dask-saturn>=0.3.0
+  - dask-saturn>=0.4.0
   - prefect-saturn>=0.5.1
   - snowflake-connector-python
