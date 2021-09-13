@@ -26,6 +26,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         openssh-server \
         htop \
         screen \
+        build-essential \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
