@@ -8,6 +8,9 @@ unset RSW_LICENSE_SERVER
 
 echo "www-port=$RSW_PORT" >> rserver.conf
 
+# this is so RStudio knows which user to log in as since we aren't authenticating
+export USER=$RSW_USER
+
 # Deactivate license when it exists
 deactivate() {
     echo "== Exiting =="
