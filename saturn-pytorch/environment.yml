@@ -8,8 +8,8 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
-- dask=2021.4.0
-- distributed=2021.4.0
+- dask=2021.07
+- distributed=2021.07
 - dask-cuda=0.19
 - fastai
 - fsspec>=0.8.5
@@ -25,11 +25,10 @@ dependencies:
 - pyarrow
 - python=3.9
 - python-graphviz
-- pytorch=1.9.0=py3.9_cuda11.1_cudnn8.0.5_0
+- pytorch=1.9.1=py3.9_cuda11.1_cudnn8.0.5_0
 - s3fs
 - tensorboard
 - torchvision
-- voila
 - pip:
   - dask-saturn>=0.3.0
   - prefect-saturn>=0.5.1
