@@ -34,3 +34,4 @@ dependencies:
   - dask-saturn>=0.3.0
   - prefect-saturn>=0.5.1
   - snowflake-connector-python
+  - jupyterlab_code_formatter==1.4.10
