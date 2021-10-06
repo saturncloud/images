@@ -31,6 +31,6 @@ dependencies:
 - voila
 - xgboost=1.4.2dev.rapidsai21.06=cuda11.2py37_0
 - pip:
-  - dask-saturn>=0.3.0
+  - dask-saturn>=0.4.0
   - prefect-saturn>=0.5.1
   - snowflake-connector-python
