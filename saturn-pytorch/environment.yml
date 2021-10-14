@@ -10,7 +10,7 @@ dependencies:
 - bokeh
 - dask=2021.07
 - distributed=2021.07
-- dask-cuda=0.19
+- dask-cuda=21.8
 - fastai
 - fsspec>=0.8.5
 - ipykernel
