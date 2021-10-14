@@ -52,3 +52,6 @@ sudo Rscript -e "install.packages(c( \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports') \
     )"
+
+# Set up R kernel for Jupyter
+RUN Rscript -e "IRkernel::installspec(user = FALSE)"
