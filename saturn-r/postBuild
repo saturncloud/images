@@ -54,4 +54,4 @@ sudo Rscript -e "install.packages(c( \
     )"
 
 # Set up R kernel for Jupyter
-RUN Rscript -e "IRkernel::installspec(user = FALSE)"
+sudo Rscript -e "IRkernel::installspec(user = FALSE)"
