@@ -32,23 +32,20 @@ sudo chmod 777 -R $R_LIBS
 
 # install other packages
 sudo Rscript -e "install.packages(c( \
-        'caret', \
         'data.table', \
         'devtools', \
         'dplyr', \
         'ggplot2', \
         'IRkernel', \
-        'keras', \
-        'lightgbm', \
         'lubridate', \
         'Rcpp', \
         'readr', \
         'remotes', \
         'reticulate', \
         'stringr', \
-        'tensorflow', \
         'tidyr', \
-        'xgboost' \
+        'forcats', \
+        'tidyverse' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports') \
     )"
