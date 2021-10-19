@@ -1,42 +1,39 @@
-FROM continuumio/miniconda3:4.9.2
+ARG MINICONDA_IMAGE
+FROM ${MINICONDA_IMAGE}
 EXPOSE 8888
 
-RUN ln -s /opt/conda /srv/conda
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
+
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
+        awscli \
+        build-essential \
+        curl \
+        htop \
         gettext-base \
         gnupg \
         locales \
-        wget \
-        curl \
-        bzip2 \
-        ca-certificates \
-        git \
-        awscli \
+        openssh-server \
         rsync \
         sudo \
-        openssh-server \
-        htop \
         screen \
-        build-essential \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* && \
-    conda update -y conda && \
     mkdir -p /run/sshd && \
     chmod 755 /run/sshd && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
-ENV LC_ALL en_US.UTF-8
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US.UTF-8
-ENV SHELL /bin/bash
+
+ENV LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US.UTF-8
+ENV SHELL=/bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV USER=${NB_USER}
@@ -46,10 +43,7 @@ RUN adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER} && \
-    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
-    mkdir -p ${APP_BASE} && \
-    chown 1000:1000 -R /opt/conda && \
-    chown -R $NB_USER:$NB_USER ${APP_BASE}
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 COPY profile /etc/profile
 
 USER ${NB_USER}
