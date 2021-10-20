@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1.1-devel-ubuntu18.04
+FROM nvidia/cuda:11.1.1-runtime-ubuntu18.04
 EXPOSE 8888
 
 ARG JUPYTER_SATURN_VERSION
