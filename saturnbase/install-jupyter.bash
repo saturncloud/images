@@ -29,6 +29,7 @@ npm cache clean --force
 find ${CONDA_DIR}/ -type f,l -name '*.pyc' -delete
 find ${CONDA_DIR}/ -type f,l -name '*.a' -delete
 find ${CONDA_DIR}/ -type f,l -name '*.js.map' -delete
+find /opt/conda/lib/python*/site-packages/bokeh/server/static/ -follow -type f -name '*.js' ! -name '*.min.js' -delete
 rm -rf $HOME/.node-gyp
 rm -rf $HOME/.local
 
