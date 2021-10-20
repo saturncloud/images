@@ -1,4 +1,4 @@
-FROM nvidia/cuda:10.1-devel-ubuntu18.04
+FROM nvidia/cuda:10.1-runtime-ubuntu18.04
 EXPOSE 8888
 
 RUN mkdir /opt/conda && \
