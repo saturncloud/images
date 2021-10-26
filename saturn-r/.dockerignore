@@ -1,4 +1,4 @@
 *
 !environment.yml
 !r-jupyter-kernel
-!postBuild
+!postbuild.sh

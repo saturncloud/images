@@ -1,0 +1,4 @@
+*
+!shared/split-dir.sh
+!*/environment.yml
+!*/postbuild.sh
