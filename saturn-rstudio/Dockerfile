@@ -50,5 +50,11 @@ COPY --chown=root:root rserver.conf /etc/rstudio/rserver.conf
 # COPY --chown=root:root rsession-profile /etc/rstudio/rsession-profile
 COPY --chown=root:root rstudio-prefs.json /etc/rstudio/rstudio-prefs.json
 
+# Ensure that the folder with R packages in them can be written into
+RUN sudo chown 1000:1000 -R /usr/local/lib/R \
+    && sudo chmod 777 -R /usr/local/lib/R \
+    && sudo chown 1000:1000 -R /usr/lib/R \
+    && sudo chmod 777 -R /usr/lib/R 
+
 ENTRYPOINT ["tini", "--"]
 CMD ["/usr/local/bin/rstudio-start.sh"]
