@@ -1,4 +1,6 @@
 *
+!database.conf
 !rserver.conf
+!rsession-profile
 !rstudio-prefs.json
-!startup.sh
+!rstudio-start.sh
