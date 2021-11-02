@@ -6,13 +6,13 @@ channels:
 - conda-forge
 dependencies:
 - blas=*=mkl
-- blazingsql=21.06.00=cuda_11.2_py37_g95ff589f8_0
+- blazingsql=21.10.00=cuda_11.2_py37_g2a4a99cc8_0
 - bokeh
 - cvxpy
 - dask-ml
-- dask=2021.4.1
-- distributed=2021.4.1
-- dask-cudf=21.06.01=py37_g101fc0fda4_2 
+- dask=2021.9.1
+- distributed=2021.9.1
+- dask-cudf=21.10.00=py37_g072fd862cc_0
 - ipykernel
 - ipywidgets
 - matplotlib
@@ -21,16 +21,17 @@ dependencies:
 - pandas
 - pip
 - prefect
-- pyarrow
+- pyarrow=5.0.0
 - python
 - python-graphviz
-- rapids-blazing=21.06.01=cuda11.2_py37_gecaf371_431
+- rapids-blazing=21.10.00=cuda11.2_py37_ge66f011_114
 - s3fs
 - scikit-learn
 - scipy
 - voila
-- xgboost=1.4.2dev.rapidsai21.06=cuda11.2py37_0
+- xgboost=1.4.2dev.rapidsai21.10=cuda11.2py37_0
 - pip:
   - dask-saturn>=0.4.0
   - prefect-saturn>=0.5.1
   - snowflake-connector-python
+  
