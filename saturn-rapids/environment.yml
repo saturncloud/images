@@ -34,4 +34,3 @@ dependencies:
   - dask-saturn>=0.4.0
   - prefect-saturn>=0.5.1
   - snowflake-connector-python
-  
