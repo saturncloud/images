@@ -40,7 +40,8 @@ RUN Rscript -e "install.packages(c( \
        'rmarkdown', \
        'tinytex' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    lib = '/usr/local/lib/R/site-library' \
     )"
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
