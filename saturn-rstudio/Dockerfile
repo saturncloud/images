@@ -33,6 +33,16 @@ RUN sudo apt-get update --fix-missing \
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini
 
+# Add a few R packages that are useful for RMarkdown
+RUN Rscript -e "install.packages(c( \
+       'jquerylib', \
+       'markdown', \
+       'rmarkdown', \
+       'tinytex' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    lib = '/usr/local/lib/R/site-library' \
+    )"
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
 RUN sudo chmod +x /usr/local/bin/rstudio-start.sh
