@@ -23,13 +23,8 @@ RUN sudo apt-get update --fix-missing \
         libssl-dev \
         libuser \
         libuser1-dev \
-        # libxext6 \
-        # libxrender1 \
         openssh-client \
         rrdtool \
-        # sudo \
-        # wget \
-        # curl \
     # Install RStudio Server --------------------------------------------------#
     && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
@@ -47,7 +42,6 @@ RUN sudo chmod +x /usr/local/bin/rstudio-start.sh
 
 COPY --chown=root:root database.conf /etc/rstudio/database.conf
 COPY --chown=root:root rserver.conf /etc/rstudio/rserver.conf
-# COPY --chown=root:root rsession-profile /etc/rstudio/rsession-profile
 COPY --chown=root:root rstudio-prefs.json /etc/rstudio/rstudio-prefs.json
 
 # Ensure that the folder with R packages in them can be written into
