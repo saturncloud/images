@@ -9,10 +9,7 @@ ARG TINI_VERSION=0.18.0
 RUN sudo apt-get update --fix-missing \
     && sudo update-locale LANG=en_US.utf8 \
     && sudo apt-get install -y --no-install-recommends \
-        # bzip2 \
-        # ca-certificates \
         gdebi-core \
-        # git \
         libcap2 \
         libglib2.0-0 \
         libpq5 \
