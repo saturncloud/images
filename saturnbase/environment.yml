@@ -6,7 +6,7 @@ dependencies:
   - python
   - ipywidgets
   - jupyterlab-git
-  - jupyterlab=2.2.9
+  - jupyterlab=3.2.2
   - nbconvert
   - notebook
   - jupyter-server-proxy
@@ -15,9 +15,16 @@ dependencies:
   - dask-labextension
   - yarl
   - pyviz_comms
-  - jupyterlab_code_formatter=1.3.8
   - black
   - isort
   - tornado
   - nbdime
   - voila
+  - pip
+  - pip:
+    - nbclassic>=0.2.8
+    - jupyterlab_execute_time
+    - jupyterlab_code_formatter
+    - jupyter_bokeh
+    - jupyterlab_widgets
+    - theme-darcula
