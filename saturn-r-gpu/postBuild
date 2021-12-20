@@ -61,3 +61,6 @@ sudo Rscript -e "IRkernel::installspec(user = FALSE)"
 
 # Setup R reticulate for Python
 sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
+
+# Add required python packages
+/opt/conda/envs/saturn/bin/python -m pip install tensorflow
