@@ -1,0 +1,32 @@
+name: saturn
+channels:
+- defaults
+- conda-forge
+- rapidsai
+dependencies:
+- blas=*=mkl
+- bokeh
+- dask=2021.07
+- distributed=2021.07
+- dask-cuda==21.8
+- fsspec
+- ipykernel
+- ipywidgets
+- keras
+- matplotlib
+- numpy
+- pandas
+- pip
+- prefect
+- pyarrow
+- python=3.9
+- python-graphviz
+- s3fs
+- tensorboard
+- tensorflow-estimator
+- tensorflow=2.4.1=gpu_py39h8236f22_0
+- voila
+- pip:
+  - dask-saturn>=0.4.0
+  - prefect-saturn>=0.5.1
+  - snowflake-connector-python
