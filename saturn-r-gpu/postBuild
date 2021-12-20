@@ -28,10 +28,12 @@ sudo apt install -y \
     libzmq3-dev \
     qpdf
 
+# Make all library folders readable then let R known
 RUN sudo chown 1000:1000 -R /usr/local/lib/R \
     && sudo chmod 777 -R /usr/local/lib/R \
     && sudo chown 1000:1000 -R /usr/lib/R \
-    && sudo chmod 777 -R /usr/lib/R 
+    && sudo chmod 777 -R /usr/lib/R \
+    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron"
 
 # install other packages
 sudo Rscript -e "install.packages(c( \
