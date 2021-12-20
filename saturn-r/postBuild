@@ -1,30 +1,24 @@
 # https://cran.rstudio.com/bin/linux/debian/
 
+sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7'
 
 sudo apt update
 sudo apt install -y \
     --no-install-recommends \
         software-properties-common
 
-wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
-
 sudo su -c \
-    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' >>/etc/apt/sources.list"
+    "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list"
 
 sudo apt update
-sudo apt install -y -t bionic-cran40 \
+sudo apt install -y -t bullseye-cran40 \
     r-base \
     r-base-core \
-    r-base-dev \
-    r-recommended
+    r-base-dev 
 
 sudo apt install -y \
     jupyter-client \
-    devscripts \
-    libxml2 \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
+	@@ -26,9 +28,10 @@ sudo apt install -y \
     libzmq3-dev \
     qpdf
 
