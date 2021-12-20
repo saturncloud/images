@@ -29,7 +29,7 @@ sudo apt install -y \
     qpdf
 
 # Make all library folders readable then let R known
-RUN sudo mkdir -p /usr/local/lib/R \
+sudo mkdir -p /usr/local/lib/R \
     && sudo mkdir -p /usr/local/lib/R/site-library \
     && sudo mkdir -p /usr/lib/R/site-library \
     && sudo mkdir -p /usr/lib/R/library \
