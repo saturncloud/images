@@ -29,7 +29,9 @@ sudo apt install -y \
     qpdf
 
 # Make all library folders readable then let R known
-RUN sudo chown 1000:1000 -R /usr/local/lib/R \
+RUN sudo chown 1000:1000 -R $R_LIBS \
+    && sudo chmod 777 -R $R_LIBS \
+    && sudo chown 1000:1000 -R /usr/local/lib/R \
     && sudo chmod 777 -R /usr/local/lib/R \
     && sudo chown 1000:1000 -R /usr/lib/R \
     && sudo chmod 777 -R /usr/lib/R \
