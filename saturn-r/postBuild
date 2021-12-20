@@ -18,7 +18,11 @@ sudo apt install -y -t bullseye-cran40 \
 
 sudo apt install -y \
     jupyter-client \
-	@@ -26,9 +28,10 @@ sudo apt install -y \
+    devscripts \
+    libxml2 \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
     libzmq3-dev \
     qpdf
 
