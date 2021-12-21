@@ -48,4 +48,4 @@ sudo Rscript -e "install.packages(c( \
 sudo Rscript -e "IRkernel::installspec(user = FALSE)"
 
 # Setup R reticulate for Python
-sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
+sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron"
