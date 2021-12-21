@@ -56,8 +56,7 @@ sudo Rscript -e "install.packages(c( \
         'forcats', \
         'tidyverse', \
         'tensorflow', \
-        'keras', \
-        'torch' \
+        'keras' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports') \
     )"
