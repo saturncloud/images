@@ -21,6 +21,7 @@ dependencies:
   - nbdime
   - voila
   - pip
+  - setuptools<60.0
   - pip:
     - nbclassic>=0.2.8
     - jupyterlab_execute_time

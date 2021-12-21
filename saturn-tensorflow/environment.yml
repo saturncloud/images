@@ -22,6 +22,7 @@ dependencies:
 - python=3.9
 - python-graphviz
 - s3fs
+- setuptools<60.0
 - tensorboard
 - tensorflow-estimator
 - tensorflow=2.4.1=gpu_py39h8236f22_0
