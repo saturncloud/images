@@ -1,5 +1,15 @@
 # https://cran.rstudio.com/bin/linux/debian/
 
+sudo apt install -y \
+    jupyter-client \
+    devscripts \
+    libxml2 \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libzmq3-dev \
+    qpdf
+
 # Make all library folders readable then let R known
 sudo mkdir -p /usr/local/lib/R \
     && sudo mkdir -p /usr/local/lib/R/site-library \
