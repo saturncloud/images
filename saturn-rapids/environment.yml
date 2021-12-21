@@ -28,6 +28,7 @@ dependencies:
 - s3fs
 - scikit-learn
 - scipy
+- setuptools<60.0
 - voila
 - xgboost=1.4.2dev.rapidsai21.06=cuda11.2py37_0
 - pip:

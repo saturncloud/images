@@ -7,3 +7,4 @@ dependencies:
 - ipykernel
 - pip
 - python=3.7
+- setuptools<60.0
