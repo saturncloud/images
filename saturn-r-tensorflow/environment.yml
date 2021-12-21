@@ -1,7 +1,19 @@
 name: saturn
 channels:
-- defaults
+- nodefaults
 - conda-forge
 dependencies:
+- ipykernel
+- ipywidgets
+- matplotlib
+- numpy
+- pandas
+- pip
+- pyarrow
+- python-graphviz
+- s3fs
+- scikit-learn
+- scipy
 - python=3.9
-- tensorflow=2.4.1=gpu_py39h8236f22_0
+- pip:
+  - tensorflow==2.7.0
