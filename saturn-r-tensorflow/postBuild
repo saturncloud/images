@@ -1,33 +1,5 @@
 # https://cran.rstudio.com/bin/linux/debian/
 
-
-sudo apt update
-sudo apt install -y \
-    --no-install-recommends \
-        software-properties-common
-
-wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
-
-sudo su -c \
-    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' >>/etc/apt/sources.list"
-
-sudo apt update
-sudo apt install -y -t bionic-cran40 \
-    r-base \
-    r-base-core \
-    r-base-dev \
-    r-recommended
-
-sudo apt install -y \
-    jupyter-client \
-    devscripts \
-    libxml2 \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libzmq3-dev \
-    qpdf
-
 # Make all library folders readable then let R known
 sudo mkdir -p /usr/local/lib/R \
     && sudo mkdir -p /usr/local/lib/R/site-library \
