@@ -1,0 +1,67 @@
+# https://cran.rstudio.com/bin/linux/debian/
+
+
+sudo apt update
+sudo apt install -y \
+    --no-install-recommends \
+        software-properties-common
+
+wget -qO- https://cloud.r-project.org/bin/linux/ubuntu/marutter_pubkey.asc | sudo tee -a /etc/apt/trusted.gpg.d/cran_ubuntu_key.asc
+
+sudo su -c \
+    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/' >>/etc/apt/sources.list"
+
+sudo apt update
+sudo apt install -y -t bionic-cran40 \
+    r-base \
+    r-base-core \
+    r-base-dev \
+    r-recommended
+
+sudo apt install -y \
+    jupyter-client \
+    devscripts \
+    libxml2 \
+    libxml2-dev \
+    libcurl4-openssl-dev \
+    libssl-dev \
+    libzmq3-dev \
+    qpdf
+
+# Make all library folders readable then let R known
+sudo mkdir -p /usr/local/lib/R \
+    && sudo mkdir -p /usr/local/lib/R/site-library \
+    && sudo mkdir -p /usr/lib/R/site-library \
+    && sudo mkdir -p /usr/lib/R/library \
+    && sudo chown 1000:1000 -R /usr/local/lib/R \
+    && sudo chmod 777 -R /usr/local/lib/R \
+    && sudo chown 1000:1000 -R /usr/lib/R \
+    && sudo chmod 777 -R /usr/lib/R \
+    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron"
+
+# install other packages
+sudo Rscript -e "install.packages(c( \
+        'data.table', \
+        'devtools', \
+        'dplyr', \
+        'ggplot2', \
+        'IRkernel', \
+        'lubridate', \
+        'Rcpp', \
+        'readr', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tidyr', \
+        'forcats', \
+        'tidyverse', \
+        'torch' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    )"
+
+# Set up R kernel for Jupyter
+sudo Rscript -e "IRkernel::installspec(user = FALSE)"
+
+# Install torch C++ libraries
+sudo Rscript -e "torch::install_torch()"
