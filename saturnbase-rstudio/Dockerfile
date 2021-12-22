@@ -92,19 +92,19 @@ WORKDIR ${HOME}
 
 RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' \
     && apt-get update \
-    && apt-get install -y \
+    && sudo apt-get install -y \
     --no-install-recommends \
         software-properties-common
 
 RUN sudo su -c \
     "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list"
 
-RUN apt-get install -y -t bullseye-cran40 \
+RUN sudo apt-get install -y -t bullseye-cran40 \
     r-base \
     r-base-core \
     r-base-dev 
 
-RUN apt-get install -y \
+RUN sudo apt-get install -y \
     devscripts \
     libxml2 \
     libxml2-dev \
