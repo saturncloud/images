@@ -1,6 +1,4 @@
 *
-!database.conf
-!rserver.conf
-!rsession-profile
-!rstudio-prefs.json
-!rstudio-start.sh
+!environment.yml
+!r-jupyter-kernel
+!postBuild

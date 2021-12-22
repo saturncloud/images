@@ -1,0 +1,22 @@
+
+# install other packages
+sudo Rscript -e "install.packages(c( \
+        'data.table', \
+        'devtools', \
+        'dplyr', \
+        'ggplot2', \
+        'lubridate', \
+        'Rcpp', \
+        'readr', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tidyr', \
+        'forcats', \
+        'tidyverse' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    )"
+
+# Setup R reticulate for Python
+sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
