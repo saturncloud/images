@@ -29,6 +29,7 @@ dependencies:
 - rasterio
 - s3fs
 - scipy
+- setuptools<60.0
 - voila
 - xarray
 - zarr
