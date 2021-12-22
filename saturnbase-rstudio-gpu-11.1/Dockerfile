@@ -108,7 +108,7 @@ RUN sudo mkdir -p /usr/local/lib/R \
     && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/local/lib/R/etc/Renviron"
 
 # Setup R reticulate for Python
-RUN sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
+RUN sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron"
 
 ## Install RStudio
 
