@@ -17,6 +17,7 @@ sudo Rscript -e "install.packages(c( \
         'torch' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    type = "both", \
     repos = 'https://packagemanager.rstudio.com/cran/__linux__/focal/latest' \
     )"
 
