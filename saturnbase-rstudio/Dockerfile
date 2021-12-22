@@ -99,7 +99,7 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
 RUN sudo su -c \
     "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list"
 
-RUN sudo apt-get install -y -t bullseye-cran40 \
+RUN sudo apt update && sudo apt-get install -y -t bullseye-cran40 \
     r-base \
     r-base-core \
     r-base-dev 
