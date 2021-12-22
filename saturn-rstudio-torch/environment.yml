@@ -1,9 +1,0 @@
-name: saturn
-channels:
-- nodefaults
-- conda-forge
-dependencies:
-- blas=*=mkl
-- ipykernel
-- pip
-- python=3.7
