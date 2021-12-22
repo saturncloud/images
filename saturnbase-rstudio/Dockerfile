@@ -1,6 +1,8 @@
 FROM debian:bullseye-slim
 EXPOSE 8888
 
+# SETUP SATURN
+
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin

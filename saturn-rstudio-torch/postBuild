@@ -1,0 +1,23 @@
+# install other packages
+sudo Rscript -e "install.packages(c( \
+        'data.table', \
+        'devtools', \
+        'dplyr', \
+        'ggplot2', \
+        'IRkernel', \
+        'lubridate', \
+        'Rcpp', \
+        'readr', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tidyr', \
+        'forcats', \
+        'tidyverse', \
+        'torch' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports') \
+    )"
+
+# Install torch C++ libraries
+sudo Rscript -e "torch::install_torch()"
