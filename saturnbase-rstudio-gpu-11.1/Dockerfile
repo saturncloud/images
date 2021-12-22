@@ -87,7 +87,7 @@ RUN sudo ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /
 
 # ADDITIONAL R SETUP BEYOND BASE IMAGE
 
-RUN sudo apt-get install -y \
+RUN sudo apt update && sudo apt-get install -y \
     devscripts \
     libxml2 \
     libxml2-dev \
