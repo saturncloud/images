@@ -91,7 +91,7 @@ WORKDIR ${HOME}
 ## Install R
 
 RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' \
-    && apt-get update \
+    && sudo apt-get update \
     && sudo apt-get install -y \
     --no-install-recommends \
         software-properties-common
