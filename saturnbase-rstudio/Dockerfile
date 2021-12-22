@@ -76,9 +76,9 @@ COPY profile /etc/profile
 
 USER ${NB_USER}
 
-COPY install-jupyter.bash /tmp/install-jupyter.bash
+COPY setup-conda.bash /tmp/setup-conda.bash
 COPY environment.yml /tmp/environment.yml
-RUN bash /tmp/install-jupyter.bash && \
+RUN bash /tmp/setup-conda.bash && \
     echo '' > ${CONDA_DIR}/conda-meta/history && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
@@ -105,7 +105,6 @@ RUN apt-get install -y -t bullseye-cran40 \
     r-base-dev 
 
 RUN apt-get install -y \
-    jupyter-client \
     devscripts \
     libxml2 \
     libxml2-dev \
