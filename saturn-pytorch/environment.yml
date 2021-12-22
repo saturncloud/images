@@ -27,6 +27,7 @@ dependencies:
 - python-graphviz
 - pytorch=1.9.1=py3.9_cuda11.1_cudnn8.0.5_0
 - s3fs
+- setuptools<60.0
 - tensorboard
 - torchvision
 - pip:
