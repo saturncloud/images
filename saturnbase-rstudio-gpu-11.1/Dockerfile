@@ -7,7 +7,7 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.authors="Jacqueline Nolis" \
       org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
 
-# SETUP SATURN 
+# SETUP SATURN (and install linux libraries for R & Rstudio)
 
 ARG JUPYTER_SATURN_VERSION
 
@@ -39,6 +39,24 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         htop \
         screen \
         build-essential \
+        devscripts \
+        libxml2 \
+        libxml2-dev \
+        libcurl4-openssl-dev \
+        libzmq3-dev \
+        qpdf \
+        gdebi-core \
+        libcap2 \
+        libglib2.0-0 \
+        libpq5 \
+        libsm6 \
+        libssl1.1 \
+        openssl \
+        libssl-dev \
+        libuser \
+        libuser1-dev \
+        openssh-client \
+        rrdtool \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
@@ -87,15 +105,6 @@ RUN sudo ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /
 
 # ADDITIONAL R SETUP BEYOND BASE IMAGE
 
-RUN sudo apt update && sudo apt-get install -y \
-    devscripts \
-    libxml2 \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libzmq3-dev \
-    qpdf
-
 # Make all library folders readable then let R known
 RUN sudo mkdir -p /usr/local/lib/R \
     && sudo mkdir -p /usr/local/lib/R/site-library \
@@ -117,24 +126,7 @@ ARG RSTUDIO_VERSION=2021.09.0-351
 ARG TINI_VERSION=0.18.0
 
 # hadolint ignore=DL3008,DL3009
-RUN sudo apt-get update --fix-missing \
-    && sudo update-locale LANG=en_US.utf8 \
-    && sudo apt-get install -y --no-install-recommends \
-        gdebi-core \
-        libcap2 \
-        libglib2.0-0 \
-        libpq5 \
-        libsm6 \
-        libcurl4-openssl-dev \
-        libssl1.1 \
-        openssl \
-        libssl-dev \
-        libuser \
-        libuser1-dev \
-        openssh-client \
-        rrdtool \
-    # Install RStudio Server --------------------------------------------------#
-    && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
