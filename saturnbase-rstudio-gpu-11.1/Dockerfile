@@ -57,6 +57,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         libuser1-dev \
         openssh-client \
         rrdtool \
+        psmisc \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
