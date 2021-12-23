@@ -1,6 +1,6 @@
 
-ARG SATURNBASE_IMAGE
-FROM ${SATURNBASE_IMAGE}
+ARG SATURNBASE_GPU_IMAGE
+FROM ${SATURNBASE_GPU_IMAGE}
 
 COPY environment.yml /tmp/environment.yml
 COPY postBuild /tmp/postBuild.sh
