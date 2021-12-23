@@ -112,19 +112,14 @@ WORKDIR ${HOME}
 
 ## Install R
 
-RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' \
-    && sudo apt-get update \
-    && sudo apt-get install -y \
-    --no-install-recommends \
-        software-properties-common
-
-RUN sudo su -c \
-    "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list"
-
-RUN sudo apt update && sudo apt-get install -y -t bullseye-cran40 \
-    r-base \
-    r-base-core \
-    r-base-dev 
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' && \
+    sudo su -c \
+    "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list" && \
+    sudo apt update && \
+    sudo apt-get install -y -t bullseye-cran40 \
+        r-base \
+        r-base-core \
+        r-base-dev 
 
 # Make all library folders readable then let R known
 RUN sudo mkdir -p /usr/local/lib/R \
