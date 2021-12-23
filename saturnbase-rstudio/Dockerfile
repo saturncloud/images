@@ -121,7 +121,7 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
         r-base-core \
         r-base-dev 
 
-# Make all library folders readable then let R known
+# Make all library folders readable then let R known, the set up reticulate package
 RUN sudo mkdir -p /usr/local/lib/R \
     && sudo mkdir -p /usr/local/lib/R/site-library \
     && sudo mkdir -p /usr/lib/R/site-library \
@@ -130,10 +130,8 @@ RUN sudo mkdir -p /usr/local/lib/R \
     && sudo chmod 777 -R /usr/local/lib/R \
     && sudo chown 1000:1000 -R /usr/lib/R \
     && sudo chmod 777 -R /usr/lib/R \
-    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron"
-
-# Setup R reticulate for Python
-RUN sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
+    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
+    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron"
 
 ## Install RStudio
 
