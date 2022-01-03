@@ -79,6 +79,8 @@ RUN \
         ssh \
         sudo \
         wget \
+        unixodbc \
+        unixodbc-dev \
      > /dev/null \
     # CUDA fix
     && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
@@ -145,6 +147,12 @@ ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
 
+## Add Snowflake ODBC driver
+RUN && sudo apt-get install -f \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && sudo dpkg -i snowflake-odbc.deb \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini
 # Configure rstudio
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
 RUN sudo chmod +x /usr/local/bin/rstudio-start.sh

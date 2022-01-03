@@ -43,11 +43,12 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         libcurl4-openssl-dev \
         libssl1.1 \
         openssl \
-        libssl-dev \
         libuser \
         libuser1-dev \
         openssh-client \
         rrdtool \
+        unixodbc \
+        unixodbc-dev \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
@@ -138,6 +139,13 @@ RUN sudo mkdir -p /usr/local/lib/R \
 ARG RSTUDIO_VERSION=2021.09.0-351
 
 ARG TINI_VERSION=0.18.0
+
+## Add Snowflake ODBC driver
+RUN sudo apt-get install -f \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && sudo dpkg -i snowflake-odbc.deb \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini
 
 # hadolint ignore=DL3008,DL3009
 RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
