@@ -4,6 +4,6 @@ export
 build_image:
 	docker build \
 		--no-cache \
-		--build-arg SATURNBASE_IMAGE=${SATURNBASE_IMAGE} \
+		--build-arg JUPYTER_SATURN_VERSION=${JUPYTER_SATURN_VERSION} \
 		-t ${IMAGE} \
 		.
