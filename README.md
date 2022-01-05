@@ -1,4 +1,4 @@
-# images
+# Images
 
 This repository holds code to create Saturn Docker images.
 
@@ -76,3 +76,12 @@ The images in this repository use `.dockerignore` files like this:
 That syntax says "ignore everything EXCEPT `app.py` and `environment.yml`".
 
 For complete details on how to write `.dockerignore` files, see [the docker documentation](https://docs.docker.com/engine/reference/builder/#dockerignore-file).
+
+## R Images
+
+There are two R base images. Each installs R and RStudio (and Python), and sets up the right environment variables including Reticulate support.
+
+* `saturnbase-rstudio` - Built in the same manner as `saturnbase` but without JupyterLab.
+* `saturnbase-rstudio-gpu-11.1` - Built using [rocker/ml](https://github.com/rocker-org/rocker-versioned2) as the starting point so that GPUs can be supported. The rocker/ml image is copyright of the rocker project.
+
+The R images that build from these two base images can then add R packages or Python packages as needed.
