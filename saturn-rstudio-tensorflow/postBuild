@@ -1,6 +1,6 @@
 
 # install other packages
-sudo Rscript -e "install.packages(c( \
+Rscript -e "install.packages(c( \
         'data.table', \
         'devtools', \
         'dplyr', \
