@@ -1,7 +1,7 @@
 # Saturn RAPIDS
 
 ## Description
-An image for GPU based accelleration using the [RAPIDS](https://rapids.ai/) library. A GPU instance in recommended for this image.
+An image for GPU based acceleration using the [RAPIDS](https://rapids.ai/) library. A GPU instance in recommended for this image.
 <hr>
 
 **OS**: Ubuntu
