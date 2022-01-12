@@ -1,0 +1,1 @@
+A basic image for data analysis, machine learning, and parallel processing with Dask. Generally used for CPU instances.

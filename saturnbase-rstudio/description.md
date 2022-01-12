@@ -1,0 +1,1 @@
+A base image for Saturn RStudio images. This image contains the packages necessary to run R, RStudio, and Python and sets up environmental variables for Reticulate support. Also installs a few libraries that are useful for Markdown support.

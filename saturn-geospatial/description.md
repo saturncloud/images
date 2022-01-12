@@ -1,0 +1,1 @@
+An image containing libraries specific to geospatial IO, analysis, and visualization. Generally used for CPU instances.
