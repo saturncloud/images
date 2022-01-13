@@ -1,0 +1,11 @@
+{
+    "title": "saturn",
+    "description": "A basic image for data analysis, machine learning, and parallel processing with Dask.",
+    "os": "Debian:bullseye-slim",
+    "hardware": "CPU",
+    "base_image": "saturnbase",
+    "installed_packages": {
+        "conda_environment": "environment.yml"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturn"
+}

@@ -1,0 +1,11 @@
+{
+    "title": "saturn-rstudio",
+    "description": "A basic image for analysis using R and RStudio.",
+    "os": "Debian:bullseye-slim",
+    "hardware": "CPU",
+    "installed_packages": {
+        "conda_environment": "environment.yml",
+        "postbuild_script": "postBuild"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturn-rstudio"
+}

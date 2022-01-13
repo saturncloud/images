@@ -1,0 +1,10 @@
+{
+    "title": "saturnbase",
+    "description": "The base image for Saturn CPU images. This image contains the minimal install required for the full functionality of Saturn Cloud, including the packages necessary to run Python, JupyterLab, and Dask.",
+    "os": "Debian:bullseye-slim",
+    "hardware": "CPU",
+    "installed_packages": {
+        "conda_environment": "environment.yml"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturnbase"
+}

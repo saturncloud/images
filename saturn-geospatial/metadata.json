@@ -1,0 +1,11 @@
+{
+    "title": "saturn-geospatial",
+    "description": "An image containing libraries specific to geospatial IO, analysis, and visualization. Generally used for CPU instances.",
+    "os": "Debian:bullseye-slim",
+    "hardware": "CPU",
+    "base_image": "saturnbase",
+    "installed_packages": {
+        "conda_environment": "environment.yml"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturn-geospatial"
+}
