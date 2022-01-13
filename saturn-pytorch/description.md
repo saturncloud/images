@@ -1,1 +1,1 @@
-An image for deep learning with PyTorch. Includes all requirements for using PyTorch on a GPU and with Dask. A GPU instance in recommended for this image.
+An image for deep learning with PyTorch. Includes all requirements for using PyTorch on a GPU and with Dask. A GPU instance is required for this image.

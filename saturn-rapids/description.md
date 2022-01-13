@@ -1,1 +1,1 @@
-An image for GPU based acceleration using the RAPIDS library. A GPU instance in recommended for this image.
+An image for GPU based acceleration using the RAPIDS library. A GPU instance is required for this image.
