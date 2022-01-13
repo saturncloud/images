@@ -4,8 +4,7 @@
     "os": "Ubuntu 20.04 LTS",
     "hardware": "GPU",
     "installed_packages": {
-        "conda_environment": "environment.yml",
-        "r_packages": "jquerylib, markdown, rmarkdown, tinytex"
+        "conda_environment": "environment.yml"
     },
     "github_url": "https://github.com/saturncloud/images/tree/main/saturnbase-rstudio-gpu-11.1"
 }
