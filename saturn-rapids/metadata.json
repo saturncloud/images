@@ -2,6 +2,7 @@
     "title": "saturn-rapids",
     "description": "An image for GPU-based acceleration using the RAPIDS library.",
     "os": "Ubuntu 18.04 LTS",
+    "workspace": "jupyter",
     "hardware": "GPU",
     "base_image": "saturnbase-gpu-11.2",
     "installed_packages": {

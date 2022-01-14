@@ -2,6 +2,7 @@
     "title": "saturn-rstudio",
     "description": "A basic image for analysis using R and RStudio.",
     "os": "Debian:bullseye-slim",
+    "workspace": "rstudio",
     "hardware": "CPU",
     "installed_packages": {
         "conda_environment": "environment.yml",

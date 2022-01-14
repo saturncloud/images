@@ -2,6 +2,7 @@
     "title": "saturn",
     "description": "A basic image for data analysis, machine learning, and parallel processing with Dask.",
     "os": "Debian:bullseye-slim",
+    "workspace": "jupyter",
     "hardware": "CPU",
     "base_image": "saturnbase",
     "installed_packages": {
