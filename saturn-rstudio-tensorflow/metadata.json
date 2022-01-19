@@ -4,6 +4,7 @@
     "os": "Ubuntu 20.04 LTS",
     "workspace": "rstudio",
     "hardware": "GPU",
+    "base_image": "saturnbase-rstudio-gpu-11.1",
     "installed_packages": {
         "conda_environment": "environment.yml",
         "postbuild_script": "postBuild"

@@ -4,6 +4,7 @@
     "os": "Debian:bullseye-slim",
     "workspace": "rstudio",
     "hardware": "CPU",
+    "base_image": "saturnbase-rstudio",
     "installed_packages": {
         "conda_environment": "environment.yml",
         "postbuild_script": "postBuild"
