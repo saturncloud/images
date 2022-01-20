@@ -1,6 +1,11 @@
 # Set the cuda version for torch to use
 sudo su -c "echo 'CUDA=11.1' >> /usr/local/lib/R/etc/Renviron"
 
+# temporary fix for issue with renviron
+mkdir -p /usr/lib/R/etc \
+    && chown 1000:1000 -R /usr/lib/R \
+    && chmod 777 -R /usr/lib/R \
+
 # install other packages
 Rscript -e "install.packages(c( \
         'data.table', \
