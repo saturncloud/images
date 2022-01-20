@@ -1,5 +1,5 @@
 # Set the cuda version for torch to use
-sudo su -c "echo 'CUDA=11.1' >> /usr/lib/R/etc/Renviron"
+sudo su -c "echo 'CUDA=11.1' >> /usr/local/lib/R/etc/Renviron"
 
 # install other packages
 Rscript -e "install.packages(c( \
