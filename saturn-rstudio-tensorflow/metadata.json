@@ -1,0 +1,13 @@
+{
+    "title": "saturn-rstudio-tensorflow",
+    "description": "An image for running TensorFlow on a GPU in RStudio.",
+    "os": "Ubuntu 20.04 LTS",
+    "workspace": "rstudio",
+    "hardware": "GPU",
+    "base_image": "saturnbase-rstudio-gpu-11.1",
+    "installed_packages": {
+        "conda_environment": "environment.yml",
+        "postbuild_script": "postBuild"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturn-rstudio-tensorflow"
+}
