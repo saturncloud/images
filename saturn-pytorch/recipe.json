@@ -1,0 +1,15 @@
+{
+    "name": "saturn-pytorch",
+    "description": "An image for deep learning with PyTorch. Includes all requirements for using PyTorch on a GPU and with Dask.",
+    "os": "Ubuntu 18.04 LTS",
+    "supports": ["jupyter", "dask"],
+    "hardware_type": "gpu",
+    "versions": [
+        "name": "2022.01.06",
+        "build_data": {
+            "base_image": "saturnbase-gpu-11.2",
+            "environment.yml": $environment.yml",
+        }
+    ],
+    "source": "https://github.com/saturncloud/images/tree/main/saturn-pytorch"
+}
