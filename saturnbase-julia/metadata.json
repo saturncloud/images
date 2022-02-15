@@ -1,0 +1,11 @@
+{
+    "title": "saturnbase-julia",
+    "description": "The base image for Julia. This image contains all of the requirements to run Julia 1.7.2 on Saturn Cloud.",
+    "os": "Debian:bullseye-slim",
+    "workspace": "jupyter",
+    "hardware": "CPU",
+    "installed_packages": {
+        "conda_environment": "environment.yml"
+    },
+    "github_url": "https://github.com/saturncloud/images/tree/main/saturnbase"
+}
