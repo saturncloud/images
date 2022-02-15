@@ -118,21 +118,16 @@ RUN set -x && \
     wget -q "https://julialang-s3.julialang.org/bin/linux/${julia_short_arch}/${julia_major_minor}/${julia_installer}" && \
     sudo tar xzf "${julia_installer}" -C "/opt/julia-${JULIA_VERSION}" --strip-components=1 && \
     rm "${julia_installer}" && \
-    sudo ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia
-
-# Show Julia where conda libraries are \
-RUN sudo mkdir /etc/julia && \
+    sudo ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia && \
+    # Show Julia where conda libraries are \
+    sudo mkdir /etc/julia && \
     sudo sh -c 'echo "push!(Libdl.DL_LOAD_PATH, \"${CONDA_DIR}/lib\")" >> /etc/julia/juliarc.jl' && \
     # Create JULIA_PKGDIR \
     sudo mkdir "${JULIA_PKGDIR}" && \
     sudo chown "${NB_USER}" "${JULIA_PKGDIR}" && \
-    fix-permissions "${JULIA_PKGDIR}"
-
-# Add Julia packages.
-# Install IJulia as jovyan and then move the kernelspec out
-# to the system share location. Avoids problems with runtime UID change not
-# taking effect properly on the .local folder in the jovyan home dir.
-RUN julia -e 'import Pkg; Pkg.update()' && \
+    fix-permissions "${JULIA_PKGDIR}" && \
+    # Install IJulia as jovyan
+    julia -e 'import Pkg; Pkg.update()' && \
     julia -e 'using Pkg; pkg"add IJulia"; pkg"precompile"' && \
     #move kernelspec out of system share
     mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
