@@ -1,6 +1,6 @@
 {
     "name": "saturn-tensorflow",
-    "description": "An image for deep learning with TensorFlow. Includes all requirements for using TensorFlow on a GPU.",
+    "description": "For deep learning with TensorFlow. Includes all requirements for using TensorFlow on a GPU.",
     "hardware_type": "gpu",
     "supports": ["jupyterlab", "dask"]
 }
