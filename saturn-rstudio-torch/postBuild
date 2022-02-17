@@ -1,0 +1,26 @@
+# Set the cuda version for torch to use
+sudo su -c "echo 'CUDA=11.1' >> /usr/local/lib/R/etc/Renviron"
+
+# install other packages
+Rscript -e "install.packages(c( \
+        'data.table', \
+        'devtools', \
+        'dplyr', \
+        'ggplot2', \
+        'lubridate', \
+        'Rcpp', \
+        'readr', \
+        'remotes', \
+        'reticulate', \
+        'stringr', \
+        'tidyr', \
+        'forcats', \
+        'tidyverse', \
+        'torch', \
+        'torchvision' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    repos = 'https://packagemanager.rstudio.com/cran/__linux__/focal/latest' \
+    )"
+
+Rscript -e "torch::install_torch()"
