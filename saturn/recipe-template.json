@@ -1,0 +1,6 @@
+{
+    "name": "saturn",
+    "description": "A basic Python image for data analysis, machine learning, and parallel processing with Dask.",
+    "hardware_type": "cpu",
+    "supports": ["jupyterlab", "dask"]
+}
