@@ -1,0 +1,10 @@
+*
+!environment.yml
+!setup-conda.bash
+!profile
+!database.conf
+!rserver.conf
+!logging.conf
+!rsession-profile
+!rstudio-prefs.json
+!rstudio-start.sh
