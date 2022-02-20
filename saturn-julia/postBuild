@@ -1,0 +1,27 @@
+julia -e 'import Pkg;
+Pkg.update();
+Pkg.add("Convex");
+Pkg.add("DataFrames");
+Pkg.add("Dierckx");
+Pkg.add("ExcelReaders");
+Pkg.add("Flux");
+Pkg.add("Gadfly");
+Pkg.add("HDF5");
+Pkg.add("Ipopt");
+Pkg.add("JLD");
+Pkg.add("JuMP");
+Pkg.add("LsqFit");
+Pkg.add("MLBase");
+Pkg.add("NMF");
+Pkg.add("Optim");
+Pkg.add("Plots");
+Pkg.add("ProgressMeter");
+Pkg.add("PyCall");
+Pkg.add("PyPlot");
+Pkg.add("RDatasets");
+Pkg.add("SCS");
+Pkg.add("SQLite");
+Pkg.add("Spectra");
+Pkg.add("Turing");
+Pkg.update();
+Pkg.precompile();'
