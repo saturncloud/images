@@ -1,5 +1,5 @@
 {
-    "name": "saturn-rstudio",
+    "name": "saturncloud/saturn-rstudio",
     "description": "For basic analysis using R and RStudio.",
     "hardware_type": "cpu",
     "supports": ["rstudio-opensource"]
