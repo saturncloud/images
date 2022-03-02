@@ -1,6 +1,6 @@
 {
-    "title": "saturnbase-rstudio-workbench-gpu-11.1",
-    "description": "R-focused base image for Saturn RStudio Workbench GPU images, built on CUDA version 11.1 using rocker/ml (https://github.com/rocker-org/rocker-versioned2) as the starting point. The rocker/ml image is copyright of the rocker project. This image contains the packages necessary to run R, RStudio, and Python, and sets up environment variables for Reticulate support. Also installs a few libraries that are useful for Markdown support.",
+    "name": "saturnbase-rstudio-workbench-gpu-11.1",
+    "description": "R-focused base image for Saturn RStudio GPU images, built on CUDA version 11.1 using rocker/ml (https://github.com/rocker-org/rocker-versioned2). This image contains the packages necessary to run R, RStudio, Python, and Reticulate.",
     "hardware_type": "gpu",
     "supports": ["rstudio-workbench"]
 }
