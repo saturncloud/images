@@ -1,5 +1,5 @@
 {
-    "name": "saturn-rstudio-parallel",
+    "name": "saturncloud/saturn-rstudio-parallel",
     "description": "For running parallel computations in RStudio",
     "hardware_type": "cpu",
     "supports": [
