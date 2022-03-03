@@ -13,7 +13,7 @@ Rscript -e "install.packages(c( \
     'shiny', \
     'shinyWidgets', \
     'shinybusy', \
-    'tictoc' \
+    'tictoc', \
     'tidyverse', \
     'visNetwork', \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
