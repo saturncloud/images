@@ -13,6 +13,8 @@ Rscript -e "install.packages(c( \
     'shiny', \
     'shinyWidgets', \
     'shinybusy', \
+    'tarchetypes', \
+    'targets', \
     'tictoc', \
     'tidyverse', \
     'visNetwork' \
@@ -20,6 +22,3 @@ Rscript -e "install.packages(c( \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
     repos = 'https://packagemanager.rstudio.com/cran/__linux__/focal/latest' \
 )"
-
-Rscript -e "remotes::install_github('wlandau/targets')"
-Rscript -e "remotes::install_github('wlandau/tarchetypes')"
