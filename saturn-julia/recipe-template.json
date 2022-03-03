@@ -1,5 +1,5 @@
 {
-    "title": "saturn-julia",
+    "name": "saturn-julia",
     "description": "A Julia image for Saturn Cloud. Contains Julia and Python along with a selection of popular Julia packages.",
     "hardware_type": "cpu",
     "supports": [

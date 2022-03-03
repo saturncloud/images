@@ -1,7 +1,7 @@
 FROM debian:bullseye-slim
 EXPOSE 8888
 
-ARG julia_version="1.7.2"
+ENV JULIA_VERSION=1.7.2
 ARG CONDA_VERSION=py39_4.10.3
 
 ENV APP_BASE=/srv
@@ -9,10 +9,9 @@ ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
-# install Julia packages in /opt/julia instead of ${HOME}
+# install Julia packages in /srv/julia instead of ${HOME}
 ENV JULIA_DEPOT_PATH=/srv/julia
 ENV JULIA_PKGDIR=/srv/julia
-ENV JULIA_VERSION="${julia_version}"
 
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
@@ -22,18 +21,18 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     bzip2 \
     ca-certificates \
     curl \
-    htop \
     gettext-base \
     git \
     gnupg \
-    locales \
+    htop \
     libzmq3-dev \
+    locales \
     openssh-client \
     openssh-server \
     procps \
     rsync \
-    sudo \
     screen \
+    sudo \
     tar \
     wget \
     > /dev/null && \
@@ -114,11 +113,11 @@ RUN set -x && \
     fi; \
     julia_installer="julia-${JULIA_VERSION}-linux-${julia_arch}.tar.gz" && \
     julia_major_minor=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
-    sudo mkdir "/opt/julia-${JULIA_VERSION}" && \
+    sudo mkdir "/srv/julia-${JULIA_VERSION}" && \
     wget -q "https://julialang-s3.julialang.org/bin/linux/${julia_short_arch}/${julia_major_minor}/${julia_installer}" && \
-    sudo tar xzf "${julia_installer}" -C "/opt/julia-${JULIA_VERSION}" --strip-components=1 && \
+    sudo tar xzf "${julia_installer}" -C "/srv/julia-${JULIA_VERSION}" --strip-components=1 && \
     rm "${julia_installer}" && \
-    sudo ln -fs /opt/julia-*/bin/julia /usr/local/bin/julia && \
+    sudo ln -fs /srv/julia-*/bin/julia /usr/local/bin/julia && \
     # Show Julia where conda libraries are \
     sudo mkdir /etc/julia && \
     sudo sh -c 'echo "push!(Libdl.DL_LOAD_PATH, \"${CONDA_DIR}/lib\")" >> /etc/julia/juliarc.jl' && \
@@ -129,7 +128,7 @@ RUN set -x && \
     # Install IJulia as jovyan
     julia -e 'import Pkg; Pkg.update()' && \
     julia -e 'using Pkg; pkg"add IJulia"; pkg"precompile"' && \
-    #move kernelspec out of system share
+    # move kernelspec out of system share
     mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
     chmod -R go+rx "${CONDA_DIR}/share/jupyter" && \
     rm -rf "${HOME}/.local" && \

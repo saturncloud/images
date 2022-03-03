@@ -18,3 +18,4 @@ dependencies:
     - nbclassic>=0.2.8
     - jupyterlab_execute_time
     - jupyterlab_widgets
+    - webio_jupyter_extension
