@@ -6,8 +6,7 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
-- dask=2021.07
-- distributed=2021.07
+- dask
 - dask-cuda==21.8
 - fsspec
 - ipykernel

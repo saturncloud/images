@@ -6,8 +6,7 @@ dependencies:
 - blas=*=mkl
 - bokeh
 - dask-ml
-- dask=2021.07
-- distributed=2021.07
+- dask
 - ipykernel
 - ipywidgets
 - matplotlib
