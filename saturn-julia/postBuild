@@ -1,22 +1,12 @@
 julia -e 'import Pkg;
 Pkg.update();
 Pkg.add([
-"Bio",
-"Clustering",
 "DataFrames", 
-"Distances",
 "Flux", 
 "HDF5",
 "Images",
-"MLBase",
-"MLDatasets",
-"Optim",
 "Plots",
-"ProgressMeter",
 "PyCall",
-"PyPlot",
-"RDatasets",
-"SCS",
 "Statistics",
 "SQLite"
 ]);
