@@ -5,5 +5,5 @@ build_image:
 	docker build \
 		--no-cache \
 		--build-arg SATURNBASE_IMAGE=${SATURNBASE_IMAGE} \
-		-t narobboo/julia-base:0.06 \
+		-t ${IMAGE} \
 		.

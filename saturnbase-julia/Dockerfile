@@ -132,6 +132,7 @@ RUN set -x && \
     mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
     chmod -R go+rx "${CONDA_DIR}/share/jupyter" && \
     rm -rf "${HOME}/.local" && \
-    fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter"
+    fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter" && \
+    sudo rm /usr/local/bin/fix-permissions
 
 WORKDIR ${HOME}

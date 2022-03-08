@@ -1,7 +1,8 @@
 julia -e 'import Pkg;
 Pkg.update();
 Pkg.add([
-"DataFrames", 
+"DataFrames",
+"Debugger",
 "Flux", 
 "HDF5",
 "Images",
