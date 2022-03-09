@@ -1,0 +1,8 @@
+{
+    "name": "saturncloud/saturn-julia-gpu",
+    "description": "A GPU Julia image for Saturn Cloud. Contains Julia and Python along with a selection of popular Julia GPU packages.",
+    "hardware_type": "gpu",
+    "supports": [
+        "jupyterlab"
+    ]
+}
