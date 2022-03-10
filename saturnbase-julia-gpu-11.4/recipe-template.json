@@ -1,8 +1,0 @@
-{
-    "name": "saturncloud/saturnbase-julia-gpu-11.6",
-    "description": "The base GPU image for Julia. This image contains all of the requirements to run Julia 1.7.2 and Python on Saturn Cloud using Nvidia CUDA 11.4",
-    "hardware_type": "gpu",
-    "supports": [
-        "jupyterlab"
-    ]
-}
