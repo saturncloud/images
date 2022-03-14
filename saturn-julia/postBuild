@@ -1,0 +1,15 @@
+julia -e 'import Pkg;
+Pkg.update();
+Pkg.add([
+"DataFrames",
+"Debugger",
+"Flux", 
+"HDF5",
+"Images",
+"Plots",
+"PyCall",
+"Statistics",
+"SQLite"
+]);
+Pkg.update();
+Pkg.precompile();'
