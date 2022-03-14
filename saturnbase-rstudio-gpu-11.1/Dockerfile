@@ -2,10 +2,10 @@ FROM rocker/cuda:cuda11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
-    org.opencontainers.image.source="https://github.com/saturncloud/images" \
-    org.opencontainers.image.vendor="Saturn Cloud" \
-    org.opencontainers.image.authors="Jacqueline Nolis" \
-    org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
+      org.opencontainers.image.source="https://github.com/saturncloud/images" \
+      org.opencontainers.image.vendor="Saturn Cloud" \
+      org.opencontainers.image.authors="Jacqueline Nolis" \
+      org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
@@ -82,7 +82,7 @@ RUN \
         wget \
         unixodbc \
         unixodbc-dev \
-    > /dev/null \
+     > /dev/null \
     # CUDA fix
     && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
     # Install rstudio-server
@@ -98,14 +98,14 @@ RUN \
     && sudo chmod +x /usr/local/bin/tini \
     # Add a few R packages that are useful for RMarkdown
     && Rscript -e "install.packages(c( \
-    'jquerylib', \
-    'markdown', \
-    'rmarkdown', \
-    'tinytex' \
-    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-    lib = '/usr/local/lib/R/site-library' \
-    )" \
+        'jquerylib', \
+        'markdown', \
+        'rmarkdown', \
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library' \
+        )" \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
     && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
@@ -124,9 +124,9 @@ RUN \
     && locale-gen \
     # Create user
     && adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER} \
+        --gecos "Default user" \
+        --uid ${NB_UID} \
+        ${NB_USER} \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
