@@ -38,7 +38,7 @@ RUN \
     && chmod 777 -R /usr/lib/R \
     && su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/local/lib/R/etc/Renviron" \
     && su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron" \
+    && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
     && apt-get update --fix-missing \
