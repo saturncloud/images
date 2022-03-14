@@ -11,45 +11,45 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
-    awscli \
-    build-essential \
-    bzip2 \
-    ca-certificates \
-    curl \
-    htop \
-    gettext-base \
-    git \
-    gnupg \
-    locales \
-    openssh-client \
-    openssh-server \
-    procps \
-    rsync \
-    sudo \
-    screen \
-    wget \
-    devscripts \
-    libxml2 \
-    libxml2-dev \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libzmq3-dev \
-    qpdf \
-    gdebi-core \
-    libcap2 \
-    libglib2.0-0 \
-    libpq5 \
-    libsm6 \
-    libcurl4-openssl-dev \
-    libssl1.1 \
-    openssl \
-    libuser \
-    libuser1-dev \
-    openssh-client \
-    rrdtool \
-    unixodbc \
-    unixodbc-dev \
-    > /dev/null && \
+        awscli \
+        build-essential \
+        bzip2 \
+        ca-certificates \
+        curl \
+        htop \
+        gettext-base \
+        git \
+        gnupg \
+        locales \
+        openssh-client \
+        openssh-server \
+        procps \
+        rsync \
+        sudo \
+        screen \
+        wget \
+        devscripts \
+        libxml2 \
+        libxml2-dev \
+        libcurl4-openssl-dev \
+        libssl-dev \
+        libzmq3-dev \
+        qpdf \
+        gdebi-core \
+        libcap2 \
+        libglib2.0-0 \
+        libpq5 \
+        libsm6 \
+        libcurl4-openssl-dev \
+        libssl1.1 \
+        openssl \
+        libuser \
+        libuser1-dev \
+        openssh-client \
+        rrdtool \
+        unixodbc \
+        unixodbc-dev \
+     > /dev/null && \
     # add snowflake ODBC driver
     sudo apt-get install -f && \
     wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb && \
@@ -124,9 +124,9 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
     "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
     sudo apt-get install -y -t bullseye-cran40 \
-    r-base \
-    r-base-core \
-    r-base-dev 
+        r-base \
+        r-base-core \
+        r-base-dev 
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
 RUN sudo mkdir -p /usr/local/lib/R \
@@ -160,14 +160,14 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
     && sudo chmod +x /usr/local/bin/tini \
     # Add a few R packages that are useful for RMarkdown
     && Rscript -e "install.packages(c( \
-    'jquerylib', \
-    'markdown', \
-    'rmarkdown', \
-    'tinytex' \
-    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-    lib = '/usr/local/lib/R/site-library' \
-    )" \
+        'jquerylib', \
+        'markdown', \
+        'rmarkdown', \
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library' \
+        )" \
     && sudo rm -rf /tmp/*
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
