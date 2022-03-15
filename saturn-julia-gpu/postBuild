@@ -1,6 +1,9 @@
 julia -e 'import Pkg;
 Pkg.update();
 Pkg.add([
+"AWS",
+"AWSS3",
+"CSV",
 "DataFrames",
 "Debugger",
 "Flux", 
