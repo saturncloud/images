@@ -3,8 +3,6 @@ saturnbase
 saturnbase-gpu-10.1
 saturnbase-gpu-11.1
 saturnbase-gpu-11.2
-examples-gpu
-examples-cpu
 saturn-rapids
 saturn-pytorch
 saturn-tensorflow
