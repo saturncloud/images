@@ -38,6 +38,8 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     sudo \
     tar \
     wget \
+    zip \ 
+    unzip \
     > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \

@@ -1,6 +1,9 @@
 julia -e 'import Pkg;
 Pkg.update();
 Pkg.add([
+"AWS",
+"AWSS3",
+"CSV",
 "DataFrames",
 "Debugger",
 "Flux", 
@@ -8,8 +11,8 @@ Pkg.add([
 "Images",
 "Plots",
 "PyCall",
-"Statistics",
-"SQLite"
+"SQLite",
+"Statistics"
 ]);
 Pkg.update();
 Pkg.precompile();'
