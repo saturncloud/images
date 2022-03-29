@@ -1,7 +1,7 @@
 name: saturn
 channels:
-- nodefaults
 - conda-forge
+- defaults
 - rapidsai
 dependencies:
 - blas=*=mkl
