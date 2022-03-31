@@ -7,7 +7,7 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
       org.opencontainers.image.vendor="Saturn Cloud" \
       org.opencontainers.image.authors="Jacqueline Nolis" \
-      org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
+      org.opencontainers.image.description="Additions to the Bioconductor Docker image to run on Saturn Cloud"
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
