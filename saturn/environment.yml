@@ -5,6 +5,7 @@ channels:
 dependencies:
 - blas=*=mkl
 - bokeh
+- click>=7.1.2,<8.0.0
 - dask-ml
 - dask=2021.07
 - distributed=2021.07
