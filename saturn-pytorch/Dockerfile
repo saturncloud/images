@@ -1,6 +1,10 @@
 ARG SATURNBASE_GPU_IMAGE
 FROM ${SATURNBASE_GPU_IMAGE}
 
+RUN sudo apt-get -qq --allow-releaseinfo-change update && \
+    sudo apt-get -qq install --yes --no-install-recommends \
+    libgl1
+
 COPY environment.yml /tmp/environment.yml
 RUN mamba env update -n saturn --file /tmp/environment.yml && \
     ${CONDA_DIR}/envs/saturn/bin/python -m ipykernel install \
