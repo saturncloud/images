@@ -120,9 +120,10 @@ WORKDIR ${HOME}
 ## Install R
 
 RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
-    sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' && \
+    sudo su -c \
+    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
-    sudo apt-get install -y -t focal-cran40 \
+    sudo apt-get install -y -t bullseye-cran40 \
         r-base \
         r-base-core \
         r-base-dev 
