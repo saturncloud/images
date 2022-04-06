@@ -166,8 +166,7 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
         'rmarkdown', \
         'tinytex' \
         ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
+        dependencies = c('LinkingTo', 'Depends', 'Imports') \
         )" \
     && sudo rm -rf /tmp/*
 
