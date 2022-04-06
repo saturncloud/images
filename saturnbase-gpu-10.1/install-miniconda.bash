@@ -10,7 +10,7 @@ INSTALLER_PATH=/tmp/miniconda-installer.sh
 wget --quiet $URL -O ${INSTALLER_PATH}
 chmod +x ${INSTALLER_PATH}
 
-MD5SUM="3143b1116f2d466d9325c206b7de88f7"
+MD5SUM="122c8c9beb51e124ab32a0fa6426c656"
 
 if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
     echo "md5sum mismatch for ${INSTALLER_PATH}, exiting!"
