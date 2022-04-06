@@ -12,7 +12,6 @@ dependencies:
   - jupyter-server-proxy
   - dask-core
   - distributed
-  - click>=7.1.2,<8.0.0
   - yarl
   - pyviz_comms
   - black
