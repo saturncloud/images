@@ -24,7 +24,7 @@ dependencies:
 - pip
 - prefect
 - pyarrow
-- python=3.7
+- python=3.8
 - python-graphviz
 - rasterio
 - s3fs
