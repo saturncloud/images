@@ -27,6 +27,7 @@ RUN apt-get -qq update && \
         htop \
         screen \
         build-essential \
+        libnuma-dev \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
