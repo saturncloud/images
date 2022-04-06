@@ -140,8 +140,8 @@ RUN sudo mkdir -p /usr/local/lib/R \
     && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
     && sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
     && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile" \
-    && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))' >> /usr/lib/R/etc/Rprofile"
+    && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
+    && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version$platform, R.version$arch, R.version$os)))' >> /usr/lib/R/etc/Rprofile.site"
 
 ## Install RStudio
 
