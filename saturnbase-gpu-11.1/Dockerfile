@@ -31,6 +31,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         htop \
         screen \
         build-essential \
+        libnuma-dev \
      > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
