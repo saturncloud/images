@@ -1,0 +1,10 @@
+*
+!environment.yml
+!install-miniconda.bash
+!setup-conda.bash
+!profile
+!database.conf
+!rserver.conf
+!rsession-profile
+!rstudio-prefs.json
+!rstudio-start.sh

@@ -1,11 +1,13 @@
-FROM rocker/cuda:cuda11.1
+FROM bioconductor/bioconductor_docker:RELEASE_3_14
+RUN usermod -l jovyan rstudio
+RUN groupmod -n jovyan rstudio
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
       org.opencontainers.image.vendor="Saturn Cloud" \
       org.opencontainers.image.authors="Jacqueline Nolis" \
-      org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
+      org.opencontainers.image.description="Additions to the Bioconductor Docker image to run on Saturn Cloud"
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
@@ -21,8 +23,6 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
-
-ARG RSTUDIO_VERSION=2021.09.0-351
 
 ARG TINI_VERSION=0.18.0
 
@@ -82,14 +82,10 @@ RUN \
         wget \
         unixodbc \
         unixodbc-dev \
-     > /dev/null \
-    # CUDA fix
-    && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
-    # Install rstudio-server
-    && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
-    && sudo gdebi --non-interactive rstudio.deb \
-    && rm rstudio.deb \
-    && sudo apt purge \
+     > /dev/null
+
+RUN \
+    sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo rm -rf /var/lib/rstudio-server/r-versions \
@@ -122,11 +118,6 @@ RUN \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # Create user
-    && adduser --disabled-password \
-        --gecos "Default user" \
-        --uid ${NB_UID} \
-        ${NB_USER} \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \

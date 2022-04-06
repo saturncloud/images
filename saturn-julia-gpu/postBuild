@@ -1,0 +1,20 @@
+julia -e 'import Pkg;
+Pkg.update();
+Pkg.add([
+"AWS",
+"AWSS3",
+"CSV",
+"DataFrames",
+"Debugger",
+"Flux", 
+"GPUifyLoops",
+"HDF5",
+"Images",
+"KernelAbstractions",
+"Plots",
+"PyCall",
+"SQLite",
+"Statistics"
+]);
+Pkg.update();
+Pkg.precompile();'
