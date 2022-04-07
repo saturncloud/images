@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM ubuntu:focal
 EXPOSE 8888
 
 # SETUP SATURN
@@ -119,11 +119,11 @@ WORKDIR ${HOME}
 
 ## Install R
 
-RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CCAD0C080A7BDC78B2DDEABC47B7' && \
+RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
     sudo su -c \
-    "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list" && \
+    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
-    sudo apt-get install -y -t bullseye-cran40 \
+    sudo apt-get install -y -t focal-cran40 \
         r-base \
         r-base-core \
         r-base-dev 
@@ -139,7 +139,9 @@ RUN sudo mkdir -p /usr/local/lib/R \
     && sudo chmod 777 -R /usr/lib/R \
     && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
     && sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron"
+    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron" \
+    && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
+    && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version\$platform, R.version\$arch, R.version\$os)))' >> /usr/lib/R/etc/Rprofile.site"
 
 ## Install RStudio
 
@@ -163,11 +165,8 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
         'jquerylib', \
         'markdown', \
         'rmarkdown', \
-        'tinytex' \
-        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
-        )" \
+        'tinytex'), \
+        lib = '/usr/local/lib/R/site-library')" \
     && sudo rm -rf /tmp/*
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
