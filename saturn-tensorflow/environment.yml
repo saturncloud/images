@@ -27,6 +27,6 @@ dependencies:
 - tensorflow=2.4.1=gpu_py39h8236f22_0
 - voila
 - pip:
-  - dask-saturn>=0.4.2
+  - dask-saturn>=0.4.1
   - prefect-saturn>=0.6.0
   - snowflake-connector-python
