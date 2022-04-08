@@ -145,7 +145,7 @@ RUN sudo mkdir -p /usr/local/lib/R \
 
 ## Install RStudio
 
-ARG RSTUDIO_VERSION=2021.09.0-351
+ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
