@@ -15,5 +15,5 @@ RUN mamba env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete && \
     /bin/bash -e -u -o pipefail /tmp/postBuild.sh && \
     sudo rm /tmp/postBuild.sh && \
-    echo '# cmd: /opt/conda/bin/conda install papermill' > ${CONDA_DIR}/envs/saturn/conda-meta/history
+    echo '# cmd: /opt/saturncloud/bin/conda install papermill' > ${CONDA_DIR}/envs/saturn/conda-meta/history
 # history command is a hotfix for https://github.com/rstudio/reticulate/issues/1184

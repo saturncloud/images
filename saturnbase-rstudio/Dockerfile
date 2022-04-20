@@ -64,7 +64,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH /opt/saturncloud/bin:$PATH
 
 # Based on https://github.com/ContinuumIO/docker-images/blob/4d7798c0ea2463d9c4057d8eaee876102eecbf86/miniconda3/debian/Dockerfile
 ARG CONDA_VERSION=py39_4.10.3
@@ -75,16 +75,16 @@ RUN set -x && \
     echo "${SHA256SUM} miniconda.sh" > shasum && \
     if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
     mkdir -p /opt && \
-    sh miniconda.sh -b -p /opt/conda && \
+    sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
-    /opt/conda/bin/conda clean -afy && \
-    ln -s /opt/conda /srv/conda && \
-    chown -R 1000:1000 /opt/conda && \
+    find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
+    find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
+    /opt/saturncloud/bin/conda clean -afy && \
+    ln -s /opt/saturncloud /srv/conda && \
+    chown -R 1000:1000 /opt/saturncloud && \
     chown -R 1000:1000 /srv
 
 ENV LC_ALL=en_US.UTF-8
@@ -138,7 +138,7 @@ RUN sudo mkdir -p /usr/local/lib/R \
     && sudo chown 1000:1000 -R /usr/lib/R \
     && sudo chmod 777 -R /usr/lib/R \
     && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
+    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
     && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron" \
     && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
     && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version\$platform, R.version\$arch, R.version\$os)))' >> /usr/lib/R/etc/Rprofile.site"
