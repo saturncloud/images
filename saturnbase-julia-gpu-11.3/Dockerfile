@@ -3,8 +3,8 @@ EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.2
 
-RUN mkdir /opt/conda && \
-    ln -s /opt/conda /srv/conda
+RUN mkdir /opt/saturncloud && \
+    ln -s /opt/saturncloud /srv/conda
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
@@ -65,7 +65,7 @@ RUN adduser --disabled-password \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     mkdir -p ${APP_BASE} && \
-    chown 1000:1000 -R /opt/conda && \
+    chown 1000:1000 -R /opt/saturncloud && \
     chown -R $NB_USER:$NB_USER ${APP_BASE}
 USER ${NB_USER}
 

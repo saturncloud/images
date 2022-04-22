@@ -37,7 +37,7 @@ RUN \
     && chown 1000:1000 -R /usr/lib/R \
     && chmod 777 -R /usr/lib/R \
     && su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/local/lib/R/etc/Renviron" \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron" \
+    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron" \
     && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
@@ -121,10 +121,10 @@ RUN \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
-    && mkdir -p /opt/conda \
-    && ln -s /opt/conda /srv/conda \
+    && mkdir -p /opt/saturncloud \
+    && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
-    && chown 1000:1000 -R /opt/conda \
+    && chown 1000:1000 -R /opt/saturncloud \
     && chown -R $NB_USER:$NB_USER ${APP_BASE}
 
 USER ${NB_USER}
