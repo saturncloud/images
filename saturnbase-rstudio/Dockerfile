@@ -119,7 +119,7 @@ ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:
 WORKDIR ${HOME}
 
 ## Install R
-
+ENV R_HOME=/usr/local/lib/R 
 RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
     sudo su -c \
     "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
