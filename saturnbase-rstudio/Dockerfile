@@ -129,17 +129,12 @@ ENV R_HOME=/usr/local/lib/R
 #         r-base-core \
 #         r-base-dev 
 RUN wget https://cloud.r-project.org/src/base/R-latest.tar.gz \
-    tar -xzvf R-latest.tar.gz \
-    cd R-latest \
-    ./configure \
-    --prefix=/opt/R/${R_VERSION} \
-    --enable-memory-profiling \
-    --enable-R-shlib \
-    --with-blas \
-    --with-lapack \
+    tar xzf "R.tar.gz" \
+    cd R-*/ \
     make \
-    sudo make install \
-    sudo make clean
+    make install \
+    make clean
+
 
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
