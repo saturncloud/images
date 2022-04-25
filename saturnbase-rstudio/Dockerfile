@@ -120,14 +120,27 @@ WORKDIR ${HOME}
 
 ## Install R
 ENV R_HOME=/usr/local/lib/R 
-RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
-    sudo su -c \
-    "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
-    sudo apt update && \
-    sudo apt-get install -y -t focal-cran40 \
-        r-base \
-        r-base-core \
-        r-base-dev 
+# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
+#     sudo su -c \
+#     "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
+#     sudo apt update && \
+#     sudo apt-get install -y -t focal-cran40 \
+#         r-base \
+#         r-base-core \
+#         r-base-dev 
+RUN wget https://cloud.r-project.org/src/base/R-latest.tar.gz \
+    tar -xzvf R-latest.tar.gz \
+    cd R-latest \
+    ./configure \
+    --prefix=/opt/R/${R_VERSION} \
+    --enable-memory-profiling \
+    --enable-R-shlib \
+    --with-blas \
+    --with-lapack \
+    make \
+    sudo make install \
+    sudo make clean
+
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
 RUN \
