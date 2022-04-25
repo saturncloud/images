@@ -162,7 +162,7 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
         'markdown', \
         'rmarkdown', \
         'tinytex'), \
-        lib = '/usr/local/lib/R/site-library')" \
+        lib = '/usr/lib/R/site-library')" \
     && sudo rm -rf /tmp/*
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
