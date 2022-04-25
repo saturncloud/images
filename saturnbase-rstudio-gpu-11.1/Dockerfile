@@ -22,20 +22,18 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
-ARG RSTUDIO_VERSION=2021.09.0-351
+ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
-ENV R_HOME=${R_HOME:-"/usr/local/lib/R"}
 
 RUN \
     # Make all library folders readable then let R known, then set up reticulate package
-    mkdir -p "${R_HOME}/site-library" \
+    mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
     && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
     && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
-    && su -c "echo 'R_LIBS=\${R_LIBS-'${R_HOME}/site-library:${R_HOME}/library'}' >>'${R_HOME}/etc/Renviron.site'" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
     && apt-get update --fix-missing \
