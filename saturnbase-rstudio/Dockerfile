@@ -1,143 +1,31 @@
-FROM ubuntu:focal
+FROM rocker/r-ver:latest
 EXPOSE 8888
 
-# SETUP SATURN
+LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
+      org.opencontainers.image.source="https://github.com/saturncloud/images" \
+      org.opencontainers.image.vendor="Saturn Cloud" \
+      org.opencontainers.image.authors="Jacqueline Nolis" \
+      org.opencontainers.image.description="Additions to rocker/r-ver support running on Saturn Cloud"
+
+# SETUP SATURN (and install linux libraries for R & Rstudio)
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-
-RUN apt-get -qq --allow-releaseinfo-change update && \
-    apt-get -qq upgrade -y && \
-    apt-get -qq install --yes --no-install-recommends \
-        awscli \
-        build-essential \
-        bzip2 \
-        ca-certificates \
-        curl \
-        htop \
-        gettext-base \
-        git \
-        gnupg \
-        locales \
-        openssh-client \
-        openssh-server \
-        procps \
-        rsync \
-        sudo \
-        screen \
-        wget \
-        devscripts \
-        libxml2 \
-        libxml2-dev \
-        libcurl4-openssl-dev \
-        libssl-dev \
-        libzmq3-dev \
-        qpdf \
-        gdebi-core \
-        libcap2 \
-        libglib2.0-0 \
-        libpq5 \
-        libsm6 \
-        libcurl4-openssl-dev \
-        libssl1.1 \
-        openssl \
-        libuser \
-        libuser1-dev \
-        openssh-client \
-        rrdtool \
-        unixodbc \
-        unixodbc-dev \
-     > /dev/null && \
-    # add snowflake ODBC driver
-    sudo apt-get install -f && \
-    wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb && \
-    sudo dpkg -i snowflake-odbc.deb && \
-    sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini && \
-    sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini && \
-    apt-get -qq purge && \
-    apt-get -qq clean && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /run/sshd && \
-    chmod 755 /run/sshd && \
-    echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
-    locale-gen
-
-ENV PATH /opt/saturncloud/bin:$PATH
-
-# Based on https://github.com/ContinuumIO/docker-images/blob/4d7798c0ea2463d9c4057d8eaee876102eecbf86/miniconda3/debian/Dockerfile
-ARG CONDA_VERSION=py39_4.10.3
-RUN set -x && \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
-    SHA256SUM="1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f"; \
-    wget "${MINICONDA_URL}" -O miniconda.sh -q && \
-    echo "${SHA256SUM} miniconda.sh" > shasum && \
-    if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
-    mkdir -p /opt && \
-    sh miniconda.sh -b -p /opt/saturncloud && \
-    rm miniconda.sh shasum && \
-    ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc && \
-    find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
-    find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
-    /opt/saturncloud/bin/conda clean -afy && \
-    ln -s /opt/saturncloud /srv/conda && \
-    chown -R 1000:1000 /opt/saturncloud && \
-    chown -R 1000:1000 /srv
-
-ENV LC_ALL=en_US.UTF-8
-ENV LANG=en_US.UTF-8
-ENV LANGUAGE=en_US.UTF-8
-ENV SHELL=/bin/bash
+ENV LC_ALL en_US.UTF-8
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US.UTF-8
+ENV SHELL /bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
-ENV R_HOME=${R_HOME:-"/usr/local/lib/R"}
 
-RUN adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER} && \
-    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
-COPY profile /etc/profile
+ARG RSTUDIO_VERSION=2021.09.0-351
 
-USER ${NB_USER}
+ARG TINI_VERSION=0.18.0
 
-COPY setup-conda.bash /tmp/setup-conda.bash
-COPY environment.yml /tmp/environment.yml
-RUN bash /tmp/setup-conda.bash && \
-    echo '' > ${CONDA_DIR}/conda-meta/history && \
-    ${CONDA_BIN}/conda config --system --add channels conda-forge && \
-    ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
-    ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
-ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
-WORKDIR ${HOME}
-
-## Install R
-ENV R_HOME=/usr/local/lib/R 
-# RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D65DFD57CBB651716619E084DAB9' && \
-#     sudo su -c \
-#     "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
-#     sudo apt update && \
-#     sudo apt-get install -y -t focal-cran40 \
-#         r-base \
-#         r-base-core \
-#         r-base-dev 
-RUN wget https://cloud.r-project.org/src/base/R-latest.tar.gz\
-    && tar xzf "R-latest.tar.gz"\
-    && cd R-*/ \
-    && make \
-    && make install \
-    make clean
-
-
-
-# Make all library folders readable then let R known, the set up reticulate and pandoc packages
 RUN \
     # Make all library folders readable then let R known, then set up reticulate package
     mkdir -p "${R_HOME}/site-library" \
@@ -145,18 +33,52 @@ RUN \
     && chmod 777 -R /usr/local/lib/R \
     && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
     && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
-    && su -c "echo 'R_LIBS=\${R_LIBS-'${R_HOME}/site-library:${R_HOME}/library'}' >>'${R_HOME}/etc/Renviron.site'" \
-    && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
-    && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version\$platform, R.version\$arch, R.version\$os)))' >> /usr/lib/R/etc/Rprofile.site"
-
-## Install RStudio
-
-ARG RSTUDIO_VERSION=2021.09.0-351
-
-ARG TINI_VERSION=0.18.0
-
-# hadolint ignore=DL3008,DL3009
-RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && apt-get -qq --allow-releaseinfo-change update \
+    # Install packages
+    && apt-get update --fix-missing \
+    && apt-get upgrade -y \
+    && apt-get install --yes --no-install-recommends \
+        awscli \
+        build-essential \
+        bzip2 \
+        ca-certificates \
+        curl \
+        devscripts \
+        file \
+        gdebi-core \
+        gettext-base \
+        git \
+        gnupg \
+        htop \
+        libcap2 \
+        libcurl4-openssl-dev \
+        libglib2.0-0 \
+        libpq5 \
+        libsm6 \
+        libssl-dev \
+        libssl1.1 \
+        libuser \
+        libuser1-dev \
+        libxml2 \
+        libxml2-dev \
+        libzmq3-dev \
+        locales \
+        openssh-client \
+        openssh-server \
+        openssl \
+        psmisc \
+        qpdf \
+        rrdtool \
+        rsync \
+        screen \
+        ssh \
+        sudo \
+        wget \
+        unixodbc \
+        unixodbc-dev \
+     > /dev/null \
+    # Install rstudio-server
+    && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
@@ -171,10 +93,60 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
         'jquerylib', \
         'markdown', \
         'rmarkdown', \
-        'tinytex'), \
-        lib = '/usr/local/lib/R/site-library')" \
-    && sudo rm -rf /tmp/*
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library' \
+        )" \
+    # add snowflake ODBC driver
+    && sudo apt-get install -f \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && sudo dpkg -i snowflake-odbc.deb \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
+    && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
+    # Cleanup
+    && sudo rm -rf /tmp/* \
+    && apt-get -qq purge \
+    && apt-get -qq clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd \
+    && chmod 755 /run/sshd \
+    # Generate locales
+    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+    && locale-gen \
+    # Create user
+    && adduser --disabled-password \
+        --gecos "Default user" \
+        --uid ${NB_UID} \
+        ${NB_USER} \
+    # Give user sudo access
+    && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
+    && mkdir -p ${APP_BASE} \
+    && mkdir -p /opt/saturncloud \
+    && ln -s /opt/saturncloud /srv/conda \
+    # Give user ownership of conda and app
+    && chown 1000:1000 -R /opt/saturncloud \
+    && chown -R $NB_USER:$NB_USER ${APP_BASE}
 
+USER ${NB_USER}
+
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+COPY setup-conda.bash /tmp/setup-conda.bash
+COPY environment.yml /tmp/environment.yml
+
+# Install miniconda
+RUN bash /tmp/install-miniconda.bash && \
+    bash /tmp/setup-conda.bash && \
+    echo '' > ${CONDA_DIR}/conda-meta/history && \
+    ${CONDA_BIN}/conda config --system --add channels conda-forge && \
+    ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
+    ${CONDA_BIN}/conda config --system --set show_channel_urls true
+ENV NPM_DIR ${APP_BASE}/npm
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+WORKDIR ${HOME}
+
+# Configure rstudio
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
 RUN sudo chmod +x /usr/local/bin/rstudio-start.sh
 
