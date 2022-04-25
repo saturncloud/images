@@ -95,6 +95,7 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
+ENV R_HOME=${R_HOME:-"/usr/local/lib/R"}
 
 RUN adduser --disabled-password \
     --gecos "Default user" \
@@ -129,17 +130,14 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D6
         r-base-dev 
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
-RUN sudo mkdir -p /usr/local/lib/R \
-    && sudo mkdir -p /usr/local/lib/R/site-library \
-    && sudo mkdir -p /usr/lib/R/site-library \
-    && sudo mkdir -p /usr/lib/R/library \
-    && sudo chown 1000:1000 -R /usr/local/lib/R \
-    && sudo chmod 777 -R /usr/local/lib/R \
-    && sudo chown 1000:1000 -R /usr/lib/R \
-    && sudo chmod 777 -R /usr/lib/R \
-    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron" \
+RUN \
+    # Make all library folders readable then let R known, then set up reticulate package
+    mkdir -p "${R_HOME}/site-library" \
+    && chown 1000:1000 -R /usr/local/lib/R \
+    && chmod 777 -R /usr/local/lib/R \
+    && su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
+    && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
+    && su -c "echo 'R_LIBS=\${R_LIBS-'${R_HOME}/site-library:${R_HOME}/library'}' >>'${R_HOME}/etc/Renviron.site'" \
     && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
     && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version\$platform, R.version\$arch, R.version\$os)))' >> /usr/lib/R/etc/Rprofile.site"
 
