@@ -128,11 +128,11 @@ ENV R_HOME=/usr/local/lib/R
 #         r-base \
 #         r-base-core \
 #         r-base-dev 
-RUN wget https://cloud.r-project.org/src/base/R-latest.tar.gz \
-    tar xzf "R.tar.gz" \
-    cd R-*/ \
-    make \
-    make install \
+RUN wget https://cloud.r-project.org/src/base/R-latest.tar.gz\
+    && tar xzf "R.tar.gz"\
+    && cd R-*/ \
+    && make \
+    && make install \
     make clean
 
 
