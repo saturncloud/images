@@ -129,23 +129,19 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D6
         r-base-dev 
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
-RUN sudo mkdir -p /usr/local/lib/R \
-    && sudo mkdir -p /usr/local/lib/R/site-library \
-    && sudo mkdir -p /usr/lib/R/site-library \
+RUN sudo mkdir -p /usr/lib/R/site-library \
     && sudo mkdir -p /usr/lib/R/library \
-    && sudo chown 1000:1000 -R /usr/local/lib/R \
-    && sudo chmod 777 -R /usr/local/lib/R \
     && sudo chown 1000:1000 -R /usr/lib/R \
     && sudo chmod 777 -R /usr/lib/R \
-    && sudo su -c "echo 'R_LIBS=/usr/local/lib/R:/usr/local/lib/R/site-library:/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron" \
-    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron" \
+    && sudo su -c "echo 'R_LIBS=/usr/lib/R/site-library:/usr/lib/R/library' >> /usr/lib/R/etc/Renviron.site" \
+    && sudo su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/lib/R/etc/Renviron.site" \
+    && sudo su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/lib/R/etc/Renviron.site" \
     && sudo su -c "echo 'options(repos = c(CRAN = \"https://packagemanager.rstudio.com/cran/__linux__/focal/latest\"), download.file.method = \"libcurl\")' >> /usr/lib/R/etc/Rprofile.site" \
     && sudo su -c "echo 'options(HTTPUserAgent = sprintf(\"R/%s R (%s)\", getRversion(), paste(getRversion(), R.version\$platform, R.version\$arch, R.version\$os)))' >> /usr/lib/R/etc/Rprofile.site"
 
 ## Install RStudio
 
-ARG RSTUDIO_VERSION=2021.09.0-351
+ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
@@ -166,7 +162,7 @@ RUN curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudi
         'markdown', \
         'rmarkdown', \
         'tinytex'), \
-        lib = '/usr/local/lib/R/site-library')" \
+        lib = '/usr/lib/R/site-library')" \
     && sudo rm -rf /tmp/*
 
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
