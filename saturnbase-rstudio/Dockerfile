@@ -49,6 +49,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
         rrdtool \
         unixodbc \
         unixodbc-dev \
+        libglpk-dev \
      > /dev/null && \
     # add snowflake ODBC driver
     sudo apt-get install -f && \
