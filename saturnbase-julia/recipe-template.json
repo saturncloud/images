@@ -1,5 +1,5 @@
 {
-    "name": "saturncloud/saturnbase-julia",
+    "name": "saturnbase-julia",
     "description": "The base image for Julia. This image contains all of the requirements to run Julia 1.7.2 and Python on Saturn Cloud.",
     "hardware_type": "cpu",
     "supports": [

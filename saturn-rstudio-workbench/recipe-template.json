@@ -1,5 +1,5 @@
 {
-    "name": "saturncloud/saturn-rstudio-workbench",
+    "name": "saturn-rstudio-workbench",
     "description": "For basic analysis using R and RStudio Workbench.",
     "hardware_type": "cpu",
     "supports": ["rstudio-workbench"]
