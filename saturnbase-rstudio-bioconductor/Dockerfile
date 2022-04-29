@@ -76,6 +76,7 @@ RUN \
         wget \
         unixodbc \
         unixodbc-dev \
+        libglpk-dev \
      > /dev/null
 
 RUN \
