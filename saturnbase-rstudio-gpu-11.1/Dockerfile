@@ -26,8 +26,9 @@ ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
-
-RUN \
+RUN apt-key del 7fa2af80 \
+    && rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
+    && apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
@@ -79,6 +80,9 @@ RUN \
         unixodbc-dev \
         libglpk-dev \
      > /dev/null \
+    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
+    && dpkg -i cuda-keyring_1.0-1_all.deb \
+    && rm cuda-keyring_1.0-1_all.deb \
     # CUDA fix
     && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
     # Install rstudio-server
