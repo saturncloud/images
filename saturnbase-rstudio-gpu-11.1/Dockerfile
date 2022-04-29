@@ -77,6 +77,7 @@ RUN \
         wget \
         unixodbc \
         unixodbc-dev \
+        libglpk-dev \
      > /dev/null \
     # CUDA fix
     && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
