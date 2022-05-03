@@ -27,7 +27,7 @@ ARG RSTUDIO_VERSION=2021.09.0-351
 ARG TINI_VERSION=0.18.0
 
 RUN apt-key del 7fa2af80 \
-    && rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
+    && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
     && apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     && mkdir -p /usr/local/lib/R \
