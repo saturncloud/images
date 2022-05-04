@@ -1,5 +1,5 @@
 {
-    "name": "saturn-rstudio-torch",
+    "name": "saturn-r-torch",
     "description": "For running Torch on a GPU in RStudio.",
     "hardware_type": "gpu",
     "supports": ["rstudio-opensource"]
