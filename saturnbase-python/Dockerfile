@@ -35,7 +35,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH /opt/saturncloud/bin:$PATH
 
 CMD [ "/bin/bash" ]
 
@@ -48,16 +48,16 @@ RUN set -x && \
     echo "${SHA256SUM} miniconda.sh" > shasum && \
     if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
     mkdir -p /opt && \
-    sh miniconda.sh -b -p /opt/conda && \
+    sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \
-    find /opt/conda/ -follow -type f -name '*.a' -delete && \
-    find /opt/conda/ -follow -type f -name '*.js.map' -delete && \
-    /opt/conda/bin/conda clean -afy && \
-    ln -s /opt/conda /srv/conda && \
-    chown -R 1000:1000 /opt/conda && \
+    find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
+    find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
+    /opt/saturncloud/bin/conda clean -afy && \
+    ln -s /opt/saturncloud /srv/conda && \
+    chown -R 1000:1000 /opt/saturncloud && \
     chown -R 1000:1000 /srv
 
 ENV LC_ALL=en_US.UTF-8

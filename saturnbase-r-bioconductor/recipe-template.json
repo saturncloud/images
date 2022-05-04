@@ -1,5 +1,5 @@
 {
-    "name": "saturncloud/saturnbase-rstudio-bioconductor",
+    "name": "saturnbase-rstudio-bioconductor",
     "description": "R-focused base image for Saturn RStudio images, based on Bioconductor's RStudio image.",
     "hardware_type": "cpu",
     "supports": ["rstudio-opensource"]

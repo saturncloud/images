@@ -27,13 +27,13 @@ ARG RSTUDIO_VERSION=2022.02.1-461
 ARG TINI_VERSION=0.18.0
 
 RUN apt-key del 7fa2af80 \
-    && rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
+    && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
     && apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
+    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
     && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
@@ -130,10 +130,10 @@ RUN apt-key del 7fa2af80 \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
-    && mkdir -p /opt/conda \
-    && ln -s /opt/conda /srv/conda \
+    && mkdir -p /opt/saturncloud \
+    && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
-    && chown 1000:1000 -R /opt/conda \
+    && chown 1000:1000 -R /opt/saturncloud \
     && chown -R $NB_USER:$NB_USER ${APP_BASE}
 
 USER ${NB_USER}

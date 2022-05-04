@@ -1,5 +1,5 @@
 {
-    "name": "saturncloud/saturnbase-rstudio-gpu-11.1",
+    "name": "saturnbase-rstudio-gpu-11.1",
     "description": "R-focused base image for Saturn RStudio GPU images, built on CUDA version 11.1 using rocker/ml (https://github.com/rocker-org/rocker-versioned2). This image contains the packages necessary to run R, RStudio, Python, and Reticulate.",
     "hardware_type": "gpu",
     "supports": ["rstudio-opensource"]
