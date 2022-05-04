@@ -1,6 +1,0 @@
-{
-    "name": "saturncloud/saturn-geospatial",
-    "description": "A Python image containing libraries specific to geospatial IO, analysis, and visualization. Generally used for CPU instances.",
-    "hardware_type": "cpu",
-    "supports": ["jupyterlab", "dask"]
-}
