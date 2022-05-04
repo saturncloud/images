@@ -4,13 +4,13 @@ set -ex
 
 cd $(dirname $0)
 
-MINICONDA_VERSION=py38_4.9.2
+MINICONDA_VERSION=py39_4.11.0
 URL="https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh"
 INSTALLER_PATH=/tmp/miniconda-installer.sh
 wget --quiet $URL -O ${INSTALLER_PATH}
 chmod +x ${INSTALLER_PATH}
 
-MD5SUM="122c8c9beb51e124ab32a0fa6426c656"
+MD5SUM="4e2f31e0b2598634c80daa12e4981647"
 
 if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
     echo "md5sum mismatch for ${INSTALLER_PATH}, exiting!"

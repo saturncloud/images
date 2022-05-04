@@ -2,7 +2,7 @@ FROM debian:bullseye-slim
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.2
-ARG CONDA_VERSION=py39_4.10.3
+ARG CONDA_VERSION=py39_4.11.0
 
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
@@ -53,7 +53,7 @@ CMD [ "/bin/bash" ]
 # Based on https://github.com/ContinuumIO/docker-images/blob/4d7798c0ea2463d9c4057d8eaee876102eecbf86/miniconda3/debian/Dockerfile
 RUN set -x && \
     MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
-    SHA256SUM="1ea2f885b4dbc3098662845560bc64271eb17085387a70c2ba3f29fff6f8d52f"; \
+    SHA256SUM="4ee9c3aa53329cd7a63b49877c0babb49b19b7e5af29807b793a76bdb1d362b4"; \
     wget "${MINICONDA_URL}" -O miniconda.sh -q && \
     echo "${SHA256SUM} miniconda.sh" > shasum && \
     if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \

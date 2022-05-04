@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.2.1-runtime-ubuntu18.04
+FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
 EXPOSE 8888
 
 RUN mkdir /opt/conda && \
@@ -8,30 +8,32 @@ ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-key del 7fa2af80 && \
-    rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
+    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
     apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
-        gettext-base \
-        gnupg \
-        locales \
-        wget \
-        curl \
-        bzip2 \
-        ca-certificates \
-        ssh \
-        file \
-        git \
-        awscli \
-        rsync \
-        sudo \
-        openssh-server \
-        htop \
-        screen \
-        build-essential \
-        libnuma-dev \
-     > /dev/null && \
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb && \
+    awscli \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    curl \
+    file \
+    gettext-base \
+    git \
+    gnupg \
+    htop \
+    libnuma-dev \
+    locales \
+    openssh-server \
+    rsync \
+    screen \
+    ssh \
+    sudo \
+    unzip \
+    wget \
+    zip \
+    > /dev/null && \
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
     dpkg -i cuda-keyring_1.0-1_all.deb && \
     rm cuda-keyring_1.0-1_all.deb && \
     apt-get -qq purge && \
