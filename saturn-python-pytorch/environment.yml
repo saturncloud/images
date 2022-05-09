@@ -3,7 +3,7 @@ channels:
     - pytorch
     - fastai
     - rapidsai
-    - defaults
+    - nodefaults
     - conda-forge
 dependencies:
     - blas=*=mkl
@@ -26,7 +26,7 @@ dependencies:
     - python=3.9
     - python-graphviz
     - pytorch
-    - s3fs
+    - s3fs>=2021.08.0
     - setuptools<60.0
     - tensorboard
     - torchvision

@@ -1,7 +1,7 @@
 name: saturn
 channels:
     - conda-forge
-    - defaults
+    - nodefaults
     - rapidsai
 dependencies:
     - blas=*=mkl
@@ -21,7 +21,7 @@ dependencies:
     - pyarrow<6.1.0,>=6.0.0
     - python=3.9
     - python-graphviz
-    - s3fs
+    - s3fs>=2021.08.0
     - setuptools<60.0
     - tensorboard
     - tensorflow-estimator
