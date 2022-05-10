@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.2
@@ -15,7 +16,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV JULIA_DEPOT_PATH=/srv/julia
 ENV JULIA_PKGDIR=/srv/julia
 
-RUN apt-get -qq --allow-releaseinfo-change update && \
+RUN apt-key del 7fa2af80 && \
+    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
+    apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
@@ -41,6 +44,9 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     zip \ 
     unzip \
     > /dev/null && \
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb && \
+    rm cuda-keyring_1.0-1_all.deb && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* && \
