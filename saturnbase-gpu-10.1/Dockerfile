@@ -1,4 +1,5 @@
 FROM nvidia/cuda:10.1-runtime-ubuntu18.04
+ENV CONDA_OVERRIDE_CUDA=10.1
 EXPOSE 8888
 
 RUN mkdir /opt/conda && \
