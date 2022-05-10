@@ -123,6 +123,9 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
     sudo su -c \
     "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
+    sudo apt-get install -y -t focal-cran40 \
+    r-base=4.2.0-1~bullseyecran.0 && \
+    sudo apt-mark hold r-base && \
     sudo apt-get install -y -t bullseye-cran40 \
         r-base \
         r-base-core \
