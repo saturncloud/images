@@ -124,7 +124,7 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key 'E298A3A825C0D6
     "echo 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
     sudo apt-get install -y -t focal-cran40 \
-        r-base=4.2.0-1~bullseyecran.0 && \
+        r-base=4.2.0-1.2004.0 && \
     sudo apt-mark hold r-base && \
     sudo apt-get install -y -t focal-cran40 \
         r-base-core \
