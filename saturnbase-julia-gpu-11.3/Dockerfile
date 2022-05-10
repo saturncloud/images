@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.2
