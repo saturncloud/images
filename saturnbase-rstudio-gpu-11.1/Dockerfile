@@ -1,4 +1,4 @@
-FROM rocker/cuda:cuda11.1
+FROM rocker/cuda:4.2.0-cuda11.1
 ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
