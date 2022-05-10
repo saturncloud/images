@@ -1,6 +1,8 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_14
 RUN usermod -l jovyan rstudio
 RUN groupmod -n jovyan rstudio
+RUN usermod -d /home/jovyan jovyan
+
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \

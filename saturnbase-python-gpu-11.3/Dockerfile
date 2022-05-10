@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 RUN mkdir /opt/saturncloud && \
