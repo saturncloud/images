@@ -1,4 +1,4 @@
-FROM rocker/cuda:cuda11.1
+FROM rocker/cuda:4.2.0-cuda11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
