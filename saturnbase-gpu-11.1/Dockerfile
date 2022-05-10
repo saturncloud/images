@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.1.1-runtime-ubuntu18.04
+ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
 ARG JUPYTER_SATURN_VERSION
@@ -12,7 +13,7 @@ ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-key del 7fa2af80 && \
-    rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
+    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
     apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
