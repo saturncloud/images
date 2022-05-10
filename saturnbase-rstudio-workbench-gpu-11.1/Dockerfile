@@ -1,4 +1,5 @@
 FROM rocker/cuda:cuda11.1
+ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
@@ -27,7 +28,7 @@ ARG RSTUDIO_WORKBENCH_VERSION=2021.09.2-382.pro1
 ARG TINI_VERSION=0.18.0
 
 RUN apt-key del 7fa2af80 \
-    && rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
+    && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
     && apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     && mkdir -p /usr/local/lib/R \
