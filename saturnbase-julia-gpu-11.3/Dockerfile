@@ -1,4 +1,5 @@
 FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.2
@@ -16,7 +17,7 @@ ENV JULIA_DEPOT_PATH=/srv/julia
 ENV JULIA_PKGDIR=/srv/julia
 
 RUN apt-key del 7fa2af80 && \
-    rm /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
+    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
     apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
