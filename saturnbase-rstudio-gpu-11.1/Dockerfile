@@ -1,4 +1,5 @@
 FROM rocker/cuda:cuda11.1
+ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
