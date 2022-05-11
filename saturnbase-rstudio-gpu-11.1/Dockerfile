@@ -131,9 +131,12 @@ RUN apt-key del 7fa2af80 \
     && chown -R $NB_USER:$NB_USER ${APP_BASE} \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
-    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" \
-    # Add a few R packages that are useful for RMarkdown
-    && Rscript -e "install.packages(c( \
+    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" 
+
+USER ${NB_USER}
+
+# Add a few R packages that are useful for RMarkdown
+RUN Rscript -e "install.packages(c( \
         'jquerylib', \
         'markdown', \
         'rmarkdown', \
@@ -143,9 +146,6 @@ RUN apt-key del 7fa2af80 \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
         )" 
-
-USER ${NB_USER}
-
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
 COPY environment.yml /tmp/environment.yml
