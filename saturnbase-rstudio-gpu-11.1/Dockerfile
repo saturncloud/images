@@ -146,6 +146,7 @@ RUN Rscript -e "install.packages(c( \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
         )" 
+
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
 COPY environment.yml /tmp/environment.yml
