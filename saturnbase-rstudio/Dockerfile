@@ -128,7 +128,7 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
         r-base-core=4.1.2-1~bullseyecran.0 \
         r-base-dev=4.1.2-1~bullseyecran.0 \
         r-recommended=4.1.2-1~bullseyecran.0 &&\
-    sudo apt-mark hold r-base r-base-core r-base-dev r-recommended && \
+    sudo apt-mark hold r-base r-base-core r-base-dev r-recommended
 
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
