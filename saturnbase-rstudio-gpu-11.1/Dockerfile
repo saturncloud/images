@@ -27,6 +27,12 @@ ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
+RUN apt-get update --fix-missing \
+    && apt-get upgrade -y \
+    && apt-get install --yes --no-install-recommends gnupg
+
+RUN useradd -ms /bin/bash joyvan
+
 RUN apt-key del 7fa2af80 \
     && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
     && apt-get -qq --allow-releaseinfo-change update \
@@ -97,6 +103,8 @@ RUN apt-key del 7fa2af80 \
     # Runtime settings ------------------------------------------------------------#
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini \
+    # Add the jovan user
+    && useradd -ms /bin/bash joyvan \
     # Add a few R packages that are useful for RMarkdown
     && Rscript -e "install.packages(c( \
         'jquerylib', \

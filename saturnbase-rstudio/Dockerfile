@@ -1,5 +1,4 @@
 FROM rocker/r-ver:4.2.0
-ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
@@ -40,6 +39,7 @@ RUN apt-key del 7fa2af80 \
     # Install packages
     && apt-get update --fix-missing \
     && apt-get upgrade -y \
+    && apt-get install --yes --no-install-recommends gnupg\
     && apt-get install --yes --no-install-recommends \
         awscli \
         build-essential \
@@ -51,7 +51,6 @@ RUN apt-key del 7fa2af80 \
         gdebi-core \
         gettext-base \
         git \
-        gnupg \
         htop \
         libcap2 \
         libcurl4-openssl-dev \
@@ -95,6 +94,8 @@ RUN apt-key del 7fa2af80 \
     # Runtime settings ------------------------------------------------------------#
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini \
+    # Add the jovan user
+    && useradd -ms /bin/bash joyvan \
     # Add a few R packages that are useful for RMarkdown
     && Rscript -e "install.packages(c( \
         'jquerylib', \
