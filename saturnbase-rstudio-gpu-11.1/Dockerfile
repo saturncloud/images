@@ -71,6 +71,7 @@ RUN apt-key del 7fa2af80 \
         openssh-client \
         openssh-server \
         openssl \
+        pandoc \
         psmisc \
         qpdf \
         rrdtool \

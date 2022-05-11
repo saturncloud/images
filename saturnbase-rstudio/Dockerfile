@@ -67,6 +67,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         openssh-client \
         openssh-server \
         openssl \
+        pandoc \
         psmisc \
         qpdf \
         rrdtool \

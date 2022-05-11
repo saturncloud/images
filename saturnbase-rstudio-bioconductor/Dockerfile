@@ -70,6 +70,7 @@ RUN \
         openssh-client \
         openssh-server \
         openssl \
+        pandoc \
         psmisc \
         qpdf \
         rrdtool \
