@@ -27,10 +27,6 @@ ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
-RUN apt-get update --fix-missing \
-    && apt-get upgrade -y \
-    && apt-get install --yes --no-install-recommends gnupg
-
 RUN useradd -ms /bin/bash joyvan
 
 RUN apt-key del 7fa2af80 \
