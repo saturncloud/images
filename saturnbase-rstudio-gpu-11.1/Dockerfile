@@ -1,4 +1,4 @@
-FROM rocker/cuda:cuda11.1
+FROM rocker/cuda:4.2.0-cuda11.1
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
@@ -22,7 +22,7 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
-ARG RSTUDIO_VERSION=2021.09.0-351
+ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
