@@ -156,6 +156,7 @@ ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:
 WORKDIR ${HOME}
 
 # Configure rstudio
+
 COPY --chown=root:root rstudio-start.sh /usr/local/bin/rstudio-start.sh
 RUN sudo chmod +x /usr/local/bin/rstudio-start.sh
 
