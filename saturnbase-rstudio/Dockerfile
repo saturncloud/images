@@ -30,8 +30,6 @@ RUN apt-get update --fix-missing \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends gnupg
 
-RUN useradd -ms /bin/bash joyvan
-
 RUN apt-key del 7fa2af80 \
     && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
     && apt-get -qq --allow-releaseinfo-change update \
