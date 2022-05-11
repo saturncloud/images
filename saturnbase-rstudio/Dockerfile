@@ -131,7 +131,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         'tinytex' \
         ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
         dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
+        lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
         )" 
 
