@@ -1,7 +1,4 @@
 FROM rocker/cuda:4.2.0-cuda11.1
-RUN usermod -l jovyan rstudio
-RUN groupmod -n jovyan rstudio
-RUN usermod -d /home/jovyan jovyan
 ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
@@ -116,6 +113,12 @@ RUN apt-key del 7fa2af80 \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
+    # add user
+    adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER} && \
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \

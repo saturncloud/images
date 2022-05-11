@@ -1,7 +1,4 @@
 FROM rocker/r-ver:4.2.0
-RUN usermod -l jovyan rstudio
-RUN groupmod -n jovyan rstudio
-RUN usermod -d /home/jovyan jovyan
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
