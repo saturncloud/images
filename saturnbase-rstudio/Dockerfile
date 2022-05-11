@@ -1,5 +1,7 @@
 FROM rocker/r-ver:4.2.0
-EXPOSE 8888
+RUN usermod -l jovyan rstudio
+RUN groupmod -n jovyan rstudio
+RUN usermod -d /home/jovyan jovyan
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
@@ -26,13 +28,7 @@ ARG RSTUDIO_VERSION=2022.02.1-461
 
 ARG TINI_VERSION=0.18.0
 
-RUN apt-get update --fix-missing \
-    && apt-get upgrade -y \
-    && apt-get install --yes --no-install-recommends gnupg
-
-RUN apt-key del 7fa2af80 \
-    && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
-    && apt-get -qq --allow-releaseinfo-change update \
+RUN  apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
@@ -43,7 +39,6 @@ RUN apt-key del 7fa2af80 \
     # Install packages
     && apt-get update --fix-missing \
     && apt-get upgrade -y \
-    && apt-get install --yes --no-install-recommends gnupg\
     && apt-get install --yes --no-install-recommends \
         awscli \
         build-essential \
@@ -55,6 +50,7 @@ RUN apt-key del 7fa2af80 \
         gdebi-core \
         gettext-base \
         git \
+        gnupg \
         htop \
         libcap2 \
         libcurl4-openssl-dev \
@@ -84,9 +80,6 @@ RUN apt-key del 7fa2af80 \
         unixodbc-dev \
         libglpk-dev \
      > /dev/null \
-    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
-    && dpkg -i cuda-keyring_1.0-1_all.deb \
-    && rm cuda-keyring_1.0-1_all.deb \
     # Install rstudio-server
     && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
@@ -98,18 +91,6 @@ RUN apt-key del 7fa2af80 \
     # Runtime settings ------------------------------------------------------------#
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini \
-    # Add the jovan user
-    && useradd -ms /bin/bash joyvan \
-    # Add a few R packages that are useful for RMarkdown
-    && Rscript -e "install.packages(c( \
-        'jquerylib', \
-        'markdown', \
-        'rmarkdown', \
-        'tinytex' \
-        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
-        )" \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
     && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
@@ -126,11 +107,6 @@ RUN apt-key del 7fa2af80 \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # Create user
-    && adduser --disabled-password \
-        --gecos "Default user" \
-        --uid ${NB_UID} \
-        ${NB_USER} \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
@@ -138,7 +114,17 @@ RUN apt-key del 7fa2af80 \
     && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
     && chown 1000:1000 -R /opt/saturncloud \
-    && chown -R $NB_USER:$NB_USER ${APP_BASE}
+    && chown -R $NB_USER:$NB_USER ${APP_BASE} \
+        # Add a few R packages that are useful for RMarkdown
+    && Rscript -e "install.packages(c( \
+        'jquerylib', \
+        'markdown', \
+        'rmarkdown', \
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library' \
+        )" 
 
 USER ${NB_USER}
 

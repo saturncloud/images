@@ -1,4 +1,7 @@
 FROM rocker/cuda:4.2.0-cuda11.1
+RUN usermod -l jovyan rstudio
+RUN groupmod -n jovyan rstudio
+RUN usermod -d /home/jovyan jovyan
 ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
@@ -97,18 +100,6 @@ RUN apt-key del 7fa2af80 \
     # Runtime settings ------------------------------------------------------------#
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini \
-    # Add the jovan user
-    && useradd -ms /bin/bash joyvan \
-    # Add a few R packages that are useful for RMarkdown
-    && Rscript -e "install.packages(c( \
-        'jquerylib', \
-        'markdown', \
-        'rmarkdown', \
-        'tinytex' \
-        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
-        )" \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
     && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
@@ -125,11 +116,6 @@ RUN apt-key del 7fa2af80 \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # Create user
-    && adduser --disabled-password \
-        --gecos "Default user" \
-        --uid ${NB_UID} \
-        ${NB_USER} \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
@@ -137,7 +123,17 @@ RUN apt-key del 7fa2af80 \
     && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
     && chown 1000:1000 -R /opt/saturncloud \
-    && chown -R $NB_USER:$NB_USER ${APP_BASE}
+    && chown -R $NB_USER:$NB_USER ${APP_BASE} \
+    # Add a few R packages that are useful for RMarkdown
+    && Rscript -e "install.packages(c( \
+        'jquerylib', \
+        'markdown', \
+        'rmarkdown', \
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library' \
+        )"
 
 USER ${NB_USER}
 
