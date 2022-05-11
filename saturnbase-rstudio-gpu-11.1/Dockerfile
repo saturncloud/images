@@ -1,4 +1,4 @@
-FROM rocker/cuda:4.2.0-cuda11.1
+FROM rocker/cuda:4.1.3-cuda11.1
 ENV CONDA_OVERRIDE_CUDA=11.1
 EXPOSE 8888
 
@@ -23,7 +23,7 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-04-01
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-03-01
 
 ARG RSTUDIO_VERSION=2022.02.1-461
 

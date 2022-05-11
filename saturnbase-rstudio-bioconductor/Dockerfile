@@ -26,7 +26,7 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-04-01
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-03-01
 
 ARG TINI_VERSION=0.18.0
 
