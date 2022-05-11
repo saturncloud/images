@@ -122,7 +122,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && chown -R $NB_USER:$NB_USER ${APP_BASE} \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
-    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" \
+    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
 
 USER ${NB_USER}
 
