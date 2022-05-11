@@ -114,7 +114,7 @@ RUN apt-key del 7fa2af80 \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
     # add user
-    adduser --disabled-password \
+    && adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER} && \
