@@ -124,11 +124,12 @@ RUN sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key '95C0FAF38DB3CC
     "echo 'deb http://cloud.r-project.org/bin/linux/debian bullseye-cran40/' >>/etc/apt/sources.list" && \
     sudo apt update && \
     sudo apt-get install -y -t bullseye-cran40 \
-        r-base=4.1.2-1~bullseyecran.0 && \
-    sudo apt-mark hold r-base && \
-    sudo apt-get install -y -t bullseye-cran40 \
-        r-base-core \
-        r-base-dev 
+        r-base=4.1.2-1~bullseyecran.0 \
+        r-base-core=4.1.2-1~bullseyecran.0 \
+        r-base-dev=4.1.2-1~bullseyecran.0 \
+        r-recommended=4.1.2-1~bullseyecran.0 &&\
+    sudo apt-mark hold r-base r-base-core r-base-dev r-recommended && \
+
 
 # Make all library folders readable then let R known, the set up reticulate and pandoc packages
 RUN sudo mkdir -p /usr/local/lib/R \
