@@ -1,0 +1,7 @@
+
+# install other packages
+Rscript -e "install.packages(c('future','furrr','fst','qs','visNetwork','clustermq','bs4Dash','DT','gt','pingr','shinybusy','shinyWidgets','shiny','tictoc'), 
+    Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    repos = 'https://packagemanager.rstudio.com/cran/__linux__/focal/latest' \
+)"
