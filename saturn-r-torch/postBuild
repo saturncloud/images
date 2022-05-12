@@ -3,18 +3,21 @@ sudo su -c "echo 'CUDA=11.1' >> /usr/local/lib/R/etc/Renviron"
 
 # install other packages
 Rscript -e "install.packages(c( \
+        'DBI', \
+        'Rcpp', \
+        'aws.s3', \
         'data.table', \
         'devtools', \
         'dplyr', \
+        'forcats', \
         'ggplot2', \
         'lubridate', \
-        'Rcpp', \
+        'odbc', \
         'readr', \
         'remotes', \
         'reticulate', \
         'stringr', \
         'tidyr', \
-        'forcats', \
         'tidyverse', \
         'torch', \
         'torchvision' \

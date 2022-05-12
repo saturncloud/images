@@ -1,18 +1,21 @@
 
 # install other packages
 Rscript -e "install.packages(c( \
+        'DBI', \
+        'Rcpp', \
+        'aws.s3', \
         'data.table', \
         'devtools', \
         'dplyr', \
+        'forcats', \
         'ggplot2', \
         'lubridate', \
-        'Rcpp', \
+        'odbc', \
         'readr', \
         'remotes', \
         'reticulate', \
         'stringr', \
         'tidyr', \
-        'forcats', \
         'tidyverse' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
