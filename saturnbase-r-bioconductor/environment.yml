@@ -1,10 +1,30 @@
-name: saturn
 channels:
-- nodefaults
-- conda-forge
+  - defaults
+  - conda-forge
 dependencies:
-- blas=*=mkl
-- ipykernel
-- pip
-- python=3.8
-- setuptools<60.0
+  - nodejs
+  - python
+  - ipywidgets
+  - jupyterlab-git
+  - jupyterlab=3.2.2
+  - nbconvert
+  - notebook
+  - jupyter-server-proxy
+  - dask-core
+  - distributed
+  - yarl
+  - pyviz_comms
+  - black
+  - isort
+  - tornado=6
+  - jupyterlab-nvdashboard
+  - nbdime
+  - voila
+  - pip
+  - pip:
+    - nbclassic>=0.2.8
+    - jupyterlab_execute_time
+    - jupyterlab_code_formatter
+    - jupyter_bokeh
+    - jupyterlab_widgets
+    - theme-darcula
