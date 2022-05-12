@@ -20,7 +20,7 @@ dependencies:
     - pandas
     - pillow
     - pip
-    - prefect
+    - prefect<1.0.0
     - py-opencv
     - pyarrow<6.1.0,>=6.0.0
     - python=3.9
