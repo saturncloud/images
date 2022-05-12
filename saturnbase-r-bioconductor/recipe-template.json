@@ -1,6 +1,6 @@
 {
-    "name": "saturnbase-r-bioconductor",
-    "description": "R-focused base image for Saturn RStudio images, based on Bioconductor's RStudio image.",
+    "name": "saturn-rstudio-bioconductor",
+    "description": "An R and RStudio image built with full Bioconductor support",
     "hardware_type": "cpu",
     "supports": ["rstudio-opensource"]
 }

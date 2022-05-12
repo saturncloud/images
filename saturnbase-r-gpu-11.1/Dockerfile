@@ -22,6 +22,8 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
+ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-04-01
 
 ARG RSTUDIO_VERSION=2022.02.1-461
 
@@ -69,6 +71,7 @@ RUN apt-key del 7fa2af80 \
         openssh-client \
         openssh-server \
         openssl \
+        pandoc \
         psmisc \
         qpdf \
         rrdtool \
@@ -97,16 +100,6 @@ RUN apt-key del 7fa2af80 \
     # Runtime settings ------------------------------------------------------------#
     && sudo curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini \
     && sudo chmod +x /usr/local/bin/tini \
-    # Add a few R packages that are useful for RMarkdown
-    && Rscript -e "install.packages(c( \
-        'jquerylib', \
-        'markdown', \
-        'rmarkdown', \
-        'tinytex' \
-        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library' \
-        )" \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
     && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
@@ -123,11 +116,12 @@ RUN apt-key del 7fa2af80 \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # Create user
+    # add user
     && adduser --disabled-password \
-        --gecos "Default user" \
-        --uid ${NB_UID} \
-        ${NB_USER} \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER} && \
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
@@ -135,9 +129,24 @@ RUN apt-key del 7fa2af80 \
     && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
     && chown 1000:1000 -R /opt/saturncloud \
-    && chown -R $NB_USER:$NB_USER ${APP_BASE}
+    && chown -R $NB_USER:$NB_USER ${APP_BASE} \
+    # Set the default repo to the latest rstudio package manager
+    && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
+    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" 
 
 USER ${NB_USER}
+
+# Add a few R packages that are useful for RMarkdown
+RUN Rscript -e "install.packages(c( \
+        'jquerylib', \
+        'markdown', \
+        'rmarkdown', \
+        'tinytex' \
+        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+        lib = '/usr/local/lib/R/site-library', \
+        repos = '${CRAN_FIXED}'\
+        )" 
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
