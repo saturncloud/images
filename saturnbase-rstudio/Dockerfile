@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.1.3
+FROM rocker/r-ver:4.1.2
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
@@ -21,7 +21,7 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-03-01
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-01-06
 
 ARG RSTUDIO_VERSION=2022.02.1-461
 
