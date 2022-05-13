@@ -16,7 +16,9 @@ Rscript -e "install.packages(c( \
         'reticulate', \
         'stringr', \
         'tidyr', \
-        'tidyverse' \
+        'tidyverse', \
+        'tensorflow', \
+        'keras' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
     repos = '${CRAN_FIXED}' \
