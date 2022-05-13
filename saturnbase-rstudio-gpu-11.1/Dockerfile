@@ -36,7 +36,7 @@ RUN apt-key del 7fa2af80 \
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
+    && su -c "echo 'RETICULATE_PYTHON=/opt/conda/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
     && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
@@ -125,14 +125,14 @@ RUN apt-key del 7fa2af80 \
     # Give user sudo access
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
-    && mkdir -p /opt/saturncloud \
-    && ln -s /opt/saturncloud /srv/conda \
+    && mkdir -p /opt/conda \
+    && ln -s /opt/conda /srv/conda \
     # Give user ownership of conda and app
-    && chown 1000:1000 -R /opt/saturncloud \
+    && chown 1000:1000 -R /opt/conda \
     && chown -R $NB_USER:$NB_USER ${APP_BASE} \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
-    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" 
+    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
 
 USER ${NB_USER}
 
@@ -146,7 +146,7 @@ RUN Rscript -e "install.packages(c( \
         dependencies = c('LinkingTo', 'Depends', 'Imports'), \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
-        )" 
+        )"
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
