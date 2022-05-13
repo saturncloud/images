@@ -8,6 +8,7 @@ dependencies:
 - blas=*=mkl
 - blazingsql=21.06.00=cuda_11.2_py37_g95ff589f8_0
 - bokeh
+- click>=7.1.2,<8.0.0
 - cvxpy
 - dask-ml
 - dask=2021.4.1
