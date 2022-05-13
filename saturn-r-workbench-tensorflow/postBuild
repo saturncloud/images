@@ -21,5 +21,5 @@ Rscript -e "install.packages(c( \
         'keras' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-    repos = 'https://packagemanager.rstudio.com/cran/__linux__/focal/latest' \
+    repos = '{$CRAN_FIXED}' \
     )"
