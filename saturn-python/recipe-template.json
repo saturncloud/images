@@ -1,0 +1,6 @@
+{
+    "name": "saturn-python",
+    "description": "For basic Python data analysis, machine learning, and parallel processing with Dask.",
+    "hardware_type": "cpu",
+    "supports": ["jupyterlab", "dask"]
+}

@@ -1,0 +1,6 @@
+{
+    "name": "saturn-r-bioconductor",
+    "description": "An R and RStudio image built with full Bioconductor support",
+    "hardware_type": "cpu",
+    "supports": ["rstudio-opensource"]
+}

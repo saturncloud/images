@@ -1,0 +1,6 @@
+{
+    "name": "saturn-r",
+    "description": "For basic analysis using R and RStudio.",
+    "hardware_type": "cpu",
+    "supports": ["rstudio-opensource"]
+}
