@@ -1,0 +1,31 @@
+channels:
+    - defaults
+    - conda-forge
+dependencies:
+    - black
+    - dask-core
+    - distributed
+    - ipywidgets
+    - isort
+    - jupyter-server-proxy
+    - jupyterlab-git
+    - jupyterlab-nvdashboard
+    - jupyterlab=3.2.2
+    - nbconvert
+    - nbdime
+    - nodejs
+    - notebook
+    - pip
+    - python=3.9
+    - pyviz_comms
+    - setuptools<60.0
+    - tornado=6
+    - voila
+    - yarl
+    - pip:
+          - jupyter_bokeh
+          - jupyterlab_code_formatter
+          - jupyterlab_execute_time
+          - jupyterlab_widgets
+          - nbclassic>=0.2.8
+          - theme-darcula

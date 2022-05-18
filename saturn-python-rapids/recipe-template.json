@@ -1,0 +1,6 @@
+{
+    "name": "saturn-python-rapids",
+    "description": "For GPU-based acceleration using the RAPIDS library.",
+    "hardware_type": "gpu",
+    "supports": ["jupyterlab", "dask"]
+}

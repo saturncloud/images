@@ -1,42 +1,31 @@
 FROM debian:bullseye-slim
 EXPOSE 8888
 
-ENV JULIA_VERSION=1.7.2
-ARG CONDA_VERSION=py39_4.11.0
-
 ENV APP_BASE=/srv
 ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
-# install Julia packages in /srv/julia instead of ${HOME}
-ENV JULIA_DEPOT_PATH=/srv/julia
-ENV JULIA_PKGDIR=/srv/julia
-
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
-    awscli \
-    build-essential \
-    bzip2 \
-    ca-certificates \
-    curl \
-    gettext-base \
-    git \
-    gnupg \
-    htop \
-    libzmq3-dev \
-    locales \
-    openssh-client \
-    openssh-server \
-    procps \
-    rsync \
-    screen \
-    sudo \
-    tar \
-    wget \
-    zip \
-    unzip \
+        awscli \
+        build-essential \
+        bzip2 \
+        ca-certificates \
+        curl \
+        htop \
+        gettext-base \
+        git \
+        gnupg \
+        locales \
+        openssh-client \
+        openssh-server \
+        procps \
+        rsync \
+        sudo \
+        screen \
+        wget \
     > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
@@ -51,6 +40,7 @@ ENV PATH /opt/saturncloud/bin:$PATH
 CMD [ "/bin/bash" ]
 
 # Based on https://github.com/ContinuumIO/docker-images/blob/4d7798c0ea2463d9c4057d8eaee876102eecbf86/miniconda3/debian/Dockerfile
+ARG CONDA_VERSION=py39_4.11.0
 RUN set -x && \
     MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
     SHA256SUM="4ee9c3aa53329cd7a63b49877c0babb49b19b7e5af29807b793a76bdb1d362b4"; \
@@ -76,7 +66,6 @@ ENV LANGUAGE=en_US.UTF-8
 ENV SHELL=/bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
-ARG NB_GID=100
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
@@ -86,6 +75,7 @@ RUN adduser --disabled-password \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
 COPY profile /etc/profile
+
 USER ${NB_USER}
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
@@ -96,45 +86,6 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NPM_DIR ${APP_BASE}/npm
-ENV NB_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
-
-# Copy a script that we will use to correct permissions after running certain commands
-COPY fix-permissions /usr/local/bin/fix-permissions
-RUN sudo chmod a+rx /usr/local/bin/fix-permissions
-
-SHELL ["/bin/bash", "-o", "pipefail", "-c"]
-
-WORKDIR /tmp
-
-RUN set -x && \
-    julia_arch=$(uname -m) && \
-    julia_short_arch="${julia_arch}" && \
-    if [ "${julia_short_arch}" == "x86_64" ]; then \
-    julia_short_arch="x64"; \
-    fi; \
-    julia_installer="julia-${JULIA_VERSION}-linux-${julia_arch}.tar.gz" && \
-    julia_major_minor=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
-    sudo mkdir "/srv/julia-${JULIA_VERSION}" && \
-    wget -q "https://julialang-s3.julialang.org/bin/linux/${julia_short_arch}/${julia_major_minor}/${julia_installer}" && \
-    sudo tar xzf "${julia_installer}" -C "/srv/julia-${JULIA_VERSION}" --strip-components=1 && \
-    rm "${julia_installer}" && \
-    sudo ln -fs /srv/julia-*/bin/julia /usr/local/bin/julia && \
-    # Show Julia where conda libraries are \
-    sudo mkdir /etc/julia && \
-    sudo sh -c 'echo "push!(Libdl.DL_LOAD_PATH, \"${CONDA_DIR}/lib\")" >> /etc/julia/juliarc.jl' && \
-    # Create JULIA_PKGDIR \
-    sudo mkdir "${JULIA_PKGDIR}" && \
-    sudo chown "${NB_USER}" "${JULIA_PKGDIR}" && \
-    fix-permissions "${JULIA_PKGDIR}" && \
-    # Install IJulia as jovyan
-    julia -e 'import Pkg; Pkg.update()' && \
-    julia -e 'using Pkg; pkg"add IJulia"; pkg"precompile"' && \
-    # move kernelspec out of system share
-    mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
-    chmod -R go+rx "${CONDA_DIR}/share/jupyter" && \
-    rm -rf "${HOME}/.local" && \
-    fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter" && \
-    sudo rm /usr/local/bin/fix-permissions
-
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
