@@ -18,5 +18,6 @@ Rscript -e "install.packages(c( \
         'keras' \
     ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
     dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-    repos = '{$CRAN_FIXED}' \
+    lib = '/usr/local/lib/R/site-library', \
+    repos = '${CRAN_FIXED}' \
     )"
