@@ -6,32 +6,32 @@ channels:
     - nodefaults
     - conda-forge
 dependencies:
-    - blas=*=mkl
-    - bokeh
+    - blas=2.114=mkl
+    - bokeh=2.4.3
     - cudatoolkit=11.3
-    - dask
     - dask-cuda=22.04
-    - fastai
-    - fsspec>=0.8.5
-    - ipykernel
-    - ipywidgets
-    - matplotlib
-    - numpy
-    - pandas
-    - pillow
+    - dask=2022.3.0
+    - fastai=2.6.3
+    - fsspec=2022.3.0
+    - ipykernel=6.13.0
+    - ipywidgets=7.7.0
+    - matplotlib=3.5.2
+    - numpy=1.21.6
+    - pandas=1.4.2
+    - pillow=9.1.1
     - pip
-    - prefect<1.0.0
-    - py-opencv
-    - pyarrow<6.1.0,>=6.0.0
+    - prefect=0.15.13
+    - py-opencv=4.5.5
+    - pyarrow=6.0.1
+    - python-graphviz=0.20
     - python=3.9
-    - python-graphviz
-    - pytorch
-    - s3fs>=2021.08.0
+    - pytorch=1.11.0
+    - s3fs=2022.3.0
     - setuptools<60.0
-    - tensorboard
-    - torchvision
-    - torchaudio
+    - tensorboard=2.9.0
+    - torchaudio=0.11.0
+    - torchvision=0.12.0
     - pip:
           - dask-saturn>=0.4.1
           - prefect-saturn>=0.6.0
-          - snowflake-connector-python
+          - snowflake-connector-python==2.7.7
