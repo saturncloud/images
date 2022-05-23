@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_14
+FROM bioconductor/bioconductor_docker:RELEASE_3_15
 RUN usermod -l jovyan rstudio
 RUN groupmod -n jovyan rstudio
 RUN usermod -d /home/jovyan jovyan
@@ -119,7 +119,7 @@ RUN \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
-    
+
 
 USER ${NB_USER}
 
@@ -133,7 +133,7 @@ RUN Rscript -e "install.packages(c( \
         dependencies = c('LinkingTo', 'Depends', 'Imports'), \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
-        )" 
+        )"
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
