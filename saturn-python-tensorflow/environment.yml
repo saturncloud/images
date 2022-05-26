@@ -6,6 +6,7 @@ channels:
 dependencies:
     - blas=*=mkl
     - bokeh
+    - cudnn
     - cudatoolkit=11.2
     - dask
     - dask-cuda==22.04
@@ -24,10 +25,10 @@ dependencies:
     - s3fs>=2021.08.0
     - setuptools<60.0
     - tensorboard
-    - tensorflow-estimator
-    - tensorflow-gpu=2.7.0=cuda112py39*
     - voila
     - pip:
-          - dask-saturn>=0.4.1
-          - prefect-saturn>=0.6.0
-          - snowflake-connector-python
+        - tensorflow
+        - dask-saturn>=0.4.1
+        - prefect-saturn>=0.6.0
+        - snowflake-connector-python
+
