@@ -5,30 +5,30 @@ channels:
     - nodefaults
     - conda-forge
 dependencies:
-    - blas=*=mkl
-    - bokeh
+    - blas=2.114=mkl
+    - bokeh=2.4.3
     - cudatoolkit=11.2
-    - cvxpy
-    - dask-ml
-    - dask
-    - dask-sql
-    - ipykernel
-    - ipywidgets
-    - matplotlib
-    - numba
-    - numpy
-    - pandas
+    - cvxpy=1.2.1
+    - dask-ml=2022.1.22
+    - dask-sql=2022.4.1
+    - dask=2022.3.0
+    - ipykernel=6.13.0
+    - ipywidgets=7.7.0
+    - matplotlib=3.5.2
+    - numba=0.55.1
+    - numpy=1.21.6
+    - pandas=1.3.5
     - pip
-    - prefect<1.0.0
-    - pyarrow<6.1.0,>=6.0.0
+    - prefect=0.15.13
+    - pyarrow=6.0.1
+    - python-graphviz=0.20
     - python=3.9
-    - python-graphviz
-    - s3fs>=2021.08.0
-    - scikit-learn<1.1.0
-    - scipy
-    - setuptools<60.0
     - rapids=22.04
+    - s3fs=2022.3.0
+    - scikit-learn=1.0.2
+    - scipy=1.8.0
+    - setuptools<60.0
     - pip:
           - dask-saturn>=0.4.1
           - prefect-saturn>=0.6.0
-          - snowflake-connector-python
+          - snowflake-connector-python==2.7.7
