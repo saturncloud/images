@@ -1,10 +1,10 @@
 FROM rocker/r-ver:4.2.0
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
-      org.opencontainers.image.source="https://github.com/saturncloud/images" \
-      org.opencontainers.image.vendor="Saturn Cloud" \
-      org.opencontainers.image.authors="Jacqueline Nolis" \
-      org.opencontainers.image.description="Additions to rocker/r-ver to support running on Saturn Cloud"
+    org.opencontainers.image.source="https://github.com/saturncloud/images" \
+    org.opencontainers.image.vendor="Saturn Cloud" \
+    org.opencontainers.image.authors="Jacqueline Nolis" \
+    org.opencontainers.image.description="Additions to rocker/r-ver to support running on Saturn Cloud"
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
@@ -21,9 +21,9 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-04-01
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-06-01
 
-ARG RSTUDIO_VERSION=2022.02.1-461
+ARG RSTUDIO_VERSION=2022.02.3-492
 
 ARG TINI_VERSION=0.18.0
 
@@ -39,47 +39,47 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && apt-get update --fix-missing \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
-        awscli \
-        build-essential \
-        bzip2 \
-        ca-certificates \
-        curl \
-        devscripts \
-        file \
-        gdebi-core \
-        gettext-base \
-        git \
-        gnupg \
-        htop \
-        libcap2 \
-        libcurl4-openssl-dev \
-        libglib2.0-0 \
-        libpq5 \
-        libsm6 \
-        libssl-dev \
-        libssl1.1 \
-        libuser \
-        libuser1-dev \
-        libxml2 \
-        libxml2-dev \
-        libzmq3-dev \
-        locales \
-        openssh-client \
-        openssh-server \
-        openssl \
-        pandoc \
-        psmisc \
-        qpdf \
-        rrdtool \
-        rsync \
-        screen \
-        ssh \
-        sudo \
-        wget \
-        unixodbc \
-        unixodbc-dev \
-        libglpk-dev \
-     > /dev/null \
+    awscli \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    curl \
+    devscripts \
+    file \
+    gdebi-core \
+    gettext-base \
+    git \
+    gnupg \
+    htop \
+    libcap2 \
+    libcurl4-openssl-dev \
+    libglib2.0-0 \
+    libpq5 \
+    libsm6 \
+    libssl-dev \
+    libssl1.1 \
+    libuser \
+    libuser1-dev \
+    libxml2 \
+    libxml2-dev \
+    libzmq3-dev \
+    locales \
+    openssh-client \
+    openssh-server \
+    openssl \
+    pandoc \
+    psmisc \
+    qpdf \
+    rrdtool \
+    rsync \
+    screen \
+    ssh \
+    sudo \
+    wget \
+    unixodbc \
+    unixodbc-dev \
+    libglpk-dev \
+    > /dev/null \
     # Install rstudio-server
     && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
@@ -129,15 +129,15 @@ USER ${NB_USER}
 
 # Add a few R packages that are useful for RMarkdown
 RUN Rscript -e "install.packages(c( \
-        'jquerylib', \
-        'markdown', \
-        'rmarkdown', \
-        'tinytex' \
-        ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
-        dependencies = c('LinkingTo', 'Depends', 'Imports'), \
-        lib = '/usr/local/lib/R/site-library', \
-        repos = '${CRAN_FIXED}'\
-        )" 
+    'jquerylib', \
+    'markdown', \
+    'rmarkdown', \
+    'tinytex' \
+    ), Ncpus = max(c(1, parallel::detectCores() - 1)), \
+    dependencies = c('LinkingTo', 'Depends', 'Imports'), \
+    lib = '/usr/local/lib/R/site-library', \
+    repos = '${CRAN_FIXED}'\
+    )" 
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
