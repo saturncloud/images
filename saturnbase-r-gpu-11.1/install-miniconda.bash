@@ -22,7 +22,8 @@ bash ${INSTALLER_PATH} -b -p ${CONDA_DIR} -f
 export PATH="${CONDA_BIN}:$PATH"
 
 # Update conda
-conda update -y conda
+conda install -y conda=4.12
+
 
 # Allow easy direct installs from conda forge
 conda config --system --add channels conda-forge
