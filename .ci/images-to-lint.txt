@@ -1,7 +1,5 @@
 saturn-python
 saturnbase-python
-saturnbase-python-gpu-11.2
-saturnbase-python-gpu-11.3
 saturn-python-rapids
 saturn-python-pytorch
 saturn-python-tensorflow
