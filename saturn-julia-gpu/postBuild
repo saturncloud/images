@@ -3,6 +3,7 @@ Pkg.update();
 Pkg.add([
 "AWS",
 "AWSS3",
+"BSON",
 "CSV",
 "DataFrames",
 "Debugger",
@@ -11,10 +12,10 @@ Pkg.add([
 "HDF5",
 "Images",
 "KernelAbstractions",
+"MLDatasets",
 "Plots",
 "PyCall",
-"SQLite",
-"Statistics"
+"SQLite"
 ]);
 Pkg.update();
 Pkg.precompile();'
