@@ -1,7 +1,7 @@
-FROM debian:bullseye-slim
+FROM ubuntu:focal
 EXPOSE 8888
 
-ENV JULIA_VERSION=1.7.2
+ENV JULIA_VERSION=1.7.3
 ARG CONDA_VERSION=py39_4.11.0
 
 ENV APP_BASE=/srv
@@ -21,22 +21,21 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     bzip2 \
     ca-certificates \
     curl \
+    file \
     gettext-base \
     git \
     gnupg \
     htop \
-    libzmq3-dev \
+    libnuma-dev \
     locales \
-    openssh-client \
     openssh-server \
-    procps \
     rsync \
     screen \
+    ssh \
     sudo \
-    tar \
+    unzip \
     wget \
     zip \
-    unzip \
     > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \

@@ -2,7 +2,7 @@ FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
 ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
-ENV JULIA_VERSION=1.7.2
+ENV JULIA_VERSION=1.7.3
 
 RUN mkdir /opt/saturncloud && \
     ln -s /opt/saturncloud /srv/conda
