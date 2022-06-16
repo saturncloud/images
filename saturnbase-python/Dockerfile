@@ -1,4 +1,4 @@
-FROM debian:bullseye-slim
+FROM ubuntu:focal
 EXPOSE 8888
 
 ENV APP_BASE=/srv
@@ -9,23 +9,26 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
-        awscli \
-        build-essential \
-        bzip2 \
-        ca-certificates \
-        curl \
-        htop \
-        gettext-base \
-        git \
-        gnupg \
-        locales \
-        openssh-client \
-        openssh-server \
-        procps \
-        rsync \
-        sudo \
-        screen \
-        wget \
+    awscli \
+    build-essential \
+    bzip2 \
+    ca-certificates \
+    curl \
+    file \
+    gettext-base \
+    git \
+    gnupg \
+    htop \
+    libnuma-dev \
+    locales \
+    openssh-server \
+    rsync \
+    screen \
+    ssh \
+    sudo \
+    unzip \
+    wget \
+    zip \
     > /dev/null && \
     apt-get -qq purge && \
     apt-get -qq clean && \
