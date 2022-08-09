@@ -13,8 +13,7 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
-ENV APP_BASE=/srv
-ENV CONDA_DIR=/srv/conda
+ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL en_US.UTF-8
@@ -112,7 +111,6 @@ RUN \
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
     && mkdir -p /opt/saturncloud \
-    && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
     && chown 1000:1000 -R /opt/saturncloud \
     && chown -R $NB_USER:$NB_USER ${APP_BASE} \
