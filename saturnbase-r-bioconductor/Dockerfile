@@ -115,11 +115,7 @@ COPY install-miniconda.bash /tmp/install-miniconda.bash
 ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
-RUN adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER} && \
-    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
+RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     chown 1000:1000 -R /opt/saturncloud
 
 COPY profile /etc/profile
