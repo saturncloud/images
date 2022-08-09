@@ -2,7 +2,7 @@ FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
 ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
-RUN mkdir /opt/saturncloud
+
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
@@ -51,18 +51,22 @@ ENV NB_UID=1000
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+ARG CONDA_VERSION=py39_4.11.0
+RUN bash /tmp/install-miniconda.bash
+
 RUN adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
-    mkdir -p ${APP_BASE} && \
-    chown 1000:1000 -R /opt/saturncloud && \
-    chown -R $NB_USER:$NB_USER ${APP_BASE}
+    chown 1000:1000 -R /opt/saturncloud
+
+COPY profile /etc/profile
+
 USER ${NB_USER}
 
-COPY install-miniconda.bash /tmp/install-miniconda.bash
-RUN bash /tmp/install-miniconda.bash
+
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY environment.yml /tmp/environment.yml
@@ -71,7 +75,6 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}

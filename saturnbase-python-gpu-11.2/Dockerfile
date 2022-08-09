@@ -61,7 +61,11 @@ RUN adduser --disabled-password \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     chown 1000:1000 -R /opt/saturncloud
+
+COPY profile /etc/profile
+
 USER ${NB_USER}
+
 
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
@@ -72,5 +76,5 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}

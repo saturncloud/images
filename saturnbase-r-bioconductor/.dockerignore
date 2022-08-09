@@ -1,6 +1,5 @@
 *
 !environment.yml
-!install-miniconda.bash
 !setup-conda.bash
 !profile
 !database.conf
@@ -8,3 +7,4 @@
 !rsession-profile
 !rstudio-prefs.json
 !rstudio-start.sh
+!install-miniconda.bash
