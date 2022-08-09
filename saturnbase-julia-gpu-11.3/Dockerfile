@@ -3,8 +3,7 @@ ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.3
-
-RUN mkdir /opt/saturncloud
+ARG CONDA_VERSION=py39_4.11.0
 
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
@@ -24,11 +23,13 @@ RUN apt-key del 7fa2af80 && \
     bzip2 \
     ca-certificates \
     curl \
+    file \
     gettext-base \
     git \
     gnupg \
     htop \
     libzmq3-dev \
+    libnuma-dev \
     locales \
     libgomp1 \
     openssh-client \
@@ -38,9 +39,9 @@ RUN apt-key del 7fa2af80 && \
     screen \
     sudo \
     tar \
+    unzip \
     wget \
     zip \
-    unzip \
     > /dev/null && \
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
     dpkg -i cuda-keyring_1.0-1_all.deb && \
@@ -63,28 +64,33 @@ ARG NB_GID=100
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+ARG CONDA_VERSION=py39_4.11.0
+RUN bash /tmp/install-miniconda.bash
+
+
 RUN adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
-    mkdir -p ${APP_BASE} && \
-    chown 1000:1000 -R /opt/saturncloud && \
-    chown -R $NB_USER:$NB_USER ${APP_BASE}
+    chown 1000:1000 -R /opt/saturncloud
+
+COPY profile /etc/profile
+
 USER ${NB_USER}
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY environment.yml /tmp/environment.yml
-RUN bash /tmp/install-miniconda.bash && \
-    bash /tmp/install-jupyter.bash && \
+RUN bash /tmp/install-jupyter.bash && \
     echo '' > ${CONDA_DIR}/conda-meta/history && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
-ENV NB_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 
 # Copy a script that we will use to correct permissions after running certain commands
 COPY fix-permissions /usr/local/bin/fix-permissions
