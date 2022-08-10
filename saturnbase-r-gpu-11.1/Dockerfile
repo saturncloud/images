@@ -19,8 +19,6 @@ ENV LANGUAGE en_US.UTF-8
 ENV SHELL /bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
-ENV USER=${NB_USER}
-ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-06-01
 
@@ -122,6 +120,9 @@ RUN apt-key del 7fa2af80 \
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
+
+ENV USER=${NB_USER}
+ENV HOME=/home/${NB_USER}
 
 RUN adduser --disabled-password \
     --gecos "Default user" \

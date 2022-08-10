@@ -11,8 +11,6 @@ set -x && \
     sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
     ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc && \
     find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
     find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
     /opt/saturncloud/bin/conda clean -afy && \

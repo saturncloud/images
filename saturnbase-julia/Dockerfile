@@ -51,12 +51,13 @@ ENV SHELL=/bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
 ARG NB_GID=100
-ENV USER=${NB_USER}
-ENV HOME=/home/${NB_USER}
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
+
+ENV USER=${NB_USER}
+ENV HOME=/home/${NB_USER}
 
 RUN adduser --disabled-password \
     --gecos "Default user" \
