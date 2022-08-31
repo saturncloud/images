@@ -2,8 +2,10 @@ FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
 ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
-RUN mkdir /opt/saturncloud
-ENV CONDA_DIR=/opt/saturncloud
+RUN mkdir /opt/saturncloud && \
+    ln -s /opt/saturncloud /srv/conda
+ENV APP_BASE=/srv
+ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-key del 7fa2af80 && \
@@ -12,7 +14,6 @@ RUN apt-key del 7fa2af80 && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
-    dumb-init \
     build-essential \
     bzip2 \
     ca-certificates \
