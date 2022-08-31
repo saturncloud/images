@@ -1,8 +1,7 @@
 FROM ubuntu:focal
 EXPOSE 8888
 
-ENV APP_BASE=/srv
-ENV CONDA_DIR=/srv/conda
+ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -10,6 +9,7 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
+    dumb-init \
     build-essential \
     bzip2 \
     ca-certificates \
@@ -59,9 +59,8 @@ RUN set -x && \
     find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
     find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
     /opt/saturncloud/bin/conda clean -afy && \
-    ln -s /opt/saturncloud /srv/conda && \
-    chown -R 1000:1000 /opt/saturncloud && \
-    chown -R 1000:1000 /srv
+    chown -R 1000:1000 /opt/saturncloud
+
 
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
@@ -88,7 +87,6 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
