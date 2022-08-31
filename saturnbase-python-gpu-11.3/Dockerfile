@@ -12,6 +12,7 @@ RUN apt-key del 7fa2af80 && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
+    dumb-init \
     build-essential \
     bzip2 \
     ca-certificates \

@@ -42,6 +42,7 @@ RUN \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
         awscli \
+        dumb-init \
         build-essential \
         bzip2 \
         ca-certificates \
