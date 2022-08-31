@@ -37,6 +37,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
         awscli \
+        dumb-init \
         build-essential \
         bzip2 \
         ca-certificates \
@@ -104,9 +105,9 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
+
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 ARG CONDA_VERSION=py39_4.11.0
