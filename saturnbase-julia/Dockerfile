@@ -45,29 +45,6 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
 
-ENV PATH /opt/saturncloud/bin:$PATH
-
-CMD [ "/bin/bash" ]
-
-# Based on https://github.com/ContinuumIO/docker-images/blob/4d7798c0ea2463d9c4057d8eaee876102eecbf86/miniconda3/debian/Dockerfile
-RUN set -x && \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
-    SHA256SUM="4ee9c3aa53329cd7a63b49877c0babb49b19b7e5af29807b793a76bdb1d362b4"; \
-    wget "${MINICONDA_URL}" -O miniconda.sh -q && \
-    echo "${SHA256SUM} miniconda.sh" > shasum && \
-    if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
-    mkdir -p /opt && \
-    sh miniconda.sh -b -p /opt/saturncloud && \
-    rm miniconda.sh shasum && \
-    ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc && \
-    find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
-    find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
-    /opt/saturncloud/bin/conda clean -afy && \
-    chown -R 1000:1000 /opt/saturncloud && \
-    chown -R 1000:1000 /opt/saturncloud
-
 ENV LC_ALL=en_US.UTF-8
 ENV LANG=en_US.UTF-8
 ENV LANGUAGE=en_US.UTF-8
@@ -75,6 +52,11 @@ ENV SHELL=/bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
 ARG NB_GID=100
+
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+ARG CONDA_VERSION=py39_4.11.0
+RUN bash /tmp/install-miniconda.bash
+
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
@@ -82,8 +64,11 @@ RUN adduser --disabled-password \
     --gecos "Default user" \
     --uid ${NB_UID} \
     ${NB_USER} && \
-    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
+    chown 1000:1000 -R /opt/saturncloud
+
 COPY profile /etc/profile
+
 USER ${NB_USER}
 
 COPY install-jupyter.bash /tmp/install-jupyter.bash
@@ -93,9 +78,10 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
-ENV NB_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+
 
 # Copy a script that we will use to correct permissions after running certain commands
 COPY fix-permissions /usr/local/bin/fix-permissions

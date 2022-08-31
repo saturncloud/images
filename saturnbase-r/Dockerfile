@@ -17,8 +17,6 @@ ENV LANGUAGE en_US.UTF-8
 ENV SHELL /bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
-ENV USER=${NB_USER}
-ENV HOME=/home/${NB_USER}
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-06-01
 
@@ -107,22 +105,25 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
-    # add user
-    && adduser --disabled-password \
-    --gecos "Default user" \
-    --uid ${NB_UID} \
-    ${NB_USER} && \
-    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
-    # Give user sudo access
-    && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
-    && mkdir -p ${APP_BASE} \
-    && mkdir -p /opt/saturncloud \
-    # Give user ownership of conda and app
-    && chown 1000:1000 -R /opt/saturncloud \
-    && chown -R $NB_USER:$NB_USER ${APP_BASE} \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
+
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+ARG CONDA_VERSION=py39_4.11.0
+RUN bash /tmp/install-miniconda.bash
+
+ENV USER=${NB_USER}
+ENV HOME=/home/${NB_USER}
+
+RUN adduser --disabled-password \
+    --gecos "Default user" \
+    --uid ${NB_UID} \
+    ${NB_USER} && \
+    echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
+    chown 1000:1000 -R /opt/saturncloud
+
+COPY profile /etc/profile
 
 USER ${NB_USER}
 
@@ -138,20 +139,17 @@ RUN Rscript -e "install.packages(c( \
         repos = '${CRAN_FIXED}'\
         )"
 
-COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
 COPY environment.yml /tmp/environment.yml
 
 # Install miniconda
-RUN bash /tmp/install-miniconda.bash && \
-    bash /tmp/setup-conda.bash && \
+RUN bash /tmp/setup-conda.bash && \
     echo '' > ${CONDA_DIR}/conda-meta/history && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
 
 # Configure rstudio

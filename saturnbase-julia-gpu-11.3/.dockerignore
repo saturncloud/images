@@ -2,4 +2,5 @@
 !environment.yml
 !install-jupyter.bash
 !install-miniconda.bash
+!profile
 !fix-permissions
