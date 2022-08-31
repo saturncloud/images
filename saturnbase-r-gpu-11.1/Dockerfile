@@ -10,7 +10,8 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
-ENV CONDA_DIR=/opt/saturncloud
+ENV APP_BASE=/srv
+ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL en_US.UTF-8
@@ -43,7 +44,6 @@ RUN apt-key del 7fa2af80 \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
         awscli \
-        dumb-init \
         build-essential \
         bzip2 \
         ca-certificates \
@@ -126,12 +126,13 @@ RUN apt-key del 7fa2af80 \
     && echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook \
     && mkdir -p ${APP_BASE} \
     && mkdir -p /opt/saturncloud \
+    && ln -s /opt/saturncloud /srv/conda \
     # Give user ownership of conda and app
     && chown 1000:1000 -R /opt/saturncloud \
     && chown -R $NB_USER:$NB_USER ${APP_BASE} \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
-    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
+    && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site" 
 
 USER ${NB_USER}
 
@@ -145,7 +146,7 @@ RUN Rscript -e "install.packages(c( \
         dependencies = c('LinkingTo', 'Depends', 'Imports'), \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
-        )"
+        )" 
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY setup-conda.bash /tmp/setup-conda.bash
