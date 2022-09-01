@@ -7,8 +7,6 @@ cd $(dirname $0)
 
 echo "installing root env:"
 cat /tmp/environment.yml
-conda install conda=4.13
-conda install -c conda-forge mamba=0.25
 mamba env update -n root  -f /tmp/environment.yml
 
 conda clean -afy

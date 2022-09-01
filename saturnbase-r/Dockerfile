@@ -140,7 +140,6 @@ RUN Rscript -e "install.packages(c( \
         )"
 
 COPY setup-conda.bash /tmp/setup-conda.bash
-COPY environment.yml /tmp/environment.yml
 
 # Install miniconda
 RUN bash /tmp/setup-conda.bash && \
