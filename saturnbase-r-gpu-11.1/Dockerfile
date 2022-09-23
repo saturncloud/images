@@ -10,7 +10,8 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
-ENV CONDA_DIR=/opt/saturncloud
+ENV APP_BASE=/srv
+ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL en_US.UTF-8
@@ -41,7 +42,6 @@ RUN apt-key del 7fa2af80 \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
         awscli \
-        dumb-init \
         build-essential \
         bzip2 \
         ca-certificates \

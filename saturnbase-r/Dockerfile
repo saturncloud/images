@@ -8,7 +8,8 @@ LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
-ENV CONDA_DIR=/opt/saturncloud
+ENV APP_BASE=/srv
+ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LC_ALL en_US.UTF-8
@@ -37,7 +38,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
         awscli \
-        dumb-init \
         build-essential \
         bzip2 \
         ca-certificates \
@@ -124,7 +124,6 @@ RUN adduser --disabled-password \
     chown 1000:1000 -R /opt/saturncloud
 
 COPY profile /etc/profile
-
 USER ${NB_USER}
 
 # Add a few R packages that are useful for RMarkdown

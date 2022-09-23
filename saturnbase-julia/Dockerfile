@@ -4,19 +4,19 @@ EXPOSE 8888
 ENV JULIA_VERSION=1.7.3
 ARG CONDA_VERSION=py39_4.11.0
 
-ENV CONDA_DIR=/opt/saturncloud
+ENV APP_BASE=/srv
+ENV CONDA_DIR=/srv/conda
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
-# install Julia packages in /opt/saturncloud/julia instead of ${HOME}
-ENV JULIA_DEPOT_PATH=/opt/saturncloud/julia
-ENV JULIA_PKGDIR=/opt/saturncloud/julia
+# install Julia packages in /srv/julia instead of ${HOME}
+ENV JULIA_DEPOT_PATH=/srv/julia
+ENV JULIA_PKGDIR=/srv/julia
 
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
-    dumb-init \
     build-essential \
     bzip2 \
     ca-certificates \
@@ -99,11 +99,11 @@ RUN set -x && \
     fi; \
     julia_installer="julia-${JULIA_VERSION}-linux-${julia_arch}.tar.gz" && \
     julia_major_minor=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
-    sudo mkdir "/opt/saturncloud/julia-${JULIA_VERSION}" && \
+    sudo mkdir "/srv/julia-${JULIA_VERSION}" && \
     wget -q "https://julialang-s3.julialang.org/bin/linux/${julia_short_arch}/${julia_major_minor}/${julia_installer}" && \
-    sudo tar xzf "${julia_installer}" -C "/opt/saturncloud/julia-${JULIA_VERSION}" --strip-components=1 && \
+    sudo tar xzf "${julia_installer}" -C "/srv/julia-${JULIA_VERSION}" --strip-components=1 && \
     rm "${julia_installer}" && \
-    sudo ln -fs /opt/saturncloud/julia-*/bin/julia /usr/local/bin/julia && \
+    sudo ln -fs /srv/julia-*/bin/julia /usr/local/bin/julia && \
     # Show Julia where conda libraries are \
     sudo mkdir /etc/julia && \
     sudo sh -c 'echo "push!(Libdl.DL_LOAD_PATH, \"${CONDA_DIR}/lib\")" >> /etc/julia/juliarc.jl' && \
