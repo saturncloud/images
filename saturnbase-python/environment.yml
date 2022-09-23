@@ -9,7 +9,7 @@ dependencies:
     - isort
     - jupyter-server-proxy
     - jupyterlab-git
-    - jupyterlab=3.2.2
+    - jupyterlab=3.4.7
     - nbconvert
     - nbdime
     - nodejs
