@@ -1,31 +1,20 @@
 #!/bin/bash
+cd /tmp
 
-set -ex
-
-cd $(dirname $0)
-
-MINICONDA_VERSION=py38_4.9.2
-URL="https://repo.continuum.io/miniconda/Miniconda3-${MINICONDA_VERSION}-Linux-x86_64.sh"
-INSTALLER_PATH=/tmp/miniconda-installer.sh
-wget --quiet $URL -O ${INSTALLER_PATH}
-chmod +x ${INSTALLER_PATH}
-
-MD5SUM="122c8c9beb51e124ab32a0fa6426c656"
-
-if ! echo "${MD5SUM}  ${INSTALLER_PATH}" | md5sum  --quiet -c -; then
-    echo "md5sum mismatch for ${INSTALLER_PATH}, exiting!"
-    exit 1
-fi
-
-bash ${INSTALLER_PATH} -b -p ${CONDA_DIR} -f
-
-export PATH="${CONDA_BIN}:$PATH"
-
-# Update conda
-conda install -y conda=4.12
-
-
-# Allow easy direct installs from conda forge
-conda config --system --add channels conda-forge
-conda config --system --set auto_update_conda false
-conda config --system --set show_channel_urls true
+set -x && \
+    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
+    SHA256SUM="4ee9c3aa53329cd7a63b49877c0babb49b19b7e5af29807b793a76bdb1d362b4"; \
+    wget "${MINICONDA_URL}" -O miniconda.sh -q && \
+    echo "${SHA256SUM} miniconda.sh" > shasum && \
+    if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
+    mkdir -p /opt && \
+    sh miniconda.sh -b -p /opt/saturncloud && \
+    rm miniconda.sh shasum && \
+    /opt/saturncloud/bin/conda install -c conda-forge main::conda=4.13 conda-forge::mamba=0.25 && \
+    ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
+    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
+    echo "conda activate base" >> ~/.bashrc && \
+    find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
+    find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
+    /opt/saturncloud/bin/conda clean -afy && \
+    chown -R 1000:1000 /opt/saturncloud

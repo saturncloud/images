@@ -3,18 +3,15 @@ ENV CONDA_OVERRIDE_CUDA=11.3
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.3
+ARG CONDA_VERSION=py39_4.11.0
 
-RUN mkdir /opt/saturncloud && \
-    ln -s /opt/saturncloud /srv/conda
-
-ENV APP_BASE=/srv
-ENV CONDA_DIR=/srv/conda
+ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
 
-# install Julia packages in /srv/julia instead of ${HOME}
-ENV JULIA_DEPOT_PATH=/srv/julia
-ENV JULIA_PKGDIR=/srv/julia
+# install Julia packages in /opt/saturncloud/julia instead of ${HOME}
+ENV JULIA_DEPOT_PATH=/opt/saturncloud/julia
+ENV JULIA_PKGDIR=/opt/saturncloud/julia
 
 RUN apt-key del 7fa2af80 && \
     rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
@@ -22,15 +19,18 @@ RUN apt-key del 7fa2af80 && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
+    dumb-init \
     build-essential \
     bzip2 \
     ca-certificates \
     curl \
+    file \
     gettext-base \
     git \
     gnupg \
     htop \
     libzmq3-dev \
+    libnuma-dev \
     locales \
     libgomp1 \
     openssh-client \
@@ -40,9 +40,9 @@ RUN apt-key del 7fa2af80 && \
     screen \
     sudo \
     tar \
-    wget \
-    zip \ 
     unzip \
+    wget \
+    zip \
     > /dev/null && \
     wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
     dpkg -i cuda-keyring_1.0-1_all.deb && \
@@ -62,6 +62,11 @@ ENV SHELL=/bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
 ARG NB_GID=100
+
+COPY install-miniconda.bash /tmp/install-miniconda.bash
+ARG CONDA_VERSION=py39_4.11.0
+RUN bash /tmp/install-miniconda.bash
+
 ENV USER=${NB_USER}
 ENV HOME=/home/${NB_USER}
 
@@ -70,23 +75,23 @@ RUN adduser --disabled-password \
     --uid ${NB_UID} \
     ${NB_USER} && \
     echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
-    mkdir -p ${APP_BASE} && \
-    chown 1000:1000 -R /opt/saturncloud && \
-    chown -R $NB_USER:$NB_USER ${APP_BASE}
+    chown 1000:1000 -R /opt/saturncloud
+
+COPY profile /etc/profile
+
 USER ${NB_USER}
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY environment.yml /tmp/environment.yml
-RUN bash /tmp/install-miniconda.bash && \
-    bash /tmp/install-jupyter.bash && \
+RUN bash /tmp/install-jupyter.bash && \
     echo '' > ${CONDA_DIR}/conda-meta/history && \
     ${CONDA_BIN}/conda config --system --add channels conda-forge && \
     ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
-ENV NPM_DIR ${APP_BASE}/npm
-ENV NB_PREFIX ${CONDA_DIR}/envs/saturn
-ENV PATH ${NB_PREFIX}/bin:${CONDA_BIN}:${NPM_DIR}/bin:${HOME}/.local/bin:${PATH}
+
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 
 # Copy a script that we will use to correct permissions after running certain commands
 COPY fix-permissions /usr/local/bin/fix-permissions
@@ -104,11 +109,11 @@ RUN set -x && \
     fi; \
     julia_installer="julia-${JULIA_VERSION}-linux-${julia_arch}.tar.gz" && \
     julia_major_minor=$(echo "${JULIA_VERSION}" | cut -d. -f 1,2) && \
-    sudo mkdir "/srv/julia-${JULIA_VERSION}" && \
+    sudo mkdir "/opt/saturncloud/julia-${JULIA_VERSION}" && \
     wget -q "https://julialang-s3.julialang.org/bin/linux/${julia_short_arch}/${julia_major_minor}/${julia_installer}" && \
-    sudo tar xzf "${julia_installer}" -C "/srv/julia-${JULIA_VERSION}" --strip-components=1 && \
+    sudo tar xzf "${julia_installer}" -C "/opt/saturncloud/julia-${JULIA_VERSION}" --strip-components=1 && \
     rm "${julia_installer}" && \
-    sudo ln -fs /srv/julia-*/bin/julia /usr/local/bin/julia && \
+    sudo ln -fs /opt/saturncloud/julia-*/bin/julia /usr/local/bin/julia && \
     # Show Julia where conda libraries are \
     sudo mkdir /etc/julia && \
     sudo sh -c 'echo "push!(Libdl.DL_LOAD_PATH, \"${CONDA_DIR}/lib\")" >> /etc/julia/juliarc.jl' && \
