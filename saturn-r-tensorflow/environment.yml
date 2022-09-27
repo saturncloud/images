@@ -16,4 +16,4 @@ dependencies:
 - scipy
 - python=3.8
 - pip:
-  - tensorflow==2.4.1
+  - tensorflow==2.9.1
