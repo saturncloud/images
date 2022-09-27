@@ -7,9 +7,7 @@ cd $(dirname $0)
 
 echo "installing root env:"
 cat /tmp/environment.yml
-conda install -c conda-forge mamba=0.22
 mamba env update -n root  -f /tmp/environment.yml
-
 conda clean -afy
 jupyter lab clean
 jlpm cache clean
