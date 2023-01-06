@@ -74,3 +74,4 @@ RUN bash /tmp/install-jupyter.bash && \
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
+ENTRYPOINT []
