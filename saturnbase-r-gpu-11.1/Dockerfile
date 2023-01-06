@@ -170,3 +170,4 @@ COPY --chown=root:root rstudio-prefs.json /etc/rstudio/rstudio-prefs.json
 
 ENTRYPOINT ["tini", "--"]
 CMD ["/usr/local/bin/rstudio-start.sh"]
+ENTRYPOINT []
