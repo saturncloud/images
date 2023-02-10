@@ -1,5 +1,5 @@
-FROM nvidia/cuda:11.3.1-runtime-ubuntu20.04
-ENV CONDA_OVERRIDE_CUDA=11.3
+FROM nvidia/cuda:11.6.2-devel-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.6
 EXPOSE 8888
 
 
@@ -80,3 +80,4 @@ RUN bash /tmp/install-jupyter.bash && \
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
+ENTRYPOINT []
