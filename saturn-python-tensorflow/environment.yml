@@ -26,6 +26,7 @@ dependencies:
     - setuptools<60.0
     - tensorboard=2.9.0
     - voila=0.3.5
+    - pynvml==11.4.1
     - pip:
           - tensorflow==2.9.1
           - dask-saturn>=0.4.1
