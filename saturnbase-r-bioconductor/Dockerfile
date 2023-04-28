@@ -1,7 +1,8 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_15
-RUN usermod -l jovyan rstudio
-RUN groupmod -n jovyan rstudio
-RUN usermod -d /home/jovyan jovyan
+RUN usermod -l jovyan rstudio && \
+    groupmod -n jovyan rstudio && \
+    usermod -d /home/jovyan jovyan && \
+    mkdir -p /home/jovyan && chown -R jovyan:jovyan /home/jovyan
 
 EXPOSE 8888
 
@@ -121,7 +122,6 @@ RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     chown 1000:1000 -R /opt/saturncloud
 
 COPY profile /etc/profile
-
 USER ${NB_USER}
 
 # Add a few R packages that are useful for RMarkdown
