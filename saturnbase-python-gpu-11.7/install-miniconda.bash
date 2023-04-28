@@ -10,10 +10,8 @@ set -x && \
     mkdir -p /opt && \
     sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
-    /opt/saturncloud/bin/conda install -c conda-forge conda-forge::mamba=1.4.2 && \
+    /opt/saturncloud/bin/conda install -c conda-forge conda-forge::mamba=1.4.2 --yes && \
     ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc && \
     find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
     find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
     /opt/saturncloud/bin/conda clean -afy && \
