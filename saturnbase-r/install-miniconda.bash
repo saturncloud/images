@@ -2,15 +2,15 @@
 cd /tmp
 
 set -x && \
-    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-${CONDA_VERSION}-Linux-x86_64.sh"; \
-    SHA256SUM="4ee9c3aa53329cd7a63b49877c0babb49b19b7e5af29807b793a76bdb1d362b4"; \
+    MINICONDA_URL="https://repo.anaconda.com/miniconda/Miniconda3-py310_23.3.1-0-Linux-x86_64.sh"; \
+    SHA256SUM="aef279d6baea7f67940f16aad17ebe5f6aac97487c7c03466ff01f4819e5a651"; \
     wget "${MINICONDA_URL}" -O miniconda.sh -q && \
     echo "${SHA256SUM} miniconda.sh" > shasum && \
-    if [ "${CONDA_VERSION}" != "latest" ]; then sha256sum --check --status shasum; fi && \
+    sha256sum --check --status shasum && \
     mkdir -p /opt && \
     sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
-    /opt/saturncloud/bin/conda install -c conda-forge main::conda=4.13 conda-forge::mamba=0.25 && \
+    /opt/saturncloud/bin/conda install -c conda-forge conda-forge::mamba=1.4.2 && \
     ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     echo ". /opt/saturncloud/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate base" >> ~/.bashrc && \

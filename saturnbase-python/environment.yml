@@ -9,7 +9,7 @@ dependencies:
     - isort
     - jupyter-server-proxy
     - jupyterlab-git
-    - jupyterlab=3.4.7
+    - jupyterlab=3.6.3
     - nbconvert
     - nbdime
     - nodejs
@@ -17,7 +17,6 @@ dependencies:
     - pip
     - python=3.9
     - pyviz_comms
-    - setuptools<60.0
     - tornado
     - voila
     - yarl
