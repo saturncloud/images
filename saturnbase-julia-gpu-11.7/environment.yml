@@ -5,7 +5,7 @@ dependencies:
   - nodejs
   - ipywidgets
   - jupyterlab-git
-  - jupyterlab=3.4.7
+  - jupyterlab=3.6.3
   - jupyter-server-proxy
   - nbconvert
   - nbdime
