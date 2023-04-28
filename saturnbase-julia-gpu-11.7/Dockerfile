@@ -1,9 +1,8 @@
-FROM nvidia/cuda:11.3.1-cudnn8-devel-ubuntu20.04
-ENV CONDA_OVERRIDE_CUDA=11.3
+FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
+ENV CONDA_OVERRIDE_CUDA=11.7
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.3
-ARG CONDA_VERSION=py39_4.11.0
 
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
@@ -64,7 +63,6 @@ ENV NB_UID=1000
 ARG NB_GID=100
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}

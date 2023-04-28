@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.7.2-runtime-ubuntu22.04
+FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
 ENV CONDA_OVERRIDE_CUDA=11.7
 EXPOSE 8888
 
@@ -6,9 +6,7 @@ EXPOSE 8888
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-key del 7fa2af80 && \
-    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
-    apt-get -qq --allow-releaseinfo-change update && \
+RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
@@ -33,9 +31,6 @@ RUN apt-key del 7fa2af80 && \
     wget \
     zip \
     > /dev/null && \
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i cuda-keyring_1.0-1_all.deb && \
-    rm cuda-keyring_1.0-1_all.deb && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -51,7 +46,6 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
