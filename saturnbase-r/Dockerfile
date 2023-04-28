@@ -17,8 +17,8 @@ ENV LANGUAGE en_US.UTF-8
 ENV SHELL /bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
-ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-06-01
+ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 
 ARG RSTUDIO_VERSION=2022.02.3-492
 

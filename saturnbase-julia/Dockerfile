@@ -1,4 +1,4 @@
-FROM ubuntu:focal
+FROM ubuntu:jammy
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.3
