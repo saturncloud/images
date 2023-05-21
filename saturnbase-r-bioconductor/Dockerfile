@@ -79,13 +79,16 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         unixodbc \
         unixodbc-dev \
         libglpk-dev \
-     > /dev/null
+     > /dev/null \
+    && sudo apt purge \
+    && sudo apt clean \
+    && sudo rm -rf /var/lib/apt/lists/* 
 
 RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
-    sudo apt purge \
+    && sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo rm -rf /var/lib/rstudio-server/r-versions \
