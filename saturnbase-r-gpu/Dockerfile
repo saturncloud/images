@@ -1,5 +1,5 @@
-FROM rocker/cuda:4.2.0-cuda11.1
-ENV CONDA_OVERRIDE_CUDA=11.1
+FROM rocker/cuda:4.3
+ENV CONDA_OVERRIDE_CUDA=11.8
 EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
@@ -59,7 +59,6 @@ RUN apt-key del 7fa2af80 \
         libpq5 \
         libsm6 \
         libssl-dev \
-        libssl1.1 \
         libuser \
         libuser1-dev \
         libxml2 \
@@ -82,6 +81,10 @@ RUN apt-key del 7fa2af80 \
         unixodbc-dev \
         libglpk-dev \
      > /dev/null \
+    && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
     && dpkg -i cuda-keyring_1.0-1_all.deb \
     && rm cuda-keyring_1.0-1_all.deb \

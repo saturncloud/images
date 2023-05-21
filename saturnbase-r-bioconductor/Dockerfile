@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_15
+FROM bioconductor/bioconductor_docker:RELEASE_3_17
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
@@ -58,8 +58,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglib2.0-0 \
         libpq5 \
         libsm6 \
-        libssl-dev \
-        libssl1.1 \
         libuser \
         libuser1-dev \
         libxml2 \
@@ -83,7 +81,10 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglpk-dev \
      > /dev/null
 
-RUN \
+RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/* \

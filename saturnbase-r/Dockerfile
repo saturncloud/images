@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.2.0
+FROM rocker/r-ver:4.3.0
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
@@ -54,8 +54,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglib2.0-0 \
         libpq5 \
         libsm6 \
-        libssl-dev \
-        libssl1.1 \
         libuser \
         libuser1-dev \
         libxml2 \
@@ -78,7 +76,11 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         unixodbc-dev \
         libglpk-dev \
      > /dev/null \
-    # Install rstudio-server
+    # Install rstudio-server \
+    && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
