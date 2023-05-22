@@ -82,7 +82,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
      > /dev/null \
     && sudo apt purge \
     && sudo apt clean \
-    && sudo rm -rf /var/lib/apt/lists/* 
+    && sudo rm -rf /var/lib/apt/lists/*
 
 RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
