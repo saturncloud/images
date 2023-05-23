@@ -1,5 +1,4 @@
 channels:
-    - defaults
     - conda-forge
 dependencies:
     - black
@@ -15,7 +14,7 @@ dependencies:
     - nodejs
     - notebook
     - pip
-    - python=3.9
+    - python=3.10
     - pyviz_comms
     - tornado
     - voila
