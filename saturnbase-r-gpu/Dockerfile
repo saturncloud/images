@@ -1,10 +1,12 @@
-FROM rocker/r-ver:4.3.0
+FROM rocker/cuda:4.3
+ENV CONDA_OVERRIDE_CUDA=11.8
+EXPOSE 8888
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
       org.opencontainers.image.vendor="Saturn Cloud" \
       org.opencontainers.image.authors="Jacqueline Nolis" \
-      org.opencontainers.image.description="Additions to rocker/r-ver to support running on Saturn Cloud"
+      org.opencontainers.image.description="Additions to rocker/cuda to support running on Saturn Cloud"
 
 # SETUP SATURN (and install linux libraries for R & Rstudio)
 
@@ -24,7 +26,9 @@ ARG RSTUDIO_VERSION=2022.02.3-492
 
 ARG TINI_VERSION=0.18.0
 
-RUN apt-get -qq --allow-releaseinfo-change update \
+RUN apt-key del 7fa2af80 \
+    && rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list \
+    && apt-get -qq --allow-releaseinfo-change update \
     # Make all library folders readable then let R known, then set up reticulate package
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
@@ -54,6 +58,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglib2.0-0 \
         libpq5 \
         libsm6 \
+        libssl-dev \
         libuser \
         libuser1-dev \
         libxml2 \
@@ -76,11 +81,16 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         unixodbc-dev \
         libglpk-dev \
      > /dev/null \
-    # Install rstudio-server \
     && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
+    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
+    && dpkg -i cuda-keyring_1.0-1_all.deb \
+    && rm cuda-keyring_1.0-1_all.deb \
+    # CUDA fix
+    && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
+    # Install rstudio-server
     && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
@@ -107,9 +117,9 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     # Generate locales
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen \
+    # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
-
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 ARG CONDA_VERSION=py39_4.11.0
@@ -163,3 +173,4 @@ COPY --chown=root:root rstudio-prefs.json /etc/rstudio/rstudio-prefs.json
 
 ENTRYPOINT ["tini", "--"]
 CMD ["/usr/local/bin/rstudio-start.sh"]
+ENTRYPOINT []

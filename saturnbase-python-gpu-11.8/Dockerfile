@@ -1,11 +1,11 @@
-FROM ubuntu:jammy
+FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
+ENV CONDA_OVERRIDE_CUDA=11.7
 EXPOSE 8888
 
 
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-
 RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
@@ -38,7 +38,6 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     chmod 755 /run/sshd && \
     echo "en_US.UTF-8 UTF-8" > /etc/locale.gen && \
     locale-gen
-
 ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
@@ -47,7 +46,6 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
@@ -64,6 +62,7 @@ COPY profile /etc/profile
 
 USER ${NB_USER}
 
+
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY environment.yml /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash && \
@@ -75,3 +74,6 @@ ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
 ENTRYPOINT []
+
+RUN sudo ln -s /opt/saturncloud /opt/conda && \
+    sudo ln -s /opt/saturncloud /srv/conda

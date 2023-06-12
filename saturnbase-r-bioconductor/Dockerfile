@@ -1,7 +1,8 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_15
-RUN usermod -l jovyan rstudio
-RUN groupmod -n jovyan rstudio
-RUN usermod -d /home/jovyan jovyan
+FROM bioconductor/bioconductor_docker:RELEASE_3_17
+RUN usermod -l jovyan rstudio && \
+    groupmod -n jovyan rstudio && \
+    usermod -d /home/jovyan jovyan && \
+    mkdir -p /home/jovyan && chown -R jovyan:jovyan /home/jovyan
 
 EXPOSE 8888
 
@@ -22,8 +23,8 @@ ENV LANGUAGE en_US.UTF-8
 ENV SHELL /bin/bash
 ENV NB_USER=jovyan
 ENV NB_UID=1000
-ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/focal/latest
-ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/focal/2022-06-01
+ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
+ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 
 ARG TINI_VERSION=0.18.0
 
@@ -57,8 +58,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglib2.0-0 \
         libpq5 \
         libsm6 \
-        libssl-dev \
-        libssl1.1 \
         libuser \
         libuser1-dev \
         libxml2 \
@@ -80,10 +79,16 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         unixodbc \
         unixodbc-dev \
         libglpk-dev \
-     > /dev/null
+     > /dev/null \
+    && sudo apt purge \
+    && sudo apt clean \
+    && sudo rm -rf /var/lib/apt/lists/*
 
-RUN \
-    sudo apt purge \
+RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
+    && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
+    && sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/* \
     && sudo rm -rf /var/lib/rstudio-server/r-versions \
@@ -121,7 +126,6 @@ RUN echo "$NB_USER ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     chown 1000:1000 -R /opt/saturncloud
 
 COPY profile /etc/profile
-
 USER ${NB_USER}
 
 # Add a few R packages that are useful for RMarkdown

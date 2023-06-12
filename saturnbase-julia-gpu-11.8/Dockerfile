@@ -1,8 +1,8 @@
-FROM ubuntu:jammy
+FROM nvidia/cuda:11.7.1-runtime-ubuntu22.04
+ENV CONDA_OVERRIDE_CUDA=11.7
 EXPOSE 8888
 
 ENV JULIA_VERSION=1.7.3
-ARG CONDA_VERSION=py39_4.11.0
 
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
@@ -12,7 +12,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 ENV JULIA_DEPOT_PATH=/opt/saturncloud/julia
 ENV JULIA_PKGDIR=/opt/saturncloud/julia
 
-RUN apt-get -qq --allow-releaseinfo-change update && \
+RUN apt-key del 7fa2af80 && \
+    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
+    apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
@@ -26,17 +28,24 @@ RUN apt-get -qq --allow-releaseinfo-change update && \
     git \
     gnupg \
     htop \
+    libzmq3-dev \
     libnuma-dev \
     locales \
+    libgomp1 \
+    openssh-client \
     openssh-server \
+    procps \
     rsync \
     screen \
-    ssh \
     sudo \
+    tar \
     unzip \
     wget \
     zip \
     > /dev/null && \
+    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
+    dpkg -i cuda-keyring_1.0-1_all.deb && \
+    rm cuda-keyring_1.0-1_all.deb && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -54,7 +63,6 @@ ENV NB_UID=1000
 ARG NB_GID=100
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
@@ -71,6 +79,7 @@ COPY profile /etc/profile
 
 USER ${NB_USER}
 
+COPY install-miniconda.bash /tmp/install-miniconda.bash
 COPY install-jupyter.bash /tmp/install-jupyter.bash
 COPY environment.yml /tmp/environment.yml
 RUN bash /tmp/install-jupyter.bash && \
@@ -81,7 +90,6 @@ RUN bash /tmp/install-jupyter.bash && \
 
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
-
 
 # Copy a script that we will use to correct permissions after running certain commands
 COPY fix-permissions /usr/local/bin/fix-permissions
@@ -113,7 +121,8 @@ RUN set -x && \
     fix-permissions "${JULIA_PKGDIR}" && \
     # Install IJulia as jovyan
     julia -e 'import Pkg; Pkg.update()' && \
-    julia -e 'using Pkg; pkg"add IJulia"; pkg"precompile"' && \
+    julia -e 'using Pkg; pkg"add IJulia CUDA"; pkg"precompile"' && \
+    julia -e 'using CUDA; CUDA.precompile_runtime()' && \
     # move kernelspec out of system share
     mv "${HOME}/.local/share/jupyter/kernels/julia"* "${CONDA_DIR}/share/jupyter/kernels/" && \
     chmod -R go+rx "${CONDA_DIR}/share/jupyter" && \
@@ -121,4 +130,7 @@ RUN set -x && \
     fix-permissions "${JULIA_PKGDIR}" "${CONDA_DIR}/share/jupyter" && \
     sudo rm /usr/local/bin/fix-permissions
 
+ENV JULIA_CUDA_USE_BINARYBUILDER=false
+
 WORKDIR ${HOME}
+ENTRYPOINT []
