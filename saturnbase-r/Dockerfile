@@ -20,7 +20,7 @@ ENV NB_UID=1000
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 
-ARG RSTUDIO_VERSION=2023.06.0+421
+ARG RSTUDIO_VERSION=2023.06.0-421
 
 ARG TINI_VERSION=0.18.0
 
