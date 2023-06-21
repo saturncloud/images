@@ -85,13 +85,8 @@ RUN apt-key del 7fa2af80 \
     && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
-    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
-    && dpkg -i cuda-keyring_1.0-1_all.deb \
-    && rm cuda-keyring_1.0-1_all.deb \
-    # CUDA fix
-    && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
     # Install rstudio-server
-    && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
