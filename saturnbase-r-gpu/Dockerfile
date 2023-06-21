@@ -33,8 +33,6 @@ RUN apt-key del 7fa2af80 \
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
-    && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
     && apt-get update --fix-missing \
@@ -156,6 +154,7 @@ RUN bash /tmp/setup-conda.bash && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+ENV RETICULATE_PYTHON /opt/saturncloud/envs/saturn/bin/python
 WORKDIR ${HOME}
 
 # Configure rstudio
