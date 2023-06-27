@@ -75,9 +75,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         libglpk-dev \
      > /dev/null \
     # Install rstudio-server \
-    && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
