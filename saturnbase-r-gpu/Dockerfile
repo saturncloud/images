@@ -98,6 +98,7 @@ RUN apt-key del 7fa2af80 \
     && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
     && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
     && sha256sum --check --status shasum \
+    && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
     # Cleanup
