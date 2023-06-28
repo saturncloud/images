@@ -72,6 +72,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         wget \
         unixodbc \
         unixodbc-dev \
+        odbcinst \
         libglpk-dev \
      > /dev/null \
     # Install rstudio-server \
@@ -88,7 +89,10 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && sudo chmod +x /usr/local/bin/tini \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
-    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.25.12/snowflake-odbc-2.25.12.x86_64.deb -O snowflake-odbc.deb \
+    && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
+    && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
+    && sha256sum --check --status shasum \
     && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
