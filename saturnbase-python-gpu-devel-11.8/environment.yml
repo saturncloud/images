@@ -7,6 +7,7 @@ dependencies:
     - ipywidgets
     - isort
     - jupyter-server-proxy
+    - jupyterlab-nvdashboard
     - jupyterlab-git
     - jupyterlab=3.6.3
     - nbconvert
@@ -20,9 +21,10 @@ dependencies:
     - voila
     - yarl
     - pip:
-          - jupyter_bokeh
-          - jupyterlab_code_formatter
-          - jupyterlab_execute_time
-          - jupyterlab_widgets
-          - nbclassic>=0.2.8
-          - theme-darcula
+        - jupyter_server==1.23.6
+        - jupyter_bokeh
+        - jupyterlab_code_formatter
+        - jupyterlab_execute_time
+        - jupyterlab_widgets
+        - nbclassic>=0.2.8
+        - theme-darcula
