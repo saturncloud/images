@@ -1,5 +1,5 @@
-FROM nvidia/cuda:11.7.1-devel-ubuntu20.04
-ENV CONDA_OVERRIDE_CUDA=11.7
+FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
+ENV CONDA_OVERRIDE_CUDA=11.8
 EXPOSE 8888
 
 

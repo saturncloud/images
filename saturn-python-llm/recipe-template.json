@@ -1,0 +1,6 @@
+{
+    "name": "saturn-python-llm",
+    "description": "For building LLMs with Python",
+    "hardware_type": "gpu",
+    "supports": ["jupyterlab", "dask"]
+}
