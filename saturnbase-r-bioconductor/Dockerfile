@@ -33,8 +33,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
-    && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
     && apt-get update --fix-missing \
@@ -78,16 +76,14 @@ RUN apt-get -qq --allow-releaseinfo-change update \
         wget \
         unixodbc \
         unixodbc-dev \
+        odbcinst \
         libglpk-dev \
      > /dev/null \
     && sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/*
 
-RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
+RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && sudo apt purge \
     && sudo apt clean \
     && sudo rm -rf /var/lib/apt/lists/* \
@@ -97,7 +93,10 @@ RUN wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1
     && sudo chmod +x /usr/local/bin/tini \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
-    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.25.12/snowflake-odbc-2.25.12.x86_64.deb -O snowflake-odbc.deb \
+    && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
+    && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
+    && sha256sum --check --status shasum \
     && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
@@ -150,6 +149,7 @@ RUN bash /tmp/setup-conda.bash && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+ENV RETICULATE_PYTHON /opt/saturncloud/envs/saturn/bin/python
 WORKDIR ${HOME}
 
 # Configure rstudio

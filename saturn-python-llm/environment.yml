@@ -1,0 +1,36 @@
+name: saturn
+channels:
+    - pytorch
+    - fastai
+    - rapidsai
+    - nodefaults
+    - conda-forge
+dependencies:
+    - cudatoolkit=11.7
+    - cudatoolkit-dev=11.7
+    - ipykernel=6.13.0
+    - ipywidgets<9,>=8
+    - pytorch>=1.13.0,<1.14.0
+    - faiss-gpu
+    - pip
+    - python=3.9
+    - pip:
+      - streamlit
+      - beautifulsoup4
+      - scrapy
+      - transformers
+      - datasets
+      - einops
+      - sentencepiece
+      - sentence_transformers
+      - git+https://github.com/saturncloud/langchain.git@bhperry/batched_length_text_splitters
+      - fschat==0.2.18
+      - bitsandbytes
+      - numpy<1.25,>=1.24
+      - accelerate
+      - xformers
+      - mkl==2021.4.0
+      - gptq
+      - git+https://github.com/huggingface/peft.git
+      - deepspeed
+      - git+https://github.com/saturncloud/saturnfs.git

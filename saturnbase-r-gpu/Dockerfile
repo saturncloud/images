@@ -22,7 +22,7 @@ ENV NB_UID=1000
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 
-ARG RSTUDIO_VERSION=2022.02.3-492
+ARG RSTUDIO_VERSION=2023.06.0-421
 
 ARG TINI_VERSION=0.18.0
 
@@ -33,8 +33,6 @@ RUN apt-key del 7fa2af80 \
     && mkdir -p "/usr/local/lib/R/site-library" \
     && chown 1000:1000 -R /usr/local/lib/R \
     && chmod 777 -R /usr/local/lib/R \
-    && su -c "echo 'RETICULATE_PYTHON=/opt/saturncloud/envs/saturn/bin/python' >> /usr/local/lib/R/etc/Renviron.site" \
-    && su -c "echo 'RSTUDIO_PANDOC=/usr/lib/rstudio-server/bin/pandoc' >> /usr/local/lib/R/etc/Renviron.site" \
     && apt-get -qq --allow-releaseinfo-change update \
     # Install packages
     && apt-get update --fix-missing \
@@ -79,19 +77,12 @@ RUN apt-key del 7fa2af80 \
         wget \
         unixodbc \
         unixodbc-dev \
+        odbcinst \
         libglpk-dev \
      > /dev/null \
-    && wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
-    && rm libssl1.1_1.1.1f-1ubuntu2_amd64.deb \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
-    && wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb \
-    && dpkg -i cuda-keyring_1.0-1_all.deb \
-    && rm cuda-keyring_1.0-1_all.deb \
-    # CUDA fix
-    && ln -s /usr/local/cuda-11.1/targets/x86_64-linux/lib/libcusolver.so.11 /usr/local/lib/libcusolver.so.10 \
     # Install rstudio-server
-    && curl -o rstudio.deb https://download2.rstudio.org/server/bionic/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
@@ -103,7 +94,10 @@ RUN apt-key del 7fa2af80 \
     && sudo chmod +x /usr/local/bin/tini \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
-    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.24.0/snowflake-odbc-2.24.0.x86_64.deb -O snowflake-odbc.deb \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.25.12/snowflake-odbc-2.25.12.x86_64.deb -O snowflake-odbc.deb \
+    && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
+    && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
+    && sha256sum --check --status shasum \
     && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
@@ -161,6 +155,7 @@ RUN bash /tmp/setup-conda.bash && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+ENV RETICULATE_PYTHON /opt/saturncloud/envs/saturn/bin/python
 WORKDIR ${HOME}
 
 # Configure rstudio
