@@ -8,3 +8,7 @@ check-metadata:
 
 .PHONY: lint
 lint: flake8 check-metadata
+
+.PHONY: sync
+sync:
+	bash scripts/sync.sh
