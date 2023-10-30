@@ -1,5 +1,5 @@
 {
-    "name": "saturnbase-python-gpu-12.1",
+    "name": "saturnbase-python-gpu-devel-12.1",
     "description": "Python-focused base image for Saturn GPU images, built on CUDA version 11.8. This image contains the minimal install required for the full functionality of Saturn Cloud on a GPU instance, including packages necessary to run Python, JupyterLab, and Dask.",
     "hardware_type": "gpu",
     "supports": ["jupyterlab", "dask"]
