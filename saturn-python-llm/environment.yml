@@ -32,5 +32,8 @@ dependencies:
       - gptq
       - git+https://github.com/huggingface/peft.git
       - git+https://github.com/saturncloud/saturnfs.git
+      - fsspec==2023.1.0
       - sseclient
       - ruamel.yaml
+      - fastapi
+      - uvicorn
