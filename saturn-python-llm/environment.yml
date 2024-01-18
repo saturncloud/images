@@ -18,13 +18,12 @@ dependencies:
       - streamlit
       - beautifulsoup4
       - scrapy
-      - transformers
+      - transformers>=4.34.0
       - datasets
       - einops
       - sentencepiece
       - sentence_transformers
-      - git+https://github.com/saturncloud/langchain.git@bhperry/batched_length_text_splitters
-      - fschat==0.2.18
+      - git+https://github.com/saturncloud/langchain.git@bhperry/batched_length_text_splitters#subdirectory=libs/langchain
       - bitsandbytes
       - numpy<1.25,>=1.24
       - accelerate
@@ -32,5 +31,9 @@ dependencies:
       - mkl==2021.4.0
       - gptq
       - git+https://github.com/huggingface/peft.git
-      - deepspeed
       - git+https://github.com/saturncloud/saturnfs.git
+      - fsspec==2023.1.0
+      - sseclient
+      - ruamel.yaml
+      - fastapi
+      - uvicorn

@@ -10,7 +10,7 @@ set -x && \
     mkdir -p /opt && \
     sh miniconda.sh -b -p /opt/saturncloud && \
     rm miniconda.sh shasum && \
-    /opt/saturncloud/bin/conda install -c conda-forge conda-forge::mamba=1.4.2 --yes && \
+    /opt/saturncloud/bin/conda install -c conda-forge conda-forge::libarchive=3.6.2=h039dbb9_1 conda-forge::mamba --yes && \
     ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
     find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
     find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
