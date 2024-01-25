@@ -75,3 +75,6 @@ ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
 WORKDIR ${HOME}
 ENTRYPOINT []
+
+RUN sudo ln -s /opt/saturncloud /opt/conda && \
+    sudo ln -s /opt/saturncloud /srv/conda
