@@ -1,6 +1,0 @@
-{
-    "name": "saturn-r-tensorflow",
-    "description": "For running TensorFlow on a GPU in RStudio.",
-    "hardware_type": "gpu",
-    "supports": ["rstudio-opensource"]
-}

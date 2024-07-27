@@ -4,12 +4,12 @@ channels:
     - nodefaults
     - rapidsai
 dependencies:
-    - blas=2.114=mkl
+    - blas=*=mkl
     - bokeh
     - dask
     - dask-cuda
     - fsspec
-    - ipykernel=
+    - ipykernel
     - ipywidgets
     - matplotlib
     - numpy
@@ -25,8 +25,9 @@ dependencies:
     - voila
     - pynvml
     - pip:
-      - dask-saturn>=0.4.1
-      - prefect-saturn>=0.6.0
+      - dask-saturn
+      - saturn-client
+      - saturnfs
       - snowflake-connector-python
       - tensorflow[and-cuda]
       - keras
