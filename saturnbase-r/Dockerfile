@@ -20,8 +20,6 @@ ENV NB_UID=1000
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 
-ARG RSTUDIO_VERSION=2024.04.2+764.pro1
-
 ARG TINI_VERSION=0.18.0
 
 RUN apt-get -qq --allow-releaseinfo-change update \
@@ -77,7 +75,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
      > /dev/null \
     # Install rstudio-server \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
-    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && curl -o rstudio.deb https://download1.rstudio.org/electron/jammy/amd64/rstudio-2024.04.2-764-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
