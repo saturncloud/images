@@ -8,13 +8,13 @@ dependencies:
     - dask-ml
     - dask
     - ipykernel
-    - ipywidget
+    - ipywidgets
     - matplotlib
     - numpy
     - pandas
     - pip
     - pyarrow
-    - python=3.11
+    - python
     - python-graphviz
     - s3fs
     - scikit-learn
