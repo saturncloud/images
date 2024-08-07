@@ -8,7 +8,8 @@ dependencies:
     - isort
     - jupyter-server-proxy
     - jupyterlab-git
-    - jupyterlab=4
+    - jupyterlab=4.2
+    - jupyter_ydoc=1.1.1
     - nbconvert
     - nbdime
     - nodejs
@@ -24,3 +25,4 @@ dependencies:
         - jupyterlab_code_formatter
         - jupyterlab_execute_time
         - jupyterlab_widgets
+
