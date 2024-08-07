@@ -6,33 +6,33 @@ channels:
     - nodefaults
     - conda-forge
 dependencies:
-    - cudatoolkit=11.7
-    - cudatoolkit-dev=11.7
-    - ipykernel=6.13.0
-    - ipywidgets<9,>=8
-    - pytorch>=1.13.0,<1.14.0
+    - nvidia/label/cuda-12.1.1::cuda-toolkit
+    - ipykernel
+    - ipywidgets
+    - pytorch=2.4
     - faiss-gpu
     - pip
-    - python=3.9
+    - python
     - pip:
       - streamlit
       - beautifulsoup4
       - scrapy
-      - transformers>=4.34.0
+      - transformers
       - datasets
       - einops
       - sentencepiece
       - sentence_transformers
-      - git+https://github.com/saturncloud/langchain.git@bhperry/batched_length_text_splitters#subdirectory=libs/langchain
+      - langchain
       - bitsandbytes
-      - numpy<1.25,>=1.24
+      - numpy
       - accelerate
       - xformers
-      - mkl==2021.4.0
+      - mkl
       - gptq
-      - git+https://github.com/huggingface/peft.git
-      - git+https://github.com/saturncloud/saturnfs.git
-      - fsspec==2023.1.0
+      - peft
+      - saturnfs
+      - saturn-client
+      - fsspec
       - sseclient
       - ruamel.yaml
       - fastapi
