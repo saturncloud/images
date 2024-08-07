@@ -14,7 +14,7 @@ dependencies:
     - pandas
     - pip
     - pyarrow
-    - python
+    - python=3.11
     - python-graphviz
     - s3fs
     - scikit-learn
