@@ -82,7 +82,7 @@ RUN apt-key del 7fa2af80 \
      > /dev/null \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     # Install rstudio-server
-    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2024.04.2-764-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
