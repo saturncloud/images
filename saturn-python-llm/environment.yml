@@ -1,7 +1,6 @@
 name: saturn
 channels:
     - pytorch
-    - fastai
     - rapidsai
     - nodefaults
     - conda-forge
@@ -9,7 +8,7 @@ dependencies:
     - nvidia/label/cuda-12.1.1::cuda-toolkit
     - ipykernel
     - ipywidgets
-    - pytorch=2.4
+    - pytorch
     - faiss-gpu
     - pip
     - python
@@ -37,3 +36,12 @@ dependencies:
       - ruamel.yaml
       - fastapi
       - uvicorn
+      - mlflow
+      - pinecone
+      - langchain-community
+      - openai
+      - tiktoken
+      - pinecone-client
+      - langchain_pinecone
+      - unsloth
+      - vllm
