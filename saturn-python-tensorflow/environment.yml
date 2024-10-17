@@ -25,7 +25,7 @@ dependencies:
     - voila
     - pynvml
     - pip:
-      - dask-saturn
+      - dask-saturn==0.4.4
       - saturn-client
       - saturnfs
       - snowflake-connector-python
