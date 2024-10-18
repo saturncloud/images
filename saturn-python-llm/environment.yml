@@ -8,26 +8,25 @@ dependencies:
     - nvidia/label/cuda-12.1.1::cuda-toolkit
     - ipykernel
     - ipywidgets
-    - pytorch
+    - pytorch=2.4.0
     - faiss-gpu
     - pip
     - python
     - pip:
+      - unsloth
+      - vllm
       - streamlit
       - beautifulsoup4
       - scrapy
       - transformers
       - datasets
-      - einops
       - sentencepiece
       - sentence_transformers
       - langchain
       - bitsandbytes
       - numpy
       - accelerate
-      - xformers
       - mkl
-      - gptq
       - peft
       - saturnfs
       - saturn-client
@@ -43,5 +42,3 @@ dependencies:
       - tiktoken
       - pinecone-client
       - langchain_pinecone
-      - unsloth
-      - vllm
