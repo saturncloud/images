@@ -3,8 +3,7 @@ channels:
 - nodefaults
 - conda-forge
 dependencies:
-- blas=*=mkl
 - ipykernel
 - pip
-- python=3.8
-- setuptools<60.0
+- python=3.11
+- setuptools

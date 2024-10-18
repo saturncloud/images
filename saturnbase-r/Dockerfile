@@ -1,4 +1,4 @@
-FROM rocker/r-ver:4.3.0
+FROM rocker/r-ver:4.4.1
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
       org.opencontainers.image.source="https://github.com/saturncloud/images" \
@@ -19,8 +19,6 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 ENV CRAN=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
 ENV CRAN_FIXED=https://packagemanager.rstudio.com/cran/__linux__/jammy/latest
-
-ARG RSTUDIO_VERSION=2023.06.0-421
 
 ARG TINI_VERSION=0.18.0
 
@@ -77,7 +75,7 @@ RUN apt-get -qq --allow-releaseinfo-change update \
      > /dev/null \
     # Install rstudio-server \
     && apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
-    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-${RSTUDIO_VERSION}-amd64.deb \
+    && curl -o rstudio.deb https://download2.rstudio.org/server/jammy/amd64/rstudio-server-2024.04.2-764-amd64.deb \
     && sudo gdebi --non-interactive rstudio.deb \
     && rm rstudio.deb \
     && sudo apt purge \
@@ -89,8 +87,8 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && sudo chmod +x /usr/local/bin/tini \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
-    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.25.12/snowflake-odbc-2.25.12.x86_64.deb -O snowflake-odbc.deb \
-    && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/3.3.2/snowflake-odbc-3.3.2.x86_64.deb -O snowflake-odbc.deb \
+    && SHA256SUM="fdcf83aadaf92ec135bed0699936fa4ef2cf2d88aef5a4657a96877ae2ba232d" \
     && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
     && sha256sum --check --status shasum \
     && sudo dpkg -i snowflake-odbc.deb \
@@ -111,7 +109,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
 
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
