@@ -9,6 +9,7 @@ dependencies:
     - ipykernel
     - ipywidgets
     - pytorch=2.4.0
+    - pytorch-cuda=12.1
     - faiss-gpu
     - pip
     - python
