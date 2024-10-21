@@ -4,8 +4,9 @@ channels:
     - rapidsai
     - nodefaults
     - conda-forge
+    - nvidia
 dependencies:
-    - nvidia/label/cuda-12.1.1::cuda-toolkit
+    - cuda-toolkit
     - ipykernel
     - ipywidgets
     - pytorch=2.4.0
