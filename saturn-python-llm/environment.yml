@@ -16,7 +16,7 @@ dependencies:
   - pip
   - python
   - pip:
-    - unsloth
+    - unsloth==2024.10.4
     - vllm
     - streamlit
     - beautifulsoup4
