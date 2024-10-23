@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_17
+FROM bioconductor/bioconductor_docker:RELEASE_3_19
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
@@ -93,8 +93,8 @@ RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && sudo chmod +x /usr/local/bin/tini \
     # add snowflake ODBC driver
     && sudo apt-get install -f \
-    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/2.25.12/snowflake-odbc-2.25.12.x86_64.deb -O snowflake-odbc.deb \
-    && SHA256SUM="3349246214bb990414bf9fb2b440eb63b9c0197765e714054b651e72406a1df0" \
+    && wget https://sfc-repo.snowflakecomputing.com/odbc/linux/3.3.2/snowflake-odbc-3.3.2.x86_64.deb -O snowflake-odbc.deb \
+    && SHA256SUM="fdcf83aadaf92ec135bed0699936fa4ef2cf2d88aef5a4657a96877ae2ba232d" \
     && echo "${SHA256SUM} snowflake-odbc.deb" > shasum \
     && sha256sum --check --status shasum \
     && sudo dpkg -i snowflake-odbc.deb \
@@ -115,7 +115,6 @@ RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
