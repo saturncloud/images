@@ -12,5 +12,3 @@ RUN mamba env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete
 RUN echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
-
-ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:/opt/saturncloud/envs/saturn/lib/
