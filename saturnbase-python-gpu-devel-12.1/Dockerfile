@@ -6,9 +6,7 @@ EXPOSE 8888
 ENV CONDA_DIR=/opt/saturncloud
 ENV CONDA_BIN=${CONDA_DIR}/bin
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-key del 7fa2af80 && \
-    rm -f /etc/apt/sources.list.d/nvidia-ml.list /etc/apt/sources.list.d/cuda.list && \
-    apt-get -qq --allow-releaseinfo-change update && \
+RUN apt-get -qq --allow-releaseinfo-change update && \
     apt-get -qq upgrade -y && \
     apt-get -qq install --yes --no-install-recommends \
     awscli \
@@ -33,9 +31,6 @@ RUN apt-key del 7fa2af80 && \
     wget \
     zip \
     > /dev/null && \
-    wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2004/x86_64/cuda-keyring_1.0-1_all.deb && \
-    dpkg -i cuda-keyring_1.0-1_all.deb && \
-    rm cuda-keyring_1.0-1_all.deb && \
     apt-get -qq purge && \
     apt-get -qq clean && \
     rm -rf /var/lib/apt/lists/* && \
@@ -51,7 +46,6 @@ ENV NB_USER=jovyan
 ENV NB_UID=1000
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
-ARG CONDA_VERSION=py39_4.11.0
 RUN bash /tmp/install-miniconda.bash
 
 ENV USER=${NB_USER}
@@ -66,3 +60,20 @@ RUN adduser --disabled-password \
 
 COPY profile /etc/profile
 
+USER ${NB_USER}
+
+
+COPY install-jupyter.bash /tmp/install-jupyter.bash
+COPY environment.yml /tmp/environment.yml
+RUN bash /tmp/install-jupyter.bash && \
+    echo '' > ${CONDA_DIR}/conda-meta/history && \
+    ${CONDA_BIN}/conda config --system --add channels conda-forge && \
+    ${CONDA_BIN}/conda config --system --set auto_update_conda false && \
+    ${CONDA_BIN}/conda config --system --set show_channel_urls true
+ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
+ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+WORKDIR ${HOME}
+ENTRYPOINT []
+
+RUN sudo ln -s /opt/saturncloud /opt/conda && \
+    sudo ln -s /opt/saturncloud /srv/conda
