@@ -8,7 +8,7 @@ channels:
 dependencies:
     - blas=*=mkl
     - bokeh
-    - pytorch-cuda=12.1
+    - pytorch::pytorch-cuda=12.1
     - dask-cuda
     - dask
     - fastai
@@ -24,12 +24,12 @@ dependencies:
     - pyarrow
     - python-graphviz
     - python
-    - pytorch=2.4.0
+    - pytorch::pytorch=2.4.0
     - s3fs
     - setuptools
     - tensorboard
-    - torchaudio
-    - torchvision
+    - pytorch::torchaudio
+    - pytorch::torchvision
     - pynvml
     - pip:
           - dask-saturn
