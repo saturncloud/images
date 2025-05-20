@@ -10,13 +10,13 @@ dependencies:
   - cuda-toolkit
   - ipykernel
   - ipywidgets
-  - pytorch=2.4.0
+  - pytorch
   - pytorch-cuda=12.1
   - faiss-gpu
   - pip
   - python
   - pip:
-    - unsloth==2024.10.4
+    - unsloth
     - vllm
     - streamlit
     - beautifulsoup4
