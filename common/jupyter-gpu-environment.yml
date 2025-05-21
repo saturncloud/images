@@ -8,8 +8,8 @@ dependencies:
     - isort
     - jupyter-server-proxy
     - jupyterlab-git
-    - jupyterlab=4.2
-    - jupyter_ydoc=1.1.1
+    - jupyterlab
+    - jupyter_ydoc
     - jupyterlab-nvdashboard
     - nbconvert
     - nbdime

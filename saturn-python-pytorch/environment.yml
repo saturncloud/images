@@ -24,7 +24,7 @@ dependencies:
     - pyarrow
     - python-graphviz
     - python
-    - pytorch::pytorch=2.4.0
+    - pytorch::pytorch
     - s3fs
     - setuptools
     - tensorboard

@@ -22,7 +22,7 @@ dependencies:
     - pyarrow
     - python-graphviz
     - python
-    - rapids=24.06
+    - rapids
     - s3fs
     - scikit-learn
     - scipy
