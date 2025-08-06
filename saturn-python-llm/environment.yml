@@ -21,8 +21,6 @@ dependencies:
   - typing-extensions
   - packaging
   - filelock
-  - ipython
-  - jupyter
   - matplotlib
   - pandas
   - seaborn
