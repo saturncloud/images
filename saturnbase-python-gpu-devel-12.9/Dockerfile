@@ -1,5 +1,5 @@
-FROM nvidia/cuda:12.4.0-cudnn8-runtime-ubuntu22.04
-ENV CONDA_OVERRIDE_CUDA=12.4
+FROM nvidia/cuda:12.9.1-cudnn-devel-ubuntu22.04
+ENV CONDA_OVERRIDE_CUDA=12.9
 EXPOSE 8888
 
 

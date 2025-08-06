@@ -1,7 +1,0 @@
-{
-    "recipeName": "saturnbase-python-gpu-devel-12.4",
-    "description": "Saturn base Python GPU devel image with CUDA 12.4 development tools",
-    "image": "saturncloud/saturnbase-python-gpu-devel-12.4:2025.05.01",
-    "gpu": true,
-    "saturnVersion": "2025.05.01"
-}

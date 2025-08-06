@@ -1,6 +1,6 @@
-FROM nvidia/cuda:12.4.0-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu22.04
 
-ENV CONDA_OVERRIDE_CUDA=12.4
+ENV CONDA_OVERRIDE_CUDA=12.9
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 
