@@ -29,6 +29,7 @@ dependencies:
   - rich
   - tensorboard
   - wandb
+  - ipykernel
   - pip
   - pip:
     - unsloth
