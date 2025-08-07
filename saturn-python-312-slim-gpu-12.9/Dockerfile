@@ -1,45 +1,14 @@
-FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu22.04
+ARG SATURNBASE_GPU_IMAGE
+FROM ${SATURNBASE_GPU_IMAGE}
 
-ENV CONDA_OVERRIDE_CUDA=12.9
-ENV DEBIAN_FRONTEND=noninteractive
-ENV PYTHONUNBUFFERED=1
-
-RUN apt-get -qq update && \
-    apt-get -qq install --yes --no-install-recommends \
-    build-essential \
-    ca-certificates \
-    curl \
-    git \
-    python3-pip \
-    python3-dev \
-    python3-venv \
-    wget \
-    > /dev/null && \
-    apt-get -qq purge && \
-    apt-get -qq clean && \
-    rm -rf /var/lib/apt/lists/*
-
-RUN ln -s /usr/bin/python3 /usr/bin/python
-
-ENV USER=jovyan
-ENV HOME=/home/${USER}
-ENV UID=1000
-
-RUN useradd -m -u ${UID} ${USER} && \
-    echo "${USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook
-
-USER ${USER}
-WORKDIR ${HOME}
-
-RUN pip install --no-cache-dir \
-    ipykernel \
-    jupyterlab \
-    notebook \
-    voila \
-    torch \
-    torchvision \
-    torchaudio
-
-EXPOSE 8888
-
-ENTRYPOINT []
+COPY environment.yml /tmp/environment.yml
+RUN mamba env update -n saturn --file /tmp/environment.yml && \
+    ${CONDA_DIR}/envs/saturn/bin/python -m ipykernel install \
+        --name python3 \
+        --display-name 'saturn (Python 3)' \
+        --prefix=${CONDA_DIR} && \
+    ${CONDA_DIR}/bin/conda clean -afy && \
+    find ${CONDA_DIR} -type f,l -name '*.pyc' -delete && \
+    find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
+    find ${CONDA_DIR} -type f,l -name '*.js.map' -delete
+RUN echo '' > ${CONDA_DIR}/envs/saturn/conda-meta/history
