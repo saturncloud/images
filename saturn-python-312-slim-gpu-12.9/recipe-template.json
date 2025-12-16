@@ -1,0 +1,7 @@
+{
+    "recipeName": "saturn-python-312-slim-gpu-12.9",
+    "description": "Python 3.12 GPU slim image with CUDA 12.9 and minimal packages",
+    "image": "saturncloud/saturn-python-slim-gpu:2025.05.01-cuda129-python312",
+    "gpu": true,
+    "saturnVersion": "2025.05.01"
+}

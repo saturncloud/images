@@ -1,47 +1,52 @@
 name: saturn
 channels:
-    - pytorch
-    - rapidsai
-    - nvidia
-    - nodefaults
-    - conda-forge
+  - pytorch
+  - nvidia
+  - conda-forge
+  - defaults
 dependencies:
-  - blas=*=mkl
+  - python=3.11
   - cuda-toolkit
+  - pytorch
+  - pytorch-cuda
+  - transformers
+  - tokenizers
+  - numpy
+  - psutil
+  - pydantic
+  - fastapi
+  - uvicorn
+  - aiohttp
+  - requests
+  - typing-extensions
+  - packaging
+  - filelock
+  - matplotlib
+  - pandas
+  - seaborn
+  - tqdm
+  - click
+  - rich
+  - tensorboard
+  - wandb
   - ipykernel
-  - ipywidgets
-  - pytorch=2.4.0
-  - pytorch-cuda=12.1
-  - faiss-gpu
   - pip
-  - python
   - pip:
-    - unsloth==2024.10.4
+    - unsloth
     - vllm
-    - streamlit
-    - beautifulsoup4
-    - scrapy
-    - transformers
-    - datasets
-    - sentencepiece
-    - sentence_transformers
-    - langchain
-    - bitsandbytes
-    - numpy
+    - ray
+    - sentence-transformers
     - accelerate
-    - mkl
-    - peft
-    - saturnfs
+    - bitsandbytes
+    - auto-gptq
+    - autoawq
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.0.post2/flash_attn-2.8.0.post2%2Bcu12torch2.7cxx11abiTRUE-cp311-cp311-linux_x86_64.whl
+    - xformers
+    - gpustat
+    - nvidia-ml-py
+    - huggingface-hub
+    - black
+    - isort
+    - mypy
+    - pytest
     - saturn-client
-    - fsspec
-    - sseclient
-    - ruamel.yaml
-    - fastapi
-    - uvicorn
-    - mlflow
-    - pinecone
-    - langchain-community
-    - openai
-    - tiktoken
-    - pinecone-client
-    - langchain_pinecone

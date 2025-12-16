@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_19
+FROM bioconductor/bioconductor_docker:RELEASE_3_21
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
@@ -38,7 +38,6 @@ RUN apt-get -qq --allow-releaseinfo-change update \
     && apt-get update --fix-missing \
     && apt-get upgrade -y \
     && apt-get install --yes --no-install-recommends \
-        awscli \
         dumb-init \
         build-essential \
         bzip2 \
@@ -113,6 +112,10 @@ RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     # Set the default repo to the latest rstudio package manager
     && grep -v "options(repos = c(CRAN" "${R_HOME}/etc/Rprofile.site" > tmp.txt && mv tmp.txt "${R_HOME}/etc/Rprofile.site" \
     && echo "options(repos = c(CRAN = '${CRAN}'), download.file.method = 'libcurl')" >>"${R_HOME}/etc/Rprofile.site"
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+        unzip awscliv2.zip && \
+        ./aws/install
 
 COPY install-miniconda.bash /tmp/install-miniconda.bash
 RUN bash /tmp/install-miniconda.bash

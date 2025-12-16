@@ -1,0 +1,7 @@
+{
+    "recipeName": "saturn-python-312-slim",
+    "description": "Python 3.12 slim image with minimal packages",
+    "image": "saturncloud/saturn-python-slim:2025.05.01-python312",
+    "gpu": false,
+    "saturnVersion": "2025.05.01"
+}
