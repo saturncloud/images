@@ -6,7 +6,7 @@ RUN sudo apt-get -qq --allow-releaseinfo-change update && \
     libgl1
 
 COPY environment.yml /tmp/environment.yml
-RUN mamba env update -n saturn --file /tmp/environment.yml && \
+RUN conda env update -n saturn --file /tmp/environment.yml && \
     ${CONDA_DIR}/envs/saturn/bin/python -m ipykernel install \
         --name python3 \
         --display-name 'saturn (Python 3)' \

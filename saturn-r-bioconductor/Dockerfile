@@ -5,7 +5,7 @@ FROM ${SATURNBASE_IMAGE}
 COPY environment.yml /tmp/environment.yml
 COPY postBuild /tmp/postBuild.sh
 
-RUN mamba env update -n saturn --file /tmp/environment.yml && \
+RUN conda env update -n saturn --file /tmp/environment.yml && \
     find ${CONDA_DIR} -type f,l -name '*.pyc' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.a' -delete && \
     find ${CONDA_DIR} -type f,l -name '*.js.map' -delete && \
