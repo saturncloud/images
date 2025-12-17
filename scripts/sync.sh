@@ -1,4 +1,5 @@
 cp ./common/install-miniconda.bash ./saturnbase-python/install-miniconda.bash
+cp ./common/install-miniconda.bash ./saturnbase-python-amd-gpu-devel/install-miniconda.bash
 cp ./common/install-miniconda.bash ./saturnbase-python-gpu-12.1/install-miniconda.bash
 cp ./common/install-miniconda.bash ./saturnbase-python-gpu-12.9/install-miniconda.bash
 cp ./common/install-miniconda.bash ./saturnbase-python-gpu-devel-12.1/install-miniconda.bash
