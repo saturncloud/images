@@ -20,6 +20,8 @@ dependencies:
     - tornado
     - voila
     - yarl
+    - sqlite=3.51.1
+    - libsqlite=3.51.1
     - pip:
         - jupyter_server
         - jupyter_bokeh

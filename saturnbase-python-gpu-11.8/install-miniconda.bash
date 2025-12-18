@@ -10,7 +10,7 @@ set -x && \
   mkdir -p /opt && \
   sh miniconda.sh -b -p /opt/saturncloud && \
   rm miniconda.sh shasum && \
-  /opt/saturncloud/bin/conda install -n base --override-channels -c conda-forge mamba==1.5.10 'python_abi=*=*cp*' --yes
+  /opt/saturncloud/bin/conda install -n base python=3.11.8 conda=24.9.2 libsqlite=3.51.1 sqlite=3.51.1 -c conda-forge && \
   ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
   find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
   find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \

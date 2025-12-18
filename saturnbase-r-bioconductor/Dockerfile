@@ -1,4 +1,4 @@
-FROM bioconductor/bioconductor_docker:RELEASE_3_21
+FROM bioconductor/bioconductor_docker:RELEASE_3_22
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
