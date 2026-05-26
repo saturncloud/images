@@ -32,7 +32,14 @@ dependencies:
   - ipykernel
   - pip
   - pip:
+    # Fine-tuning stack. unsloth pulls trl/peft/datasets transitively, but we
+    # declare them explicitly so the image's training API surface is stable
+    # against unsloth version bumps. The Token Factory fine-tune training
+    # script (separate repo) imports trl.SFTTrainer + peft directly.
     - unsloth
+    - trl
+    - peft
+    - datasets
     - vllm
     - ray
     - sentence-transformers
