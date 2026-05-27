@@ -40,6 +40,9 @@ dependencies:
     - trl
     - peft
     - datasets
+    # Pinned exactly: Token Factory's Atlas renderer is keyed to specific
+    # axolotl YAML field names that change across versions.
+    - axolotl==0.16.1
     - vllm
     - ray
     - sentence-transformers
