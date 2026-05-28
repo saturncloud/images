@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.13
+  - python=3.12
   - transformers
   - tokenizers
   - numpy
@@ -47,9 +47,7 @@ dependencies:
     - sentence-transformers
     - accelerate
     - bitsandbytes
-    - auto-gptq
-    - autoawq
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.0.post2/flash_attn-2.8.0.post2%2Bcu12torch2.7cxx11abiTRUE-cp313-cp313-linux_x86_64.whl
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
     - xformers
     - gpustat
     - nvidia-ml-py
