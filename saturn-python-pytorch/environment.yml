@@ -23,7 +23,7 @@ dependencies:
     - py-opencv
     - pyarrow
     - python-graphviz
-    - python
+    - python=3.13
     - pytorch::pytorch
     - s3fs
     - setuptools
