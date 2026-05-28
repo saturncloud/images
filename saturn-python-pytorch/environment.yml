@@ -1,15 +1,11 @@
 name: saturn
 channels:
-    - pytorch
-    - rapidsai
-    - nvidia
-    - nodefaults
     - conda-forge
+    - nodefaults
 dependencies:
+    - python=3.13
     - blas=*=mkl
     - bokeh
-    - pytorch::pytorch-cuda=12.1
-    - dask-cuda
     - dask
     - fastai
     - fsspec
@@ -23,15 +19,16 @@ dependencies:
     - py-opencv
     - pyarrow
     - python-graphviz
-    - python=3.13
-    - pytorch::pytorch
     - s3fs
     - setuptools
     - tensorboard
-    - pytorch::torchaudio
-    - pytorch::torchvision
     - pynvml
     - pip:
+          - --extra-index-url
+          - https://download.pytorch.org/whl/cu129
+          - torch
+          - torchvision
+          - torchaudio
           - dask-saturn
           - saturn-client
           - saturnfs
