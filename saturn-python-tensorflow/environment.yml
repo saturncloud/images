@@ -17,7 +17,7 @@ dependencies:
     - pip
     - prefect
     - pyarrow
-    - python
+    - python=3.13
     - python-graphviz
     - s3fs
     - setuptools
