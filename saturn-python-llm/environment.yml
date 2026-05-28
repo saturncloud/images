@@ -1,14 +1,9 @@
 name: saturn
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
-  - defaults
+  - nodefaults
 dependencies:
-  - python=3.11
-  - cuda-toolkit
-  - pytorch
-  - pytorch-cuda
+  - python=3.13
   - transformers
   - tokenizers
   - numpy
@@ -32,6 +27,10 @@ dependencies:
   - ipykernel
   - pip
   - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu129
+    - torch
+    - torchvision
+    - torchaudio
     # Fine-tuning stack. unsloth pulls trl/peft/datasets transitively, but we
     # declare them explicitly so the image's training API surface is stable
     # against unsloth version bumps. The Token Factory fine-tune training
@@ -50,7 +49,7 @@ dependencies:
     - bitsandbytes
     - auto-gptq
     - autoawq
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.0.post2/flash_attn-2.8.0.post2%2Bcu12torch2.7cxx11abiTRUE-cp311-cp311-linux_x86_64.whl
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.0.post2/flash_attn-2.8.0.post2%2Bcu12torch2.7cxx11abiTRUE-cp313-cp313-linux_x86_64.whl
     - xformers
     - gpustat
     - nvidia-ml-py
