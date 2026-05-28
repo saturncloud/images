@@ -21,7 +21,7 @@ dependencies:
     - prefect
     - pyarrow
     - python-graphviz
-    - python
+    - python=3.13
     - rapids
     - s3fs
     - scikit-learn
