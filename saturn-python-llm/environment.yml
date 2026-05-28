@@ -42,7 +42,10 @@ dependencies:
     # Pinned exactly: Token Factory's Atlas renderer is keyed to specific
     # axolotl YAML field names that change across versions.
     - axolotl==0.16.1
-    - vllm
+    # Pinned: vllm walks back through versions otherwise — axolotl 0.16.1 forces
+    # torch==2.8.0, and only 0.10–0.11 satisfy that. Pin to keep CI's pip from
+    # backtracking past wheel-only releases into 0.5.x sdists (which need nvcc).
+    - vllm==0.11.0
     - ray
     - sentence-transformers
     - accelerate
