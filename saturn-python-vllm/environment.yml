@@ -1,0 +1,62 @@
+name: saturn
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  # INFERENCE/SERVING image (vLLM). Split out from the former saturn-python-llm
+  # (which tried to be one image for both training and serving). vLLM 0.11 boots
+  # only on transformers 4.x: transformers 5.x removed
+  # tokenizer.all_special_tokens_extended, which vLLM 0.11 reads at startup, so
+  # 5.x -> AttributeError -> CrashLoopBackOff. Fine-tuning (axolotl, which needs
+  # the transformers 5.x API) now lives in saturn-python-axolotl, so this image
+  # is free to pin transformers<5 without breaking training.
+  - transformers>=4.55,<5
+  - tokenizers
+  - numpy
+  - psutil
+  - pydantic
+  - fastapi
+  - uvicorn
+  - aiohttp
+  - requests
+  - typing-extensions
+  - packaging
+  - filelock
+  - matplotlib
+  - pandas
+  - seaborn
+  - tqdm
+  - click
+  - rich
+  - tensorboard
+  - wandb
+  - ipykernel
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu129
+    - torch
+    - torchvision
+    - torchaudio
+    # Held below transformers 5 to match the conda pin above (the pip: block is
+    # run through pip by `mamba env update`, so repeat the bound to stop pip
+    # backtracking to 5.x).
+    - transformers>=4.55,<5
+    # vLLM serving stack.
+    - vllm==0.11.0
+    - ray
+    - sentence-transformers
+    # peft so vLLM can load the LoRA adapters Token Factory fine-tunes produce.
+    - peft
+    - accelerate
+    - bitsandbytes
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    - xformers
+    - gpustat
+    - nvidia-ml-py
+    - huggingface-hub
+    - black
+    - isort
+    - mypy
+    - pytest
+    - saturn-client
