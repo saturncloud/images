@@ -1,0 +1,53 @@
+name: saturn
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  # TRAINING-ONLY image (axolotl). Split out from saturn-python-llm because that
+  # image must pin transformers<5 for vLLM 0.11 serving, but axolotl 0.16.1 is
+  # hard-coupled to the transformers 5.x API (e.g. Trainer.create_optimizer(model=)
+  # — a 5.x-only signature; on 4.57 training dies inside the loop). The two dep
+  # stacks are incompatible in one env, so serving lives in saturn-python-llm and
+  # training lives here. Because there is NO vLLM here, axolotl is installed WITH
+  # its deps (see Dockerfile) — no transformers pin, no --no-deps hack — and it
+  # pulls the correct transformers 5.5 / datasets 4.5 / trl 0.29 / hf-hub>=1 set.
+  - numpy
+  - psutil
+  - pandas
+  - tqdm
+  - click
+  - rich
+  - tensorboard
+  - wandb
+  - ipykernel
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu129
+    # axolotl 0.16.1 pins torch==2.8.0; install it from the cu129 index so the
+    # GPU build is used (and so the flash-attn wheel below matches torch 2.8).
+    - torch==2.8.0
+    - torchvision
+    - torchaudio
+    # The whole fine-tuning stack. Unlike the serving image, we let axolotl
+    # resolve its own dependency tree (transformers 5.5.0, datasets 4.5.0,
+    # trl 0.29.0, accelerate 1.13.0, peft, hf-hub>=1, etc.) — installed WITH
+    # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
+    # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
+    - axolotl[flash-attn,deepspeed,mlflow]==0.16.1
+    # flash-attn's build wants torch present at install time; ship the prebuilt
+    # cu12/torch2.8 wheel so it doesn't compile from source (slow, needs nvcc).
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    # Saturn workspace + ops basics (mirror the serving image's tail).
+    - gpustat
+    - black
+    - isort
+    - mypy
+    - pytest
+    - saturn-client
+    # The Token Factory inline training script (pdc/scripts/tf/finetune.py) only
+    # needs requests + PyYAML at runtime; both come in transitively (requests via
+    # axolotl/saturn-client, PyYAML via axolotl). Listed here for clarity / in
+    # case axolotl ever drops them.
+    - requests
+    - pyyaml
