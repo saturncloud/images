@@ -32,9 +32,17 @@ dependencies:
     # The whole fine-tuning stack. Unlike the serving image, we let axolotl
     # resolve its own dependency tree (transformers 5.5.0, datasets 4.5.0,
     # trl 0.29.0, accelerate 1.13.0, peft, hf-hub>=1, etc.) — installed WITH
-    # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
-    # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
-    - axolotl[flash-attn,deepspeed,mlflow]==0.16.1
+    # deps in the Dockerfile. [flash-attn] for attention; [mlflow] for tracking.
+    #
+    # NOTE: deepspeed is deliberately NOT installed. accelerate imports it
+    # unconditionally (in unwrap_model) WHENEVER it's present, and deepspeed's
+    # op-builder probes `nvcc` at import — which this RUNTIME image lacks (nvcc
+    # ships only in -devel bases) — crashing every job, including single-GPU ones
+    # that never use it (verified: without deepspeed, accelerate.unwrap_model
+    # degrades gracefully and axolotl trains). Re-enabling multi-GPU deepspeed is
+    # a follow-up that needs either a -devel base (for nvcc) or a prebuilt-ops
+    # deepspeed; the renderer only emits a deepspeed config for instance_gpus > 1.
+    - axolotl[flash-attn,mlflow]==0.16.1
     # flash-attn's build wants torch present at install time; ship the prebuilt
     # cu12/torch2.8 wheel so it doesn't compile from source (slow, needs nvcc).
     - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
