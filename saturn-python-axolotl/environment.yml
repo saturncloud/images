@@ -34,6 +34,15 @@ dependencies:
     # trl 0.29.0, accelerate 1.13.0, peft, hf-hub>=1, etc.) — installed WITH
     # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
     # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
+    #
+    # IMPORTANT: [deepspeed] REQUIRES the gpu-DEVEL base (nvcc). deepspeed's
+    # op-builder probes nvcc at import, and accelerate imports deepspeed
+    # unconditionally whenever it's installed — so on a runtime (non-devel) base
+    # EVERY axolotl job crashes at Trainer init with FileNotFoundError: .../nvcc,
+    # even single-GPU jobs that never use it. This image therefore builds on
+    # saturnbase-python-gpu-devel-12.9 (see its dependency in release-images
+    # data_science.py). Do NOT switch back to the runtime base without also
+    # dropping the [deepspeed] extra.
     - axolotl[flash-attn,deepspeed,mlflow]==0.16.1
     # flash-attn's build wants torch present at install time; ship the prebuilt
     # cu12/torch2.8 wheel so it doesn't compile from source (slow, needs nvcc).
