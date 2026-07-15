@@ -4,14 +4,14 @@ channels:
   - nodefaults
 dependencies:
   - python=3.12
-  # TRAINING-ONLY image (axolotl). Split out from saturn-python-llm because that
-  # image must pin transformers<5 for vLLM 0.11 serving, but axolotl 0.16.1 is
-  # hard-coupled to the transformers 5.x API (e.g. Trainer.create_optimizer(model=)
-  # — a 5.x-only signature; on 4.57 training dies inside the loop). The two dep
-  # stacks are incompatible in one env, so serving lives in saturn-python-llm and
-  # training lives here. Because there is NO vLLM here, axolotl is installed WITH
-  # its deps (see Dockerfile) — no transformers pin, no --no-deps hack — and it
-  # pulls the correct transformers 5.5 / datasets 4.5 / trl 0.29 / hf-hub>=1 set.
+  # TRAINING-ONLY image (axolotl). Split out from the serving image (vLLM) because
+  # the two dep stacks pin different exact versions of transformers/torch/trl and
+  # can't share one env. Training lives here; serving lives in saturn-python-vllm.
+  # Because there is NO vLLM here, axolotl is installed WITH its deps (see
+  # Dockerfile) — no transformers pin, no --no-deps hack — and it pulls its own
+  # consistent tree (axolotl 0.17.0 -> transformers 5.9.0 / datasets 4.8 /
+  # trl 1.5.1 / accelerate 1.13.0 / peft 0.19.1 / hf-hub>=1). peft 0.19.1 matches
+  # the serving image so a LoRA adapter trained here loads in vLLM.
   - numpy
   - psutil
   - pandas
@@ -24,14 +24,14 @@ dependencies:
   - pip
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu129
-    # axolotl 0.16.1 pins torch==2.8.0; install it from the cu129 index so the
-    # GPU build is used (and so the flash-attn wheel below matches torch 2.8).
-    - torch==2.8.0
+    # axolotl 0.17.0 pins torch>=2.9.1; install torch 2.9.1 from the cu129 index so
+    # the GPU build is used (and so the flash-attn wheel below matches torch 2.9).
+    - torch==2.9.1
     - torchvision
     - torchaudio
     # The whole fine-tuning stack. Unlike the serving image, we let axolotl
-    # resolve its own dependency tree (transformers 5.5.0, datasets 4.5.0,
-    # trl 0.29.0, accelerate 1.13.0, peft, hf-hub>=1, etc.) — installed WITH
+    # resolve its own dependency tree (transformers 5.9.0, datasets 4.8,
+    # trl 1.5.1, accelerate 1.13.0, peft 0.19.1, hf-hub>=1, etc.) — installed WITH
     # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
     # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
     #
@@ -43,10 +43,12 @@ dependencies:
     # saturnbase-python-gpu-devel-12.9 (see its dependency in release-images
     # data_science.py). Do NOT switch back to the runtime base without also
     # dropping the [deepspeed] extra.
-    - axolotl[flash-attn,deepspeed,mlflow]==0.16.1
+    - axolotl[flash-attn,deepspeed,mlflow]==0.17.0
     # flash-attn's build wants torch present at install time; ship the prebuilt
-    # cu12/torch2.8 wheel so it doesn't compile from source (slow, needs nvcc).
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    # cu12/torch2.9 wheel so it doesn't compile from source (slow, needs nvcc).
+    # axolotl 0.17.0's [flash-attn] extra still pins flash-attn==2.8.3; the wheel
+    # tag must match the torch version above (torch2.9), not the old torch2.8.
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
     # Saturn workspace + ops basics (mirror the serving image's tail).
     - gpustat
     - black

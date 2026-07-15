@@ -4,14 +4,14 @@ channels:
   - nodefaults
 dependencies:
   - python=3.12
-  # INFERENCE/SERVING image (vLLM). Split out from the former saturn-python-llm
-  # (which tried to be one image for both training and serving). vLLM 0.11 boots
-  # only on transformers 4.x: transformers 5.x removed
-  # tokenizer.all_special_tokens_extended, which vLLM 0.11 reads at startup, so
-  # 5.x -> AttributeError -> CrashLoopBackOff. Fine-tuning (axolotl, which needs
-  # the transformers 5.x API) now lives in saturn-python-axolotl, so this image
-  # is free to pin transformers<5 without breaking training.
-  - transformers>=4.55,<5
+  # INFERENCE/SERVING image (vLLM). Split from the training image (axolotl) because
+  # the two stacks pin different exact torch/transformers versions. vLLM 0.25.1
+  # REQUIRES transformers>=5.5.3 and torch==2.11.0 (a hard pin in its metadata) —
+  # the old transformers<5 constraint that forced the split is gone; vLLM 0.25 is
+  # now a transformers-5.x stack too. Kept as a separate image only because it
+  # pins torch 2.11 while axolotl pins torch 2.9. peft is held at 0.19.1 (see the
+  # pip block) to match the training image so LoRA adapters load.
+  - transformers>=5.5.3
   - tokenizers
   - numpy
   - psutil
@@ -35,22 +35,27 @@ dependencies:
   - pip
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu129
-    - torch
+    # vLLM 0.25.1 pins torch==2.11.0; install it from the cu129 index for the GPU
+    # build (cu129 carries torch 2.11.0 cp312 wheels).
+    - torch==2.11.0
     - torchvision
     - torchaudio
-    # Held below transformers 5 to match the conda pin above (the pip: block is
-    # run through pip by `mamba env update`, so repeat the bound to stop pip
-    # backtracking to 5.x).
-    - transformers>=4.55,<5
-    # vLLM serving stack.
-    - vllm==0.11.0
+    # Match the conda transformers pin above (the pip: block is run through pip by
+    # `mamba env update`, so repeat the bound). vLLM 0.25.1 needs transformers>=5.5.3.
+    - transformers>=5.5.3
+    # vLLM serving stack. vLLM 0.25.1 uses flashinfer (pulled in transitively as
+    # flashinfer-python) as its attention backend — no hand-shipped flash-attn
+    # wheel needed here anymore (the old torch2.8 wheel would also be wrong for
+    # torch 2.11).
+    - vllm==0.25.1
     - ray
     - sentence-transformers
     # peft so vLLM can load the LoRA adapters Token Factory fine-tunes produce.
-    - peft
+    # Pinned to match the training image (axolotl 0.17.0 resolves peft 0.19.1) so
+    # an adapter trained there loads here.
+    - peft==0.19.1
     - accelerate
     - bitsandbytes
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
     - xformers
     - gpustat
     - nvidia-ml-py
