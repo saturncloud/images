@@ -34,9 +34,12 @@ dependencies:
   - ipykernel
   - pip
   - pip:
-    - --extra-index-url https://download.pytorch.org/whl/cu129
-    # vLLM 0.25.1 pins torch==2.11.0; install it from the cu129 index for the GPU
-    # build (cu129 carries torch 2.11.0 cp312 wheels).
+    - --extra-index-url https://download.pytorch.org/whl/cu130
+    # vLLM 0.25.1 pins torch==2.11.0, whose only CUDA wheels are cu130 (CUDA 13):
+    # torch 2.11.0 is NOT published on the cu129 index. Installing it here builds
+    # against libcudart.so.13, so this image MUST sit on the CUDA-13 base
+    # (saturnbase-python-gpu-13.3) — on the old cu129 base vLLM crashed at import
+    # with `ImportError: libcudart.so.13`. See release-images data_science.py.
     - torch==2.11.0
     - torchvision
     - torchaudio

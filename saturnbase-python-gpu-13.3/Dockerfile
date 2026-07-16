@@ -1,5 +1,5 @@
 FROM nvidia/cuda:13.3.0-cudnn-runtime-ubuntu22.04
-ENV CONDA_OVERRIDE_CUDA=13.0
+ENV CONDA_OVERRIDE_CUDA=13.3
 EXPOSE 8888
 
 
