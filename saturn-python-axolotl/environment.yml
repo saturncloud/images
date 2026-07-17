@@ -23,9 +23,12 @@ dependencies:
   - ipykernel
   - pip
   - pip:
-    - --extra-index-url https://download.pytorch.org/whl/cu129
-    # axolotl 0.17.0 pins torch>=2.9.1; install torch 2.9.1 from the cu129 index so
-    # the GPU build is used (and so the flash-attn wheel below matches torch 2.9).
+    - --extra-index-url https://download.pytorch.org/whl/cu130
+    # axolotl 0.17.0 requires torch>=2.9.1 (a floor, not a pin); we pin torch
+    # 2.9.1 for reproducibility and install it from the cu130 (CUDA 13) index so
+    # the GPU build matches the CUDA-13 base (saturnbase-python-gpu-devel-13.3)
+    # and the cu13torch2.9 flash-attn wheel below. This keeps TF train (axolotl)
+    # and serve (vllm) on one CUDA-13 line.
     - torch==2.9.1
     - torchvision
     - torchaudio
@@ -40,15 +43,15 @@ dependencies:
     # unconditionally whenever it's installed — so on a runtime (non-devel) base
     # EVERY axolotl job crashes at Trainer init with FileNotFoundError: .../nvcc,
     # even single-GPU jobs that never use it. This image therefore builds on
-    # saturnbase-python-gpu-devel-12.9 (see its dependency in release-images
+    # saturnbase-python-gpu-devel-13.3 (see its dependency in release-images
     # data_science.py). Do NOT switch back to the runtime base without also
     # dropping the [deepspeed] extra.
     - axolotl[flash-attn,deepspeed,mlflow]==0.17.0
     # flash-attn's build wants torch present at install time; ship the prebuilt
-    # cu12/torch2.9 wheel so it doesn't compile from source (slow, needs nvcc).
+    # cu13/torch2.9 wheel so it doesn't compile from source (slow, needs nvcc).
     # axolotl 0.17.0's [flash-attn] extra still pins flash-attn==2.8.3; the wheel
-    # tag must match the torch version above (torch2.9), not the old torch2.8.
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    # tag must match BOTH the torch version (torch2.9) AND the CUDA-13 base (cu13).
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu13torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
     # Saturn workspace + ops basics (mirror the serving image's tail).
     - gpustat
     - black
