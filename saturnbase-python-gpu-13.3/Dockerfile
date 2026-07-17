@@ -72,6 +72,15 @@ RUN bash /tmp/install-jupyter.bash && \
     ${CONDA_BIN}/conda config --system --set show_channel_urls true
 ENV NB_PYTHON_PREFIX ${CONDA_DIR}/envs/saturn
 ENV PATH ${NB_PYTHON_PREFIX}/bin:${CONDA_BIN}:${HOME}/.local/bin:${PATH}
+# Prefer the conda env's libstdc++ over the CUDA base's system one. The
+# nvidia/cuda:13.3-ubuntu22.04 base ships an older system libstdc++ (max
+# CXXABI_1.3.13); newer compiled wheels (e.g. scipy's _highspy, pulled in by
+# vLLM's transformers import chain) need CXXABI_1.3.15, which the conda env's
+# libstdcxx-ng DOES provide. Without this, `vllm serve` crashes at import with
+# `libstdc++.so.6: version CXXABI_1.3.15 not found`. (On the CUDA-12 bases this
+# was masked because torch/libcudart failed earlier; on CUDA 13 the import gets
+# far enough to hit it.)
+ENV LD_LIBRARY_PATH ${NB_PYTHON_PREFIX}/lib:${CONDA_DIR}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
 WORKDIR ${HOME}
 ENTRYPOINT []
 
