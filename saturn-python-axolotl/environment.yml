@@ -65,3 +65,7 @@ dependencies:
     # case axolotl ever drops them.
     - requests
     - pyyaml
+    # finetune.py also uploads the trained LoRA adapter to the TF adapter store
+    # (S3-compatible) — that upload needs boto3, which nothing pulls in
+    # transitively.
+    - boto3
