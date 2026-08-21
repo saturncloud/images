@@ -1,0 +1,71 @@
+name: saturn
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  # TRAINING-ONLY image (axolotl). Split out from the serving image (vLLM) because
+  # the two dep stacks pin different exact versions of transformers/torch/trl and
+  # can't share one env. Training lives here; serving lives in saturn-python-vllm.
+  # Because there is NO vLLM here, axolotl is installed WITH its deps (see
+  # Dockerfile) — no transformers pin, no --no-deps hack — and it pulls its own
+  # consistent tree (axolotl 0.17.0 -> transformers 5.9.0 / datasets 4.8 /
+  # trl 1.5.1 / accelerate 1.13.0 / peft 0.19.1 / hf-hub>=1). peft 0.19.1 matches
+  # the serving image so a LoRA adapter trained here loads in vLLM.
+  - numpy
+  - psutil
+  - pandas
+  - tqdm
+  - click
+  - rich
+  - tensorboard
+  - wandb
+  - ipykernel
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu130
+    # axolotl 0.17.0 requires torch>=2.9.1 (a floor, not a pin); we pin torch
+    # 2.9.1 for reproducibility and install it from the cu130 (CUDA 13) index so
+    # the GPU build matches the CUDA-13 base (saturnbase-python-gpu-devel-13.3)
+    # and the cu13torch2.9 flash-attn wheel below. This keeps TF train (axolotl)
+    # and serve (vllm) on one CUDA-13 line.
+    - torch==2.9.1
+    - torchvision
+    - torchaudio
+    # The whole fine-tuning stack. Unlike the serving image, we let axolotl
+    # resolve its own dependency tree (transformers 5.9.0, datasets 4.8,
+    # trl 1.5.1, accelerate 1.13.0, peft 0.19.1, hf-hub>=1, etc.) — installed WITH
+    # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
+    # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
+    #
+    # IMPORTANT: [deepspeed] REQUIRES the gpu-DEVEL base (nvcc). deepspeed's
+    # op-builder probes nvcc at import, and accelerate imports deepspeed
+    # unconditionally whenever it's installed — so on a runtime (non-devel) base
+    # EVERY axolotl job crashes at Trainer init with FileNotFoundError: .../nvcc,
+    # even single-GPU jobs that never use it. This image therefore builds on
+    # saturnbase-python-gpu-devel-13.3 (see its dependency in release-images
+    # data_science.py). Do NOT switch back to the runtime base without also
+    # dropping the [deepspeed] extra.
+    - axolotl[flash-attn,deepspeed,mlflow]==0.17.0
+    # flash-attn's build wants torch present at install time; ship the prebuilt
+    # cu13/torch2.9 wheel so it doesn't compile from source (slow, needs nvcc).
+    # axolotl 0.17.0's [flash-attn] extra still pins flash-attn==2.8.3; the wheel
+    # tag must match BOTH the torch version (torch2.9) AND the CUDA-13 base (cu13).
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu13torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    # Saturn workspace + ops basics (mirror the serving image's tail).
+    - gpustat
+    - black
+    - isort
+    - mypy
+    - pytest
+    - saturn-client
+    # The Token Factory inline training script (pdc/scripts/tf/finetune.py) only
+    # needs requests + PyYAML at runtime; both come in transitively (requests via
+    # axolotl/saturn-client, PyYAML via axolotl). Listed here for clarity / in
+    # case axolotl ever drops them.
+    - requests
+    - pyyaml
+    # finetune.py also uploads the trained LoRA adapter to the TF adapter store
+    # (S3-compatible) — that upload needs boto3, which nothing pulls in
+    # transitively.
+    - boto3

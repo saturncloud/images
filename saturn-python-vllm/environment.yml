@@ -1,0 +1,70 @@
+name: saturn
+channels:
+  - conda-forge
+  - nodefaults
+dependencies:
+  - python=3.12
+  # INFERENCE/SERVING image (vLLM). Split from the training image (axolotl) because
+  # the two stacks pin different exact torch/transformers versions. vLLM 0.25.1
+  # REQUIRES transformers>=5.5.3 and torch==2.11.0 (a hard pin in its metadata) —
+  # the old transformers<5 constraint that forced the split is gone; vLLM 0.25 is
+  # now a transformers-5.x stack too. Kept as a separate image only because it
+  # pins torch 2.11 while axolotl pins torch 2.9. peft is held at 0.19.1 (see the
+  # pip block) to match the training image so LoRA adapters load.
+  - transformers>=5.5.3
+  - tokenizers
+  - numpy
+  - psutil
+  - pydantic
+  - fastapi
+  - uvicorn
+  - aiohttp
+  - requests
+  - typing-extensions
+  - packaging
+  - filelock
+  - matplotlib
+  - pandas
+  - seaborn
+  - tqdm
+  - click
+  - rich
+  - tensorboard
+  - wandb
+  - ipykernel
+  - pip
+  - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu130
+    # vLLM 0.25.1 pins torch==2.11.0, whose only CUDA wheels are cu130 (CUDA 13):
+    # torch 2.11.0 is NOT published on the cu129 index. Installing it here builds
+    # against libcudart.so.13, so this image MUST sit on the CUDA-13 base
+    # (saturnbase-python-gpu-13.3) — on the old cu129 base vLLM crashed at import
+    # with `ImportError: libcudart.so.13`. See release-images data_science.py.
+    - torch==2.11.0
+    - torchvision
+    - torchaudio
+    # Match the conda transformers pin above (the pip: block is run through pip by
+    # `mamba env update`, so repeat the bound). vLLM 0.25.1 needs transformers>=5.5.3.
+    - transformers>=5.5.3
+    # vLLM serving stack. vLLM 0.25.1 uses flashinfer (pulled in transitively as
+    # flashinfer-python) as its attention backend — no hand-shipped flash-attn
+    # wheel needed here anymore (the old torch2.8 wheel would also be wrong for
+    # torch 2.11).
+    - vllm==0.25.1
+    - ray
+    - sentence-transformers
+    # peft so vLLM can load the LoRA adapters Token Factory fine-tunes produce.
+    # Pinned to match the training image (axolotl 0.17.0 resolves peft 0.19.1) so
+    # an adapter trained there loads here.
+    - peft==0.19.1
+    - accelerate
+    - bitsandbytes
+    - xformers
+    - gpustat
+    - nvidia-ml-py
+    - huggingface-hub
+    - black
+    - isort
+    - mypy
+    - pytest
+    - saturn-client

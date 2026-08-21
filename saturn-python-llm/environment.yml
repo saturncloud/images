@@ -1,15 +1,15 @@
 name: saturn
 channels:
-  - pytorch
-  - nvidia
   - conda-forge
-  - defaults
+  - nodefaults
 dependencies:
-  - python=3.11
-  - cuda-toolkit
-  - pytorch
-  - pytorch-cuda
-  - transformers
+  - python=3.12
+  # vLLM 0.11 boots only on transformers 4.x: transformers 5.x removed
+  # tokenizer.all_special_tokens_extended, which vLLM 0.11 reads at startup,
+  # so 5.x triggers AttributeError -> CrashLoopBackOff. axolotl 0.16.1 runs
+  # fine on transformers 4.57.x at runtime (its metadata pins 5.5.0, but that
+  # is over-strict; see the pip: block where axolotl is installed --no-deps).
+  - transformers>=4.55,<5
   - tokenizers
   - numpy
   - psutil
@@ -32,15 +32,52 @@ dependencies:
   - ipykernel
   - pip
   - pip:
+    - --extra-index-url https://download.pytorch.org/whl/cu129
+    - torch
+    - torchvision
+    - torchaudio
+    # Fine-tuning stack. unsloth pulls trl/peft/datasets transitively, but we
+    # declare them explicitly so the image's training API surface is stable
+    # against unsloth version bumps. The Token Factory fine-tune training
+    # script (separate repo) imports trl.SFTTrainer + peft directly.
     - unsloth
-    - vllm
+    - trl
+    - peft
+    - datasets
+    # Held below transformers 5 to match the conda transformers pin above (the
+    # pip: block is run through pip by `mamba env update`, so repeat the bound
+    # here to stop pip backtracking to 5.x).
+    - transformers>=4.55,<5
+    # axolotl 0.16.1 transitive deps. axolotl itself is installed separately in
+    # the Dockerfile with --no-deps, because its metadata carries an over-strict
+    # `transformers==5.5.0` pin that would otherwise drag transformers 5.x back
+    # in and break vLLM 0.11 at boot. axolotl runs fine on transformers 4.57.x;
+    # its real transitive deps are declared here (and via unsloth/vllm/trl/peft).
+    # NOTE: --no-deps cannot be scoped to a single entry inside this block (pip
+    # applies it to the whole `pip install` invocation), so axolotl is pulled
+    # out into its own `pip install --no-deps axolotl==0.16.1` Dockerfile step.
+    - liger-kernel==0.7.0
+    - lm_eval==0.4.11
+    - fla-core==0.4.1
+    - flash-linear-attention==0.4.1
+    - torchao==0.17.0
+    - optimum==1.16.2
+    - trackio>=0.16.1
+    - schedulefree==1.4.1
+    - axolotl-contribs-lgpl==0.0.7
+    - axolotl-contribs-mit==0.0.6
+    - openenv-core==0.1.0
+    - mistral-common==1.11.0
+    - modal==1.3.0.post1
+    # Pinned: vllm walks back through versions otherwise — axolotl 0.16.1 forces
+    # torch==2.8.0, and only 0.10–0.11 satisfy that. Pin to keep CI's pip from
+    # backtracking past wheel-only releases into 0.5.x sdists (which need nvcc).
+    - vllm==0.11.0
     - ray
     - sentence-transformers
     - accelerate
     - bitsandbytes
-    - auto-gptq
-    - autoawq
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.0.post2/flash_attn-2.8.0.post2%2Bcu12torch2.7cxx11abiTRUE-cp311-cp311-linux_x86_64.whl
+    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu12torch2.8cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
     - xformers
     - gpustat
     - nvidia-ml-py

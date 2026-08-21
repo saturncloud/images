@@ -6,10 +6,9 @@ channels:
     - conda-forge
 dependencies:
     - bokeh
-    - cuda-version=12.0
+    - cuda-version=12.9
     - cvxpy
     - dask-ml
-    - dask-sql
     - dask
     - ipykernel
     - ipywidgets
@@ -21,8 +20,8 @@ dependencies:
     - prefect
     - pyarrow
     - python-graphviz
-    - python
-    - rapids
+    - python=3.13
+    - rapids>=26.02
     - s3fs
     - scikit-learn
     - scipy
