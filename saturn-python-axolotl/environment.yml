@@ -25,33 +25,43 @@ dependencies:
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu130
     # axolotl 0.17.0 requires torch>=2.9.1 (a floor, not a pin); we pin torch
-    # 2.9.1 for reproducibility and install it from the cu130 (CUDA 13) index so
-    # the GPU build matches the CUDA-13 base (saturnbase-python-gpu-devel-13.3)
-    # and the cu13torch2.9 flash-attn wheel below. This keeps TF train (axolotl)
-    # and serve (vllm) on one CUDA-13 line.
-    - torch==2.9.1
-    - torchvision
-    - torchaudio
+    # 2.10.0 for reproducibility and install it from the cu130 (CUDA 13) index so
+    # the GPU build matches the CUDA-13 base (saturnbase-python-gpu-devel-13.3).
+    # 2.10, not 2.9: flash-attn 2.8.3 publishes a linux_aarch64 (Grace / GB200 /
+    # GB300) CUDA-13 wheel only for torch 2.10, and both architectures must run
+    # the same stack. torchvision/torchaudio are pinned to the matching releases
+    # (unpinned, the resolver picks a torchaudio built for a newer torch).
+    - torch==2.10.0
+    - torchvision==0.25.0
+    - torchaudio==2.10.0
     # The whole fine-tuning stack. Unlike the serving image, we let axolotl
     # resolve its own dependency tree (transformers 5.9.0, datasets 4.8,
     # trl 1.5.1, accelerate 1.13.0, peft 0.19.1, hf-hub>=1, etc.) — installed WITH
-    # deps in the Dockerfile. [flash-attn] + [deepspeed] extras for real
-    # multi-GPU LoRA/full fine-tunes; [mlflow] for experiment tracking.
+    # deps in the Dockerfile. [mlflow] for experiment tracking. axolotl itself
+    # skips xformers, torchao and flash-linear-attention on aarch64.
+    - axolotl[mlflow]==0.17.0
+    # DeepSpeed for real multi-GPU LoRA/full fine-tunes. Listed directly instead
+    # of through axolotl's [deepspeed] extra because that extra also pulls
+    # deepspeed-kernels, which ships ONLY an x86_64 wheel (no source): on aarch64
+    # the extra cannot install. deepspeed-kernels backs DeepSpeed's inference
+    # kernels, not ZeRO training, so aarch64 goes without it.
     #
-    # IMPORTANT: [deepspeed] REQUIRES the gpu-DEVEL base (nvcc). deepspeed's
+    # IMPORTANT: deepspeed REQUIRES the gpu-DEVEL base (nvcc). deepspeed's
     # op-builder probes nvcc at import, and accelerate imports deepspeed
     # unconditionally whenever it's installed — so on a runtime (non-devel) base
     # EVERY axolotl job crashes at Trainer init with FileNotFoundError: .../nvcc,
     # even single-GPU jobs that never use it. This image therefore builds on
     # saturnbase-python-gpu-devel-13.3 (see its dependency in release-images
     # data_science.py). Do NOT switch back to the runtime base without also
-    # dropping the [deepspeed] extra.
-    - axolotl[flash-attn,deepspeed,mlflow]==0.17.0
-    # flash-attn's build wants torch present at install time; ship the prebuilt
-    # cu13/torch2.9 wheel so it doesn't compile from source (slow, needs nvcc).
-    # axolotl 0.17.0's [flash-attn] extra still pins flash-attn==2.8.3; the wheel
-    # tag must match BOTH the torch version (torch2.9) AND the CUDA-13 base (cu13).
-    - https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu13torch2.9cxx11abiTRUE-cp312-cp312-linux_x86_64.whl
+    # dropping deepspeed.
+    - deepspeed>=0.18.6,<0.19.0
+    - deepspeed-kernels; platform_machine == "x86_64"
+    # axolotl 0.17.0 pins flash-attn==2.8.3 (its [flash-attn] extra). Ship the
+    # prebuilt wheel so it doesn't compile from source (slow, needs nvcc). The
+    # wheel tag must match the torch version (torch2.10), the CUDA-13 base (cu13)
+    # AND the build platform, hence one line per architecture.
+    - flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu13torch2.10cxx11abiTRUE-cp312-cp312-linux_x86_64.whl ; platform_machine == "x86_64"
+    - flash-attn @ https://github.com/Dao-AILab/flash-attention/releases/download/v2.8.3/flash_attn-2.8.3%2Bcu13torch2.10cxx11abiTRUE-cp312-cp312-linux_aarch64.whl ; platform_machine == "aarch64"
     # Saturn workspace + ops basics (mirror the serving image's tail).
     - gpustat
     - black
