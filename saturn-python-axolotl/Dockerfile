@@ -5,6 +5,15 @@ RUN sudo apt-get -qq --allow-releaseinfo-change update && \
     sudo apt-get -qq install --yes --no-install-recommends \
     libgl1
 
+# Blackwell Ultra (B300 / GB300, compute capability 10.3, sm_103a): Triton 3.5
+# (torch 2.9) bundles a CUDA 12.8 ptxas that rejects sm_103a, which killed every
+# LoRA fine-tune at its first step (axolotl's LoRA Triton kernels). Triton 3.6
+# (torch 2.10, pinned in environment.yml) uses its own CUDA 12.9 ptxas-blackwell
+# for 10.x and works without this; pointing TRITON_PTXAS_PATH at the devel
+# base's CUDA 13.x ptxas keeps a Triton downgrade from bringing the failure back.
+# Both proven on a B300, 2026-10-18.
+ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
+
 COPY environment.yml /tmp/environment.yml
 # Unlike the serving image (saturn-python-llm), axolotl is installed WITH its
 # deps here: this image has no vLLM, so there is no transformers<5 constraint to
