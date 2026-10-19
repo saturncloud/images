@@ -38,8 +38,15 @@ dependencies:
     # resolve its own dependency tree (transformers 5.9.0, datasets 4.8,
     # trl 1.5.1, accelerate 1.13.0, peft 0.19.1, hf-hub>=1, etc.) — installed WITH
     # deps in the Dockerfile. [mlflow] for experiment tracking. axolotl itself
-    # skips xformers, torchao and flash-linear-attention on aarch64.
+    # skips xformers, torchao and flash-linear-attention on aarch64 (torchao is added back below).
     - axolotl[mlflow]==0.17.0
+    # axolotl declares torchao only for platform_machine != "aarch64", but axolotl.cli.train
+    # imports it at module level (axolotl/utils/quantization.py, utils/callbacks/qat.py), so the
+    # linux/arm64 image failed every fine-tune with "No module named 'torchao'" (GB300, 2026-10-19).
+    # Same pin axolotl uses on x86; torchao 0.17.0 ships a py3-none-any wheel for aarch64. It is the
+    # only arm64-skipped axolotl dependency imported on the training path (xformers is only in
+    # attention monkeypatches that flash_attention_2 does not load; fla has no module-level import).
+    - torchao==0.17.0
     # DeepSpeed for real multi-GPU LoRA/full fine-tunes. Listed directly instead
     # of through axolotl's [deepspeed] extra because that extra also pulls
     # deepspeed-kernels, which ships ONLY an x86_64 wheel (no source): on aarch64
