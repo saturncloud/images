@@ -13,6 +13,13 @@ RUN sudo apt-get -qq --allow-releaseinfo-change update && \
 # base's CUDA 13.x ptxas keeps a Triton downgrade from bringing the failure back.
 # Both proven on a B300, 2026-10-18.
 ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
+# Blackwell Ultra (compute capability 10.3), torch 2.10.0+cu130 / cuBLAS 13.1: every F.linear WITH a bias
+# fails with CUBLAS_STATUS_NOT_INITIALIZED in cublasLtMatmulAlgoGetHeuristic (PyTorch's cuBLASLt
+# bias-epilogue addmm path; bf16, fp16 and fp32 alike). Fine-tunes hit it whenever axolotl's fused LoRA
+# kernels are off (lora_dropout > 0, which Atlas sends), e.g. Qwen2's biased q/k/v. DISABLE_ADDMM_CUDA_LT=1
+# makes PyTorch use plain cuBLAS GEMM plus a bias add for addmm (negligible cost for LoRA training).
+# Proven on a B300 (x86) with Atlas's hyperparameters, 2026-10-19.
+ENV DISABLE_ADDMM_CUDA_LT=1
 
 COPY environment.yml /tmp/environment.yml
 # Unlike the serving image (saturn-python-llm), axolotl is installed WITH its
