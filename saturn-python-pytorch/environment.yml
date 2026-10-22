@@ -3,6 +3,7 @@ channels:
     - conda-forge
     - nodefaults
 dependencies:
+    - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
     - python=3.13
     - blas=*=mkl
     - bokeh
