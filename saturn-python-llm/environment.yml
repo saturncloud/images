@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
   - python=3.12
   # vLLM 0.11 boots only on transformers 4.x: transformers 5.x removed
   # tokenizer.all_special_tokens_extended, which vLLM 0.11 reads at startup,
