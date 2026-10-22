@@ -4,6 +4,7 @@ channels:
     - nodefaults
     - rapidsai
 dependencies:
+    - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
     - blas=*=mkl
     - bokeh
     - dask
@@ -17,7 +18,7 @@ dependencies:
     - pip
     - prefect
     - pyarrow
-    - python
+    - python=3.13
     - python-graphviz
     - s3fs
     - setuptools

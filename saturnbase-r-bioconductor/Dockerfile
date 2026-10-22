@@ -1,4 +1,14 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_21
+
+# CVE-2026-111943: current trust store (ca-certificates >= 20260816ubuntu0.* drops the emSign ECC
+# Root CA - G3). This layer also forces the rest of the image to rebuild, so the apt layers below
+# pick up current packages instead of cached ones.
+RUN apt-get -qq update && \
+    apt-get -qq install --yes --only-upgrade ca-certificates > /dev/null && \
+    rm -rf /var/lib/apt/lists/*
+# grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
+ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
+
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
@@ -99,6 +109,9 @@ RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
+    # The driver's bundled cacert.pem still trusts the emSign ECC Root CA - G3 (CVE-2026-111943):
+    # point its CABundleFile at the current system store.
+    && sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/lib/snowflake/odbc/lib/cacert.pem \
     # Cleanup
     && sudo rm -rf /tmp/* \
     && apt-get -qq purge \

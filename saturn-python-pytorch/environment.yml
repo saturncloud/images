@@ -1,15 +1,12 @@
 name: saturn
 channels:
-    - pytorch
-    - rapidsai
-    - nvidia
-    - nodefaults
     - conda-forge
+    - nodefaults
 dependencies:
+    - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
+    - python=3.13
     - blas=*=mkl
     - bokeh
-    - pytorch::pytorch-cuda=12.1
-    - dask-cuda
     - dask
     - fastai
     - fsspec
@@ -23,15 +20,15 @@ dependencies:
     - py-opencv
     - pyarrow
     - python-graphviz
-    - python
-    - pytorch::pytorch
     - s3fs
     - setuptools
     - tensorboard
-    - pytorch::torchaudio
-    - pytorch::torchvision
     - pynvml
     - pip:
+          - --extra-index-url https://download.pytorch.org/whl/cu129
+          - torch
+          - torchvision
+          - torchaudio
           - dask-saturn
           - saturn-client
           - saturnfs
