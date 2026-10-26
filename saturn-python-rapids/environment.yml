@@ -6,6 +6,7 @@ channels:
     - conda-forge
 dependencies:
     - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
+    - ca-certificates>=2026.10.18  # CVE-2026-111943: the env's own OpenSSL bundle (ssl/cacert.pem), used by Python's default ssl context
     - bokeh
     - cuda-version=12.9
     - cvxpy
@@ -17,7 +18,7 @@ dependencies:
     - numba
     - numpy
     - pandas
-    - pip
+    - pip>=26.2.2  # CVE-2026-111943: pip vendors its own certifi; 26.2.2 vendors 2026.10.19
     - prefect
     - pyarrow
     - python-graphviz
@@ -31,4 +32,4 @@ dependencies:
           - dask-saturn
           - saturn-client
           - saturnfs
-          - snowflake-connector-python
+          - snowflake-connector-python>=5.1.0  # CVE-2026-111943: 5.0.0 compiles in a root list with the emSign ECC Root CA - G3

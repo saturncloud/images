@@ -8,6 +8,12 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 # grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
+# Every pip (the system one, and any older pip a user installs into a new env) otherwise reads its
+# own vendored certifi, which can still have that root.
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+# Quarto's deno (bundled with RStudio Server) otherwise also trusts its built-in root list, which
+# still has that root. Use only the system store.
+ENV DENO_TLS_CA_STORE=system
 
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
