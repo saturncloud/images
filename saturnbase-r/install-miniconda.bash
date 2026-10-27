@@ -10,7 +10,9 @@ set -x && \
   mkdir -p /opt && \
   sh miniconda.sh -b -p /opt/saturncloud && \
   rm miniconda.sh shasum && \
-  /opt/saturncloud/bin/conda install -n base --override-channels -c conda-forge mamba==1.5.10 'python_abi=*=*cp*' --yes
+  # CVE-2026-111943: the installer's pip 24.0 vendors a certifi with the emSign ECC Root CA - G3;
+  # 26.2.2 vendors 2026.10.19 (same pin as saturnbase-python's environment.yml).
+  /opt/saturncloud/bin/conda install -n base --override-channels -c conda-forge mamba==1.5.10 'python_abi=*=*cp*' 'pip>=26.2.2' --yes
   ln -s /opt/saturncloud/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
   find /opt/saturncloud/ -follow -type f -name '*.a' -delete && \
   find /opt/saturncloud/ -follow -type f -name '*.js.map' -delete && \
