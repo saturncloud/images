@@ -1,0 +1,6 @@
+{
+    "name": "saturn-python-312-slim-gpu-13.3",
+    "description": "Python 3.12 GPU slim image with CUDA 13.3 and minimal packages.",
+    "hardware_type": "gpu",
+    "supports": ["jupyterlab", "dask"]
+}

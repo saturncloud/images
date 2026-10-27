@@ -1,15 +1,13 @@
 name: saturn
 channels:
-    - pytorch
-    - rapidsai
-    - nvidia
-    - nodefaults
     - conda-forge
+    - nodefaults
 dependencies:
+    - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
+    - ca-certificates>=2026.10.18  # CVE-2026-111943: the env's own OpenSSL bundle (ssl/cacert.pem), used by Python's default ssl context
+    - python=3.13
     - blas=*=mkl
     - bokeh
-    - pytorch::pytorch-cuda=12.1
-    - dask-cuda
     - dask
     - fastai
     - fsspec
@@ -19,20 +17,20 @@ dependencies:
     - numpy
     - pandas
     - pillow
-    - pip
+    - pip>=26.2.2  # CVE-2026-111943: pip vendors its own certifi; 26.2.2 vendors 2026.10.19
     - py-opencv
     - pyarrow
     - python-graphviz
-    - python
-    - pytorch::pytorch
     - s3fs
     - setuptools
     - tensorboard
-    - pytorch::torchaudio
-    - pytorch::torchvision
     - pynvml
     - pip:
+          - --extra-index-url https://download.pytorch.org/whl/cu129
+          - torch
+          - torchvision
+          - torchaudio
           - dask-saturn
           - saturn-client
           - saturnfs
-          - snowflake-connector-python
+          - snowflake-connector-python>=5.1.0  # CVE-2026-111943: 5.0.0 compiles in a root list with the emSign ECC Root CA - G3

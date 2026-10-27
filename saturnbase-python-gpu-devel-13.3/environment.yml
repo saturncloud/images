@@ -1,0 +1,30 @@
+channels:
+    - conda-forge
+dependencies:
+    - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
+    - ca-certificates>=2026.10.18  # CVE-2026-111943: the env's own OpenSSL bundle (ssl/cacert.pem), used by Python's default ssl context
+    - black
+    - dask-core
+    - distributed
+    - ipywidgets
+    - isort
+    - jupyter-server-proxy
+    - jupyterlab-git
+    - jupyterlab
+    - jupyter_ydoc
+    - jupyterlab-nvdashboard
+    - nbconvert
+    - nbdime
+    - nodejs
+    - notebook
+    - pip>=26.2.2  # CVE-2026-111943: pip vendors its own certifi; 26.2.2 vendors 2026.10.19
+    - pyviz_comms
+    - tornado
+    - voila
+    - yarl
+    - pip:
+        - jupyter_server
+        - jupyter_bokeh
+        - jupyterlab_code_formatter
+        - jupyterlab_execute_time
+        - jupyterlab_widgets

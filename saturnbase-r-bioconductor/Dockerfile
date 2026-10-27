@@ -1,4 +1,25 @@
 FROM bioconductor/bioconductor_docker:RELEASE_3_21
+
+# CVE-2026-111943: current trust store (ca-certificates >= 20260816ubuntu0.* drops the emSign ECC
+# Root CA - G3). This layer also forces the rest of the image to rebuild, so the apt layers below
+# pick up current packages instead of cached ones.
+# Java's keystore (/etc/ssl/certs/java/cacerts) is not rebuilt by that upgrade, so it is deleted and
+# rebuilt from the current store where Java is present; where it isn't, a later JRE install builds
+# a fresh one.
+RUN apt-get -qq update && \
+    apt-get -qq install --yes --only-upgrade ca-certificates > /dev/null && \
+    rm -f /etc/ssl/certs/java/cacerts && \
+    update-ca-certificates --fresh > /dev/null && \
+    rm -rf /var/lib/apt/lists/*
+# grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
+ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
+# Every pip (the system one, and any older pip a user installs into a new env) otherwise reads its
+# own vendored certifi, which can still have that root.
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+# Quarto's deno (bundled with RStudio Server) otherwise also trusts its built-in root list, which
+# still has that root. Use only the system store.
+ENV DENO_TLS_CA_STORE=system
+
 RUN usermod -l jovyan rstudio && \
     groupmod -n jovyan rstudio && \
     usermod -d /home/jovyan jovyan && \
@@ -99,6 +120,9 @@ RUN apt-get install --yes --no-install-recommends libssl-dev  > /dev/null \
     && sudo dpkg -i snowflake-odbc.deb \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbc.ini -O /usr/lib/snowflake/odbc/lib/odbc.ini \
     && sudo wget https://saturn-public-data.s3.us-east-2.amazonaws.com/r-odbc/odbcinst.ini -O /usr/lib/snowflake/odbc/lib/odbcinst.ini \
+    # The driver's bundled cacert.pem still trusts the emSign ECC Root CA - G3 (CVE-2026-111943):
+    # point its CABundleFile at the current system store.
+    && sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/lib/snowflake/odbc/lib/cacert.pem \
     # Cleanup
     && sudo rm -rf /tmp/* \
     && apt-get -qq purge \
@@ -140,6 +164,13 @@ RUN Rscript -e "install.packages(c( \
         lib = '/usr/local/lib/R/site-library', \
         repos = '${CRAN_FIXED}'\
         )"
+
+# CVE-2026-111943: the R openssl package bundles its own cacert.pem (read by openssl::ca_bundle()),
+# which still has the emSign ECC Root CA - G3. Point it at the system store. saturn-r-bioconductor's
+# postBuild does the same for anything it reinstalls.
+RUN if [ -f /usr/local/lib/R/site-library/openssl/cacert.pem ]; then \
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/lib/R/site-library/openssl/cacert.pem; \
+    fi
 
 COPY setup-conda.bash /tmp/setup-conda.bash
 
