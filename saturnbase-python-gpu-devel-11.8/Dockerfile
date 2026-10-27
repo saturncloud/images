@@ -6,6 +6,13 @@ FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 RUN apt-get -qq update && \
     apt-get -qq install --yes --only-upgrade ca-certificates > /dev/null && \
     rm -rf /var/lib/apt/lists/*
+# Ubuntu 20.04 gets no fixed ca-certificates (its newest is 20240203~20.04.1), so distrust the root
+# in /etc/ca-certificates.conf and rebuild the store. The conf entry survives later upgrades. The
+# check fails the build if the root is still in the bundle.
+RUN sed -i 's#^mozilla/emSign_ECC_Root_CA_-_G3\.crt$#!&#' /etc/ca-certificates.conf && \
+    update-ca-certificates --fresh > /dev/null && \
+    ! grep -q '^mozilla/emSign_ECC_Root_CA_-_G3\.crt$' /etc/ca-certificates.conf && \
+    [ ! -e /etc/ssl/certs/emSign_ECC_Root_CA_-_G3.pem ]
 # grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
 # Every pip (the system one, and any older pip a user installs into a new env) otherwise reads its
