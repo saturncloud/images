@@ -8,6 +8,9 @@ RUN apt-get -qq update && \
     rm -rf /var/lib/apt/lists/*
 # grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
+# Every pip (the system one, and any older pip a user installs into a new env) otherwise reads its
+# own vendored certifi, which can still have that root.
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
 
 ENV CONDA_OVERRIDE_CUDA=12.9
 EXPOSE 8888

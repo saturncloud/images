@@ -4,6 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - certifi>=2026.10.19  # CVE-2026-111943: drops the emSign ECC Root CA - G3
+  - ca-certificates>=2026.10.18  # CVE-2026-111943: the env's own OpenSSL bundle (ssl/cacert.pem), used by Python's default ssl context
   - python=3.12
   # TRAINING-ONLY image (axolotl). Split out from the serving image (vLLM) because
   # the two dep stacks pin different exact versions of transformers/torch/trl and
@@ -22,7 +23,7 @@ dependencies:
   - tensorboard
   - wandb
   - ipykernel
-  - pip
+  - pip>=26.2.2  # CVE-2026-111943: pip vendors its own certifi; 26.2.2 vendors 2026.10.19
   - pip:
     - --extra-index-url https://download.pytorch.org/whl/cu130
     # axolotl 0.17.0 requires torch>=2.9.1 (a floor, not a pin); we pin torch

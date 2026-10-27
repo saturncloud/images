@@ -3,11 +3,22 @@ FROM rocker/r-ver:4.5
 # CVE-2026-111943: current trust store (ca-certificates >= 20260816ubuntu0.* drops the emSign ECC
 # Root CA - G3). This layer also forces the rest of the image to rebuild, so the apt layers below
 # pick up current packages instead of cached ones.
+# Java's keystore (/etc/ssl/certs/java/cacerts) is not rebuilt by that upgrade, so it is deleted and
+# rebuilt from the current store where Java is present; where it isn't, a later JRE install builds
+# a fresh one.
 RUN apt-get -qq update && \
     apt-get -qq install --yes --only-upgrade ca-certificates > /dev/null && \
+    rm -f /etc/ssl/certs/java/cacerts && \
+    update-ca-certificates --fresh > /dev/null && \
     rm -rf /var/lib/apt/lists/*
 # grpcio otherwise uses the roots.pem bundled in its wheel, which still has that root.
 ENV GRPC_DEFAULT_SSL_ROOTS_FILE_PATH=/etc/ssl/certs/ca-certificates.crt
+# Every pip (the system one, and any older pip a user installs into a new env) otherwise reads its
+# own vendored certifi, which can still have that root.
+ENV PIP_CERT=/etc/ssl/certs/ca-certificates.crt
+# Quarto's deno (bundled with RStudio Server) otherwise also trusts its built-in root list, which
+# still has that root. Use only the system store.
+ENV DENO_TLS_CA_STORE=system
 
 
 LABEL org.opencontainers.image.licenses="GPL-2.0-or-later" \
