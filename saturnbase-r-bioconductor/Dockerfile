@@ -165,6 +165,13 @@ RUN Rscript -e "install.packages(c( \
         repos = '${CRAN_FIXED}'\
         )"
 
+# CVE-2026-111943: the R openssl package bundles its own cacert.pem (read by openssl::ca_bundle()),
+# which still has the emSign ECC Root CA - G3. Point it at the system store. saturn-r-bioconductor's
+# postBuild does the same for anything it reinstalls.
+RUN if [ -f /usr/local/lib/R/site-library/openssl/cacert.pem ]; then \
+        sudo ln -sf /etc/ssl/certs/ca-certificates.crt /usr/local/lib/R/site-library/openssl/cacert.pem; \
+    fi
+
 COPY setup-conda.bash /tmp/setup-conda.bash
 
 # Install miniconda
