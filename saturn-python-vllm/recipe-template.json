@@ -1,0 +1,6 @@
+{
+    "name": "saturn-python-vllm",
+    "description": "Serving LLMs with vLLM (inference; transformers 4 stack)",
+    "hardware_type": "gpu",
+    "supports": ["jupyterlab", "dask"]
+}
