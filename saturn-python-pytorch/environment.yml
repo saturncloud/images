@@ -10,6 +10,14 @@ dependencies:
     - bokeh
     - dask
     - fastai
+    # These build strings are what make this a GPU image. fastai depends on conda's
+    # pytorch, and with no pin the solve takes the newest pytorch even when only its
+    # CPU build can be solved. That happened with 2.14.1: on this base's CUDA 12.9,
+    # the CUDA set for 2.14.1 needs cuDNN 9.27 builds that require CUDA 13. With the
+    # pins, the build fails instead of silently going back to CPU.
+    - pytorch=*=cuda129*
+    - torchaudio=*=cuda129*
+    - torchvision=*=cuda129*
     - fsspec
     - ipykernel
     - ipywidgets
@@ -26,10 +34,6 @@ dependencies:
     - tensorboard
     - pynvml
     - pip:
-          - --extra-index-url https://download.pytorch.org/whl/cu129
-          - torch
-          - torchvision
-          - torchaudio
           - dask-saturn
           - saturn-client
           - saturnfs
