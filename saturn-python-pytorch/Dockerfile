@@ -7,6 +7,7 @@ RUN sudo apt-get -qq --allow-releaseinfo-change update && \
 
 COPY environment.yml /tmp/environment.yml
 RUN mamba env update -n saturn --file /tmp/environment.yml && \
+    ${CONDA_DIR}/envs/saturn/bin/python -c "import torch, torchvision; assert torch.backends.cuda.is_built() and torchvision.version.cuda, 'torch or torchvision is a CPU build'" && \
     ${CONDA_DIR}/envs/saturn/bin/python -m ipykernel install \
         --name python3 \
         --display-name 'saturn (Python 3)' \
