@@ -5,6 +5,10 @@ RUN sudo apt-get -qq --allow-releaseinfo-change update && \
     sudo apt-get -qq install --yes --no-install-recommends \
     libgl1
 
+# Supply-chain cooldown: pip takes only files uploaded at least 7 days ago
+# (pip>=26.1, pinned via environment.yml). A build ARG, not ENV, so it applies
+# while the image is built and is not set in customers' workspaces.
+ARG PIP_UPLOADED_PRIOR_TO=P7D
 COPY environment.yml /tmp/environment.yml
 RUN mamba env update -n saturn --file /tmp/environment.yml && \
     ${CONDA_DIR}/envs/saturn/bin/python -c "import torch, torchvision; assert torch.backends.cuda.is_built() and torchvision.version.cuda, 'torch or torchvision is a CPU build'" && \

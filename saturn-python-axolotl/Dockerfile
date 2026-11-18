@@ -21,6 +21,10 @@ ENV TRITON_PTXAS_PATH=/usr/local/cuda/bin/ptxas
 # Proven on a B300 (x86) with Atlas's hyperparameters, 2026-10-19.
 ENV DISABLE_ADDMM_CUDA_LT=1
 
+# Supply-chain cooldown: pip takes only files uploaded at least 7 days ago
+# (pip>=26.1, pinned via environment.yml). A build ARG, not ENV, so it applies
+# while the image is built and is not set in customers' workspaces.
+ARG PIP_UPLOADED_PRIOR_TO=P7D
 COPY environment.yml /tmp/environment.yml
 # Unlike the serving image (saturn-python-llm), axolotl is installed WITH its
 # deps here: this image has no vLLM, so there is no transformers<5 constraint to
