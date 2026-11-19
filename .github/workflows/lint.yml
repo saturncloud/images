@@ -6,6 +6,9 @@ on:
     # Run every Monday morning at 11:00a UTC, 6:00a CST
     - cron: '0 11 * * 1'
 
+permissions:
+  contents: read
+
 jobs:
   test:
     name: ${{ matrix.task }}
@@ -17,9 +20,9 @@ jobs:
           - task: linting
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v1
+        uses: actions/checkout@50fbc622fc4ef5163becd7fab6573eac35f8462e # v1.2.0
       - name: Set up Python 3.7
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@e9aba2c848f5ebd159c070c61ea2c4e2b122355e # v2.3.4
         with:
           python-version: 3.7
       - name: linting
